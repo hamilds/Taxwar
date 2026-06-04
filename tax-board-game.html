@@ -140,14 +140,14 @@ hr.divider{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
   box-shadow:0 2px 0 #7B0000;grid-column:1/-1}
 
 /* ── BOARD ── */
-.board{background:var(--paper);border:2px solid var(--gold);border-radius:6px;
-  padding:3px;aspect-ratio:1/1;position:relative;overflow:hidden;
+.board{background:var(--paper);border:2px solid var(--gold);border-radius:4px;
+  padding:2px;aspect-ratio:1/1;position:relative;overflow:hidden;
   box-shadow:4px 4px 0 rgba(0,0,0,.5),0 0 20px rgba(212,160,23,.1);
   width:100%;margin:0 auto;display:flex;align-items:stretch}
 .board::before{content:'';position:absolute;inset:8px;
   border:1px dashed rgba(212,160,23,.2);border-radius:4px;pointer-events:none;z-index:1}
 .board-grid{display:grid;grid-template-columns:repeat(9,1fr);
-  grid-template-rows:repeat(9,1fr);width:100%;gap:1px;flex:1}
+  grid-template-rows:repeat(9,1fr);width:100%;gap:1px;flex:1;overflow:hidden}
 .cell{border-radius:4px;display:flex;flex-direction:column;align-items:center;
   justify-content:center;font-size:clamp(6px,.9vw,9px);font-weight:600;
   text-align:center;padding:2px;border:1px solid transparent;
@@ -174,10 +174,10 @@ hr.divider{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
   font-weight:700;color:var(--gold);letter-spacing:2px}
 .center-logo .cs{font-size:clamp(8px,1vw,11px);color:#5A3A10;font-weight:600;text-align:center;opacity:.8}
 .tax-rates{background:rgba(212,160,23,.12);border:1px solid rgba(212,160,23,.35);
-  border-radius:6px;padding:5px 8px;font-size:clamp(7px,.8vw,10px);color:var(--ink);
-  line-height:1.9;text-align:left;width:96%}
-.rr{display:flex;justify-content:space-between;gap:8px;padding:1px 0}
-.rp{font-weight:700;color:var(--blue);min-width:36px;text-align:right}
+  border-radius:6px;padding:5px 8px;font-size:clamp(6.5px,.75vw,9.5px);color:var(--ink);
+  line-height:1.85;text-align:left;width:96%;overflow:hidden}
+.rr{display:flex;justify-content:space-between;gap:4px;padding:1px 0;white-space:nowrap}
+.rp{font-weight:700;color:var(--blue);min-width:34px;text-align:right;flex-shrink:0}
 .token{position:absolute;width:16px;height:16px;border-radius:50%;border:2px solid white;
   display:flex;align-items:center;justify-content:center;font-size:9px;
   transform:translate(-50%,-50%);box-shadow:0 2px 5px rgba(0,0,0,.4);
@@ -729,14 +729,14 @@ function buildBoard(){
           <div class="ct">TAX WAR</div>
           <div class="cs">⚔️ สงครามภาษี 2568 ⚔️</div>
           <div class="tax-rates">
-            <div class="rr"><span>0–150,000 ฿</span><span class="rp">ยกเว้น</span></div>
-            <div class="rr"><span>150,001–300,000 ฿</span><span class="rp">5%</span></div>
-            <div class="rr"><span>300,001–500,000 ฿</span><span class="rp">10%</span></div>
-            <div class="rr"><span>500,001–750,000 ฿</span><span class="rp">15%</span></div>
-            <div class="rr"><span>750,001–1,000,000 ฿</span><span class="rp">20%</span></div>
-            <div class="rr"><span>1,000,001–2,000,000 ฿</span><span class="rp">25%</span></div>
-            <div class="rr"><span>2,000,001–5,000,000 ฿</span><span class="rp">30%</span></div>
-            <div class="rr"><span>5,000,001+ ฿</span><span class="rp">35%</span></div>
+            <div class="rr"><span>0 – 150,000</span><span class="rp">ยกเว้น</span></div>
+            <div class="rr"><span>150,001 – 300,000</span><span class="rp">5%</span></div>
+            <div class="rr"><span>300,001 – 500,000</span><span class="rp">10%</span></div>
+            <div class="rr"><span>500,001 – 750,000</span><span class="rp">15%</span></div>
+            <div class="rr"><span>750,001 – 1,000,000</span><span class="rp">20%</span></div>
+            <div class="rr"><span>1,000,001 – 2,000,000</span><span class="rp">25%</span></div>
+            <div class="rr"><span>2,000,001 – 5,000,000</span><span class="rp">30%</span></div>
+            <div class="rr"><span>5,000,001 ขึ้นไป</span><span class="rp">35%</span></div>
           </div></div>`;
         grid.appendChild(div);centerAdded=true;
       }
