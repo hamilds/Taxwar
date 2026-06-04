@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TAX WAR — สงครามภาษี(เงินได้)</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&family=Teko:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#D4A017;--gold-l:#F5C842;--dark:#1A1208;--paper:#F5EDD6;
+  --paper-d:#E8D9B5;--red:#C0392B;--green:#1A6B3A;--blue:#1B4F8A;--ink:#2C1A05;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--dark);font-family:'Sarabun',sans-serif;min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;padding:10px 12px;
+  background-image:radial-gradient(ellipse at 20% 20%,#2A1A05 0%,transparent 60%),
+    radial-gradient(ellipse at 80% 80%,#0A1A2A 0%,transparent 60%)}
+
+/* ── SCREENS ── */
+.screen{display:none}.screen.active{display:block}
+
+/* ── SETUP SCREEN ── */
+#setupScreen{max-width:960px;margin:0 auto;width:100%}
+.setup-title{font-family:'Teko',sans-serif;font-size:clamp(52px,8vw,80px);font-weight:700;
+  color:var(--gold);letter-spacing:4px;line-height:1;text-align:center;
+  text-shadow:0 0 40px rgba(212,160,23,.5),3px 3px 0 #8B6000;
+  animation:glow 3s ease-in-out infinite}
+@keyframes glow{0%,100%{text-shadow:0 0 40px rgba(212,160,23,.5),3px 3px 0 #8B6000}
+  50%{text-shadow:0 0 60px rgba(212,160,23,.9),3px 3px 0 #8B6000}}
+.setup-sub{color:var(--paper);font-size:16px;font-weight:600;letter-spacing:6px;
+  text-transform:uppercase;opacity:.8;text-align:center;margin:4px 0 24px}
+.setup-card{background:var(--paper);border:2px solid var(--gold);border-radius:12px;
+  padding:20px;margin-bottom:16px;box-shadow:4px 4px 0 rgba(0,0,0,.4)}
+.setup-card h3{font-family:'Teko',sans-serif;font-size:22px;letter-spacing:2px;
+  color:var(--gold);margin-bottom:14px;text-transform:uppercase;
+  border-bottom:1px solid rgba(212,160,23,.3);padding-bottom:6px}
+.player-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px}
+.player-slot{background:var(--paper-d);border:2px solid rgba(212,160,23,.3);
+  border-radius:8px;padding:10px;text-align:center}
+.player-slot.active{border-color:var(--gold);background:#FFF8E7}
+.slot-av{font-size:32px;margin-bottom:4px}
+.slot-name{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:6px}
+.slot-input{width:100%;padding:5px 8px;border:1px solid rgba(212,160,23,.4);border-radius:5px;
+  font-family:'Sarabun',sans-serif;font-size:13px;text-align:center;background:white}
+.career-sel{width:100%;padding:5px;border:1px solid rgba(212,160,23,.4);border-radius:5px;
+  font-size:12px;font-family:'Sarabun',sans-serif;margin-top:4px;background:white}
+.career-badge{font-size:10px;padding:2px 6px;border-radius:10px;color:white;
+  font-weight:700;display:inline-block;margin-top:3px}
+
+.start-btn{width:100%;padding:16px;border-radius:10px;border:none;
+  background:linear-gradient(135deg,var(--gold),#A87800);
+  font-family:'Teko',sans-serif;font-size:26px;font-weight:600;letter-spacing:3px;
+  color:var(--dark);cursor:pointer;box-shadow:0 5px 0 #6B4A00;
+  transition:transform .1s,box-shadow .1s;text-transform:uppercase}
+.start-btn:hover{transform:translateY(-2px);box-shadow:0 7px 0 #6B4A00}
+.start-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #6B4A00}
+
+/* ── GAME SCREEN ── */
+#gameScreen{width:100%;max-width:1140px;margin:0 auto}
+.game-header{text-align:center;margin-bottom:8px}
+.game-title{font-family:'Teko',sans-serif;font-size:clamp(40px,6vw,64px);font-weight:700;
+  color:var(--gold);letter-spacing:4px;line-height:1;
+  text-shadow:0 0 40px rgba(212,160,23,.5),3px 3px 0 #8B6000;animation:glow 3s ease-in-out infinite}
+.game-subtitle{color:var(--paper);font-size:14px;font-weight:600;letter-spacing:6px;opacity:.7}
+.round-counter{text-align:center;color:var(--paper);font-family:'Teko',sans-serif;
+  font-size:13px;letter-spacing:2px;opacity:.6;margin-bottom:8px}
+.game-layout{display:grid;grid-template-columns:200px 1fr 200px;gap:10px;align-items:start}
+
+/* panels */
+.panel{background:var(--paper);border:2px solid var(--gold);border-radius:8px;overflow:hidden;
+  box-shadow:4px 4px 0 rgba(0,0,0,.5)}
+.panel-header{background:var(--gold);color:var(--dark);font-family:'Teko',sans-serif;
+  font-size:17px;font-weight:600;letter-spacing:2px;text-align:center;
+  padding:7px 10px;text-transform:uppercase}
+.panel-body{padding:10px;max-height:300px;overflow-y:auto}
+.panel-body::-webkit-scrollbar{width:3px}
+.panel-body::-webkit-scrollbar-thumb{background:rgba(212,160,23,.4);border-radius:2px}
+
+/* player cards */
+.player-card{background:var(--paper-d);border:1px solid rgba(212,160,23,.3);
+  border-radius:6px;padding:9px;margin-bottom:8px;transition:all .2s;position:relative}
+.player-card:last-child{margin-bottom:0}
+.player-card.active{background:#FFF8E7;border-color:var(--gold);
+  box-shadow:0 0 10px rgba(212,160,23,.35);transform:translateX(3px)}
+.player-card.active::before{content:'▶';position:absolute;left:-14px;top:50%;
+  transform:translateY(-50%);color:var(--gold);font-size:11px}
+.player-name{font-weight:700;font-size:14px;color:var(--ink);display:flex;align-items:center;gap:5px}
+.player-av{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px}
+.player-career-tag{font-size:10px;padding:1px 6px;border-radius:8px;color:white;font-weight:700;margin-left:auto}
+.player-money{font-family:'Teko',sans-serif;font-size:20px;color:var(--green)}
+.player-stats{display:grid;grid-template-columns:1fr 1fr;font-size:10px;color:#5A3A10;gap:2px;margin-top:2px}
+.stat-val{font-weight:700;text-align:right}
+.bracket-bar{height:6px;background:rgba(0,0,0,.1);border-radius:3px;margin-top:4px;overflow:hidden}
+.bracket-fill{height:100%;background:linear-gradient(90deg,#4CAF50,#FF9800,#E53935);
+  border-radius:3px;transition:width .5s ease}
+
+/* board */
+.board{background:var(--paper);border:3px solid var(--gold);border-radius:12px;
+  padding:10px;aspect-ratio:1;position:relative;overflow:hidden;
+  box-shadow:6px 6px 0 rgba(0,0,0,.6),0 0 30px rgba(212,160,23,.12);
+  max-width:660px;margin:0 auto;width:100%}
+.board::before{content:'';position:absolute;inset:10px;
+  border:1px dashed rgba(212,160,23,.25);border-radius:5px;pointer-events:none}
+.board-grid{display:grid;grid-template-columns:repeat(9,1fr);
+  grid-template-rows:repeat(9,1fr);width:100%;height:100%;gap:1px;position:absolute;inset:6px}
+.cell{border-radius:4px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;font-size:clamp(7px,1vw,10px);font-weight:600;
+  text-align:center;padding:2px;border:1px solid transparent;
+  position:relative;line-height:1.2;transition:transform .15s;cursor:default}
+.cell-num{position:absolute;top:1px;left:2px;font-size:7px;opacity:.45;font-family:'Teko',sans-serif}
+.cell-icon{font-size:clamp(10px,1.5vw,16px);margin-bottom:1px}
+.cell-text{font-size:clamp(5px,.65vw,7.5px);color:var(--ink);opacity:.8;line-height:1.1}
+.cell-start  {background:linear-gradient(135deg,#FFD700,#FFA500);border-color:#B8860B}
+.cell-income {background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border-color:#4CAF50}
+.cell-expense{background:linear-gradient(135deg,#FFEBEE,#FFCDD2);border-color:#EF9A9A}
+.cell-tax    {background:linear-gradient(135deg,#E3F2FD,#BBDEFB);border-color:#64B5F6}
+.cell-penalty{background:linear-gradient(135deg,#FCE4EC,#F8BBD0);border-color:#F48FB1}
+.cell-deduct {background:linear-gradient(135deg,#F3E5F5,#E1BEE7);border-color:#CE93D8}
+.cell-event  {background:linear-gradient(135deg,#FFF8E1,#FFECB3);border-color:#FFD54F}
+.cell-career {background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border-color:#FF9800}
+.cell-bonus  {background:linear-gradient(135deg,#E0F7FA,#B2EBF2);border-color:#4DD0E1}
+.cell-audit  {background:linear-gradient(135deg,#FBE9E7,#FFCCBC);border-color:#FF8A65}
+.cell-center {background:transparent;border:none}
+.cell-current{box-shadow:0 0 0 3px var(--gold),0 0 10px rgba(212,160,23,.6)!important;
+  transform:scale(1.08)!important;z-index:20}
+
+/* center logo */
+.center-logo{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:4px}
+.center-logo .big-icon{font-size:clamp(20px,3vw,36px)}
+.center-logo .center-title{font-family:'Teko',sans-serif;font-size:clamp(11px,1.8vw,22px);
+  font-weight:700;color:var(--gold);letter-spacing:2px}
+.center-logo .center-sub{font-size:clamp(7px,.9vw,10px);color:#5A3A10;font-weight:600;text-align:center;opacity:.8}
+.tax-rates{background:rgba(212,160,23,.12);border:1px solid rgba(212,160,23,.35);
+  border-radius:5px;padding:3px 5px;font-size:clamp(5px,.65vw,8px);color:var(--ink);
+  line-height:1.6;text-align:left;width:92%}
+.rate-row{display:flex;justify-content:space-between;gap:6px}
+.rate-pct{font-weight:700;color:var(--blue)}
+
+/* token */
+.token{position:absolute;width:16px;height:16px;border-radius:50%;border:2px solid white;
+  display:flex;align-items:center;justify-content:center;font-size:9px;
+  transform:translate(-50%,-50%);box-shadow:0 2px 5px rgba(0,0,0,.4);
+  z-index:30;pointer-events:none;animation:tf 2s ease-in-out infinite}
+@keyframes tf{0%,100%{transform:translate(-50%,-50%) translateY(0)}
+  50%{transform:translate(-50%,-50%) translateY(-3px)}}
+
+/* dice */
+.dice-section{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:10px}
+.dice-display{display:flex;gap:8px}
+.die{width:42px;height:42px;background:white;border:2px solid var(--ink);border-radius:7px;
+  display:flex;align-items:center;justify-content:center;font-size:26px;
+  box-shadow:2px 2px 0 rgba(0,0,0,.25)}
+.die.rolling{animation:dr .45s ease-out}
+@keyframes dr{0%{transform:rotate(0) scale(1.2)}50%{transform:rotate(180deg) scale(.9)}100%{transform:rotate(360deg) scale(1)}}
+.dice-btn{background:linear-gradient(135deg,var(--gold),#A87800);color:var(--dark);border:none;
+  border-radius:8px;padding:9px 22px;font-family:'Teko',sans-serif;font-size:20px;
+  font-weight:600;letter-spacing:2px;cursor:pointer;box-shadow:0 3px 0 #6B4A00;
+  transition:transform .1s,box-shadow .1s}
+.dice-btn:hover{transform:translateY(-2px);box-shadow:0 5px 0 #6B4A00}
+.dice-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #6B4A00}
+
+/* turn banner */
+.turn-banner{background:linear-gradient(135deg,var(--gold),#A87800);color:var(--dark);
+  text-align:center;padding:7px;border-radius:6px;margin-bottom:8px;
+  font-family:'Teko',sans-serif;font-size:16px;font-weight:600;letter-spacing:1px;
+  box-shadow:2px 2px 0 rgba(0,0,0,.25)}
+
+/* log */
+.log-entry{background:var(--paper-d);border-left:3px solid var(--gold);
+  border-radius:0 4px 4px 0;padding:6px 9px;margin-bottom:5px;
+  font-size:11px;color:var(--ink);line-height:1.4;animation:si .3s ease-out}
+@keyframes si{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.log-entry.income{border-color:#4CAF50}.log-entry.expense{border-color:#E53935}
+.log-entry.tax{border-color:#1976D2}.log-entry.event{border-color:#FF8F00}
+.log-entry.penalty{border-color:#E64A19}.log-entry.career{border-color:#FF9800}
+.log-round{font-family:'Teko',sans-serif;font-size:10px;letter-spacing:1px;
+  text-transform:uppercase;opacity:.55;margin-bottom:1px}
+
+/* legend */
+.legend-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--ink)}
+.legend-dot{width:13px;height:13px;border-radius:3px;flex-shrink:0}
+.rules-box{background:rgba(212,160,23,.08);border:1px solid rgba(212,160,23,.25);
+  border-radius:5px;padding:7px;margin-bottom:6px}
+.rules-box h4{font-family:'Teko',sans-serif;font-size:13px;letter-spacing:1px;
+  color:var(--gold);margin-bottom:3px;text-transform:uppercase}
+.rules-box p{font-size:11px;color:var(--ink);line-height:1.5;opacity:.85}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;
+  align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px)}
+.modal{background:var(--paper);border:3px solid var(--gold);border-radius:12px;
+  padding:24px;max-width:400px;width:90%;box-shadow:8px 8px 0 rgba(0,0,0,.5);
+  text-align:center;animation:mp .25s cubic-bezier(.34,1.56,.64,1)}
+@keyframes mp{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-icon{font-size:52px;display:block;margin-bottom:8px}
+.modal-title{font-family:'Teko',sans-serif;font-size:26px;font-weight:700;
+  color:var(--ink);letter-spacing:1px;margin-bottom:6px}
+.modal-desc{font-size:13px;color:#4A3010;line-height:1.6;margin-bottom:10px}
+.modal-amount{font-family:'Teko',sans-serif;font-size:34px;font-weight:700;margin-bottom:10px}
+.modal-amount.positive{color:var(--green)}.modal-amount.negative{color:var(--red)}
+
+/* learning tip box */
+.learning-tip{background:linear-gradient(135deg,#EEF4FB,#E3EDFA);
+  border:1px solid #90CAF9;border-radius:8px;padding:10px 12px;
+  margin-bottom:14px;text-align:left}
+.tip-label{font-size:10px;font-weight:700;color:var(--blue);letter-spacing:1px;
+  text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:4px}
+.tip-text{font-size:12px;color:#1A237E;line-height:1.6}
+
+.modal-btn{background:linear-gradient(135deg,var(--gold),#A87800);color:var(--dark);
+  border:none;border-radius:8px;padding:9px 28px;font-family:'Teko',sans-serif;
+  font-size:18px;font-weight:600;letter-spacing:2px;cursor:pointer;
+  box-shadow:0 3px 0 #6B4A00;transition:transform .1s;text-transform:uppercase}
+.modal-btn:hover{transform:translateY(-1px)}
+
+/* career modal */
+.career-modal-card{border-radius:10px;padding:14px;margin-bottom:12px;text-align:left;color:white}
+.career-perk{font-size:12px;opacity:.9;margin-top:6px;line-height:1.6}
+.career-perk span{display:block;padding-left:12px;position:relative}
+.career-perk span::before{content:'✓';position:absolute;left:0;color:#A5D6A7}
+
+/* ── END SCREEN ── */
+.endscreen-overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);display:flex;
+  align-items:flex-start;justify-content:center;z-index:200;
+  backdrop-filter:blur(8px);overflow-y:auto;padding:20px}
+.endscreen{background:var(--paper);border:4px solid var(--gold);border-radius:16px;
+  padding:28px;max-width:700px;width:100%;
+  box-shadow:0 0 80px rgba(212,160,23,.25),10px 10px 0 rgba(0,0,0,.5);
+  text-align:center;animation:mp .4s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden}
+.confetti-bar{position:absolute;top:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg,#E53935,#FF9800,#FFD700,#4CAF50,#2196F3,#9C27B0,#E53935);
+  background-size:200% 100%;animation:cs 2s linear infinite}
+@keyframes cs{0%{background-position:0%}100%{background-position:200%}}
+.end-trophy{font-size:64px;display:block;margin-bottom:6px;
+  animation:tb 1s ease-out .3s both}
+@keyframes tb{0%{transform:scale(0) rotate(-20deg);opacity:0}
+  70%{transform:scale(1.2) rotate(5deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+.end-title{font-family:'Teko',sans-serif;font-size:40px;font-weight:700;
+  color:var(--gold);letter-spacing:3px;margin-bottom:2px}
+.end-subtitle{font-size:12px;color:#5A3A10;opacity:.7;margin-bottom:16px;letter-spacing:2px}
+
+/* podium */
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:6px;
+  margin-bottom:16px;height:140px}
+.pd-slot{display:flex;flex-direction:column;align-items:center;flex:1;max-width:130px}
+.pd-av{font-size:24px;margin-bottom:2px}
+.pd-nm{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:2px}
+.pd-mo{font-family:'Teko',sans-serif;font-size:14px;color:var(--green);margin-bottom:2px}
+.pd-career{font-size:9px;color:#5A3A10;opacity:.7;margin-bottom:3px}
+.pd-block{width:100%;border-radius:5px 5px 0 0;display:flex;align-items:center;
+  justify-content:center;font-family:'Teko',sans-serif;font-size:28px;font-weight:700;
+  color:white;text-shadow:1px 1px 3px rgba(0,0,0,.3)}
+.rank-1 .pd-block{height:96px;background:linear-gradient(135deg,#FFD700,#B8860B)}
+.rank-2 .pd-block{height:70px;background:linear-gradient(135deg,#C0C0C0,#808080)}
+.rank-3 .pd-block{height:50px;background:linear-gradient(135deg,#CD7F32,#8B4513)}
+.rank-4 .pd-block{height:34px;background:linear-gradient(135deg,#78909C,#455A64);font-size:20px}
+
+/* score table */
+.scoreboard{background:var(--paper-d);border:1px solid rgba(212,160,23,.4);
+  border-radius:8px;overflow:hidden;margin-bottom:14px}
+.sc-hd{background:linear-gradient(135deg,#8B6000,#5A3A00);color:var(--gold-l);
+  font-family:'Teko',sans-serif;font-size:14px;letter-spacing:2px;padding:7px 12px;text-align:left}
+.sc-cols{display:grid;grid-template-columns:28px 1fr 90px 90px 80px 78px 70px;
+  padding:5px 12px;border-bottom:1px solid rgba(212,160,23,.25);gap:3px}
+.sc-ch{font-size:9px;color:#5A3A10;opacity:.65;text-align:right;font-weight:700}
+.sc-row{display:grid;grid-template-columns:28px 1fr 90px 90px 80px 78px 70px;
+  align-items:center;padding:7px 12px;border-bottom:1px solid rgba(212,160,23,.1);
+  font-size:11px;gap:3px}
+.sc-row:last-child{border-bottom:none}
+.sc-row.winner{background:rgba(255,215,0,.1)}
+.sc-rank{font-family:'Teko',sans-serif;font-size:18px;font-weight:700;text-align:center}
+.sc-nm{font-weight:700;color:var(--ink);display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.sc-n{font-family:'Teko',sans-serif;font-size:13px;text-align:right}
+
+/* awards */
+.awards{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
+.award-card{background:var(--paper-d);border:1px solid rgba(212,160,23,.25);
+  border-radius:7px;padding:8px 10px;text-align:left}
+.award-icon{font-size:18px}.award-label{font-size:9px;color:#5A3A10;opacity:.65;
+  text-transform:uppercase;letter-spacing:1px;margin:2px 0}
+.award-winner{font-weight:700;font-size:12px;color:var(--ink)}
+.award-detail{font-size:10px;color:#7A5A20}
+
+/* learning summary */
+.learning-summary{background:linear-gradient(135deg,#F1F8E9,#E8F5E9);
+  border:1px solid #A5D6A7;border-radius:8px;padding:14px;margin-bottom:14px;text-align:left}
+.learning-summary h4{font-family:'Teko',sans-serif;font-size:17px;color:var(--green);
+  letter-spacing:1px;margin-bottom:8px}
+.ls-item{display:flex;align-items:flex-start;gap:6px;font-size:11px;
+  color:var(--ink);margin-bottom:4px;line-height:1.5}
+.ls-item span:first-child{font-size:14px;flex-shrink:0}
+
+.end-btn{background:linear-gradient(135deg,var(--gold),#A87800);color:var(--dark);
+  border:none;border-radius:10px;padding:12px 40px;font-family:'Teko',sans-serif;
+  font-size:22px;font-weight:600;letter-spacing:3px;cursor:pointer;
+  box-shadow:0 4px 0 #6B4A00;transition:transform .1s;text-transform:uppercase;margin-right:8px}
+.end-btn:hover{transform:translateY(-2px)}
+.end-btn-sec{background:linear-gradient(135deg,#5A3A00,#3A2000);color:var(--paper);
+  border:none;border-radius:10px;padding:12px 28px;font-family:'Teko',sans-serif;
+  font-size:18px;font-weight:600;letter-spacing:2px;cursor:pointer;
+  box-shadow:0 4px 0 #1A0A00;transition:transform .1s;text-transform:uppercase}
+.end-btn-sec:hover{transform:translateY(-2px)}
+
+
+/* ── KNOWLEDGE GUIDE (คู่มือความรู้ภาษี) ── */
+.guide-btn{background:linear-gradient(135deg,#1B4F8A,#0D2A4A);color:white;border:none;
+  border-radius:8px;padding:10px 20px;font-family:'Teko',sans-serif;font-size:18px;
+  letter-spacing:2px;cursor:pointer;box-shadow:0 3px 0 #0A1A2E;
+  transition:transform .1s;margin-bottom:12px;width:100%}
+.guide-btn:hover{transform:translateY(-2px)}
+.guide-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;
+  align-items:center;justify-content:center;z-index:300;backdrop-filter:blur(4px)}
+.guide-box{background:var(--paper);border:3px solid var(--gold);border-radius:14px;
+  padding:28px;max-width:600px;width:94%;max-height:88vh;overflow-y:auto;
+  box-shadow:8px 8px 0 rgba(0,0,0,.5)}
+.guide-box h2{font-family:'Teko',sans-serif;font-size:28px;color:var(--gold);
+  letter-spacing:2px;margin-bottom:16px;text-align:center}
+.guide-section{background:var(--paper-d);border-left:4px solid var(--gold);
+  border-radius:0 8px 8px 0;padding:12px 14px;margin-bottom:10px}
+.guide-section h4{font-family:'Teko',sans-serif;font-size:17px;color:var(--blue);
+  letter-spacing:1px;margin-bottom:6px}
+.guide-section p{font-size:13px;color:var(--ink);line-height:1.7}
+.guide-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+.guide-table th{background:rgba(212,160,23,.2);padding:5px 8px;text-align:left;
+  font-weight:700;color:var(--ink);border:1px solid rgba(212,160,23,.3)}
+.guide-table td{padding:5px 8px;border:1px solid rgba(212,160,23,.2);color:var(--ink)}
+.guide-table tr:nth-child(even) td{background:rgba(212,160,23,.05)}
+.guide-close{width:100%;margin-top:16px;padding:10px;border-radius:8px;border:none;
+  background:linear-gradient(135deg,var(--gold),#A87800);font-family:'Teko',sans-serif;
+  font-size:20px;font-weight:600;letter-spacing:2px;color:var(--dark);cursor:pointer;
+  box-shadow:0 3px 0 #6B4A00}
+
+/* ── SOUND TOGGLE ── */
+.sound-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px}
+.sound-toggle{background:var(--paper-d);border:2px solid rgba(212,160,23,.4);
+  border-radius:20px;padding:5px 14px;font-size:13px;font-weight:700;color:var(--ink);
+  cursor:pointer;transition:all .2s}
+.sound-toggle.on{background:var(--gold);border-color:var(--gold);color:var(--dark)}
+
+/* ── HINT BOX ── */
+.hint-box{background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border:2px solid #FF9800;
+  border-radius:8px;padding:11px 13px;margin-bottom:12px;text-align:left;display:none}
+.hint-box .hint-label{font-size:11px;font-weight:700;color:#E65100;letter-spacing:1px;
+  text-transform:uppercase;margin-bottom:4px}
+.hint-box .hint-text{font-size:13px;color:#4E2600;line-height:1.6}
+.hint-btn{background:linear-gradient(135deg,#FF9800,#E65100);color:white;border:none;
+  border-radius:6px;padding:6px 16px;font-family:'Teko',sans-serif;font-size:15px;
+  letter-spacing:1px;cursor:pointer;box-shadow:0 2px 0 #8B3500;margin-top:8px}
+
+/* ── TAX CALC MODAL (Multiple Choice) ── */
+.tax-choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.tax-choice{background:var(--paper-d);border:2px solid rgba(212,160,23,.3);
+  border-radius:8px;padding:10px;cursor:pointer;font-family:'Teko',sans-serif;
+  font-size:20px;font-weight:600;color:var(--ink);text-align:center;transition:all .15s}
+.tax-choice:hover{background:#FFF8E7;border-color:var(--gold)}
+.tax-choice.correct-ans{background:#E8F5E9;border-color:#4CAF50;color:var(--green)}
+.tax-choice.wrong-ans{background:#FFEBEE;border-color:#E53935;color:var(--red)}
+.tax-choice.reveal-ans{background:#E8F5E9;border-color:#4CAF50;color:var(--green)}
+.choice-feedback{background:rgba(212,160,23,.1);border-left:4px solid var(--gold);
+  border-radius:0 6px 6px 0;padding:10px 12px;margin-bottom:12px;
+  font-size:12px;color:var(--ink);line-height:1.6;display:none}
+.choice-feedback.show{display:block}
+
+/* ── CELEBRATION ── */
+@keyframes popIn{0%{transform:scale(0) rotate(-15deg);opacity:0}
+  70%{transform:scale(1.2) rotate(3deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+.celebration-icon{animation:popIn .5s cubic-bezier(.34,1.56,.64,1) both}
+
+/* particle */
+.particle{position:absolute;border-radius:2px;animation:pf linear infinite;pointer-events:none}
+@keyframes pf{0%{transform:translateY(-20px) rotate(0);opacity:1}100%{transform:translateY(700px) rotate(720deg);opacity:0}}
+
+@media(max-width:1000px){
+  .game-layout{grid-template-columns:180px 1fr 180px;gap:8px}
+  .panel-body{max-height:220px}
+}
+@media(max-width:860px){
+  .game-layout{grid-template-columns:1fr}
+  .board{width:min(100%, calc(100vh - 220px)) !important}
+  .player-row{grid-template-columns:1fr 1fr}
+  #gameScreen{padding:6px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ SETUP SCREEN ══════════════════════════════════════════ -->
+<div class="screen active" id="setupScreen">
+  <div style="text-align:center;margin-bottom:20px;padding-top:10px">
+    <div class="setup-title">TAX WAR</div>
+    <div class="setup-sub">TAX WAR · สงครามภาษี(เงินได้)บุคคลธรรมดา</div>
+  </div>
+
+  <div class="setup-card">
+    <h3>👥 ตั้งค่าผู้เล่น (2–4 คน)</h3>
+    <div class="player-row" id="playerSetupRow"></div>
+  </div>
+
+  <div class="setup-card">
+    <h3>📋 กติกาสำคัญ</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+      <div class="rules-box"><h4>🎯 เป้าหมาย</h4><p>มีเงินคงเหลือมากที่สุดหลัง 5 รอบ (1 ปีภาษี)</p></div>
+      <div class="rules-box"><h4>🃏 อาชีพ</h4><p>แต่ละอาชีพมีรายได้และเหตุการณ์พิเศษต่างกัน ส่งผลต่อภาษีที่จ่าย</p></div>
+      <div class="rules-box"><h4>🏛️ ยื่นภาษี</h4><p>เมื่อผ่านช่องเริ่ม = ยื่นภาษีประจำปี คำนวณตามรายได้จริงในเกม</p></div>
+    </div>
+  </div>
+
+  <div class="sound-row">
+    <span style="color:var(--paper);font-size:13px;opacity:.8">🔊 เสียงประกอบ</span>
+    <button class="sound-toggle on" id="soundToggle" onclick="toggleSound()">เปิด</button>
+  </div>
+  <button class="guide-btn" onclick="showGuide()">📖 คู่มือความรู้ภาษีก่อนเล่น</button>
+  <button class="start-btn" onclick="initGame()">⚔️ เริ่มสงครามภาษี</button>
+</div>
+
+<!-- ══ KNOWLEDGE GUIDE OVERLAY ══════════════════════════════ -->
+<div id="guideOverlay" style="display:none" class="guide-overlay" onclick="if(event.target===this)hideGuide()">
+  <div class="guide-box">
+    <h2>📖 คู่มือความรู้ภาษี</h2>
+    <p style="font-size:12px;color:#5A3A10;text-align:center;margin-bottom:14px;opacity:.8">
+      เกมนี้จำลอง 1 ปีภาษี (5 รอบ) เหตุการณ์ที่เกิดขึ้นแต่ละรอบ = เหตุการณ์ในรอบปีภาษีนั้น
+    </p>
+
+    <div class="guide-section">
+      <h4>🧮 สูตรคำนวณภาษี</h4>
+      <p><b>รายได้รวม</b> − <b>ค่าใช้จ่าย</b> − <b>ค่าลดหย่อน</b> = <b>เงินได้สุทธิ</b><br>
+      แล้วนำเงินได้สุทธิไปคำนวณภาษีตามอัตราก้าวหน้า</p>
+    </div>
+
+    <div class="guide-section">
+      <h4>💰 ค่าลดหย่อนพื้นฐาน (ทุกคนได้รับ)</h4>
+      <table class="guide-table">
+        <tr><th>รายการ</th><th>จำนวน</th></tr>
+        <tr><td>ค่าลดหย่อนส่วนตัว</td><td>60,000 ฿</td></tr>
+        <tr><td>ประกันสังคม (ตามจริง)</td><td>ไม่เกิน 9,000 ฿</td></tr>
+        <tr><td>ประกันชีวิต (คุ้มครอง ≥ 10 ปี)</td><td>ไม่เกิน 100,000 ฿</td></tr>
+        <tr><td>ประกันสุขภาพ</td><td>ไม่เกิน 25,000 ฿</td></tr>
+        <tr><td>ดอกเบี้ยบ้าน</td><td>ไม่เกิน 100,000 ฿</td></tr>
+        <tr><td>ลดหย่อนบุตร (ต่อคน)</td><td>30,000 ฿</td></tr>
+        <tr><td>บริจาคการกุศล</td><td>2 เท่า ไม่เกิน 10% ของรายได้</td></tr>
+        <tr><td>RMF/SSF/กบข.</td><td>ตามเงื่อนไขแต่ละกองทุน</td></tr>
+      </table>
+    </div>
+
+    <div class="guide-section">
+      <h4>📊 อัตราภาษีก้าวหน้า ปี 2568</h4>
+      <table class="guide-table">
+        <tr><th>เงินได้สุทธิ</th><th>อัตราภาษี</th></tr>
+        <tr><td>0 – 150,000 ฿</td><td>ยกเว้น (0%)</td></tr>
+        <tr><td>150,001 – 300,000 ฿</td><td>5%</td></tr>
+        <tr><td>300,001 – 500,000 ฿</td><td>10%</td></tr>
+        <tr><td>500,001 – 750,000 ฿</td><td>15%</td></tr>
+        <tr><td>750,001 – 1,000,000 ฿</td><td>20%</td></tr>
+        <tr><td>1,000,001 – 2,000,000 ฿</td><td>25%</td></tr>
+        <tr><td>2,000,001 – 5,000,000 ฿</td><td>30%</td></tr>
+        <tr><td>5,000,001 ฿ ขึ้นไป</td><td>35%</td></tr>
+      </table>
+    </div>
+
+    <div class="guide-section">
+      <h4>🃏 ค่าใช้จ่ายตามอาชีพ (หักเหมา)</h4>
+      <table class="guide-table">
+        <tr><th>อาชีพ</th><th>มาตรา</th><th>หักได้</th></tr>
+        <tr><td>👔 พนักงาน / 🏛️ ข้าราชการ</td><td>40(1)</td><td>50% ไม่เกิน 100,000 ฿</td></tr>
+        <tr><td>💻 ฟรีแลนซ์</td><td>40(2)</td><td>50% ไม่เกิน 100,000 ฿</td></tr>
+        <tr><td>⚕️ แพทย์/ทนาย</td><td>40(6)</td><td>60% ไม่เกิน 600,000 ฿</td></tr>
+        <tr><td>🏪 ธุรกิจ / 🎬 ดารา / 🌾 เกษตรกร</td><td>40(8)</td><td>60% ไม่เกิน 600,000 ฿</td></tr>
+        <tr><td>📈 นักลงทุน (ค่าเช่า)</td><td>40(5)</td><td>30%</td></tr>
+      </table>
+    </div>
+
+    <div class="guide-section">
+      <h4>⚠️ โทษปรับ</h4>
+      <p>ยื่นแบบล่าช้า: ปรับ 100–2,000 ฿ + เงินเพิ่ม 1.5%/เดือน<br>
+      ตรวจพบรายได้ซ่อน: ภาษีย้อนหลัง + เบี้ยปรับ 1–2 เท่า</p>
+    </div>
+
+    <button class="guide-close" onclick="hideGuide()">✓ เข้าใจแล้ว เริ่มเล่น!</button>
+  </div>
+</div>
+
+<!-- ══ GAME SCREEN ══════════════════════════════════════════ -->
+<div class="screen" id="gameScreen">
+  <div class="game-header">
+    <div class="game-title">🏛️ TAX WAR</div>
+    <div class="game-subtitle">สงครามภาษี(เงินได้)บุคคลธรรมดา</div>
+  </div>
+  <div class="round-counter" id="roundCounter">รอบที่ 1 จาก 5 · ปีภาษี 2568</div>
+
+  <div class="game-layout">
+    <div>
+      <div class="turn-banner" id="turnBanner">🎲 ตาของ ผู้เล่น</div>
+      <div class="panel">
+        <div class="panel-header">👤 ผู้เล่น</div>
+        <div class="panel-body" id="playerList"></div>
+      </div>
+      <br>
+      <div class="panel">
+        <div class="panel-header">📜 กฎ</div>
+        <div class="panel-body">
+          <div class="rules-box"><h4>🎯 ชนะ</h4><p>เงินมากสุดหลัง 5 รอบ</p></div>
+          <div class="rules-box"><h4>🃏 อาชีพ</h4><p>หยุดช่อง 🟠 = เหตุการณ์เฉพาะอาชีพ</p></div>
+          <div class="rules-box"><h4>🏛️ ภาษี</h4><p>ผ่านช่องเริ่ม = ยื่นภาษีปีนั้น</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="board-wrapper">
+      <div class="board"><div class="board-grid" id="boardGrid"></div></div>
+      <div class="dice-section">
+        <div class="dice-display">
+          <div class="die" id="die1">⚀</div>
+          <div class="die" id="die2">⚁</div>
+        </div>
+        <button class="dice-btn" onclick="rollDice()">🎲 ทอยลูกเต๋า</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <div class="panel-header">📋 ตำนาน</div>
+        <div class="panel-body">
+          <div class="legend-grid">
+            <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(135deg,#FFD700,#FFA500)"></div>เริ่ม/ภาษี</div>
+            <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border:1px solid #4CAF50"></div>รายได้</div>
+            <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(135deg,#FFEBEE,#FFCDD2);border:1px solid #EF9A9A"></div>รายจ่าย</div>
+            <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(135deg,#E3F2FD,#BBDEFB);border:1px solid #64B5F6"></div>ภาษี</div>
+            <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(135deg,#F3E5F5,#E1BEE7);border:1px solid #CE93D8"></div>ลดหย่อน</div>
+            <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(135deg,#FFF8E1,#FFECB3);border:1px solid #FFD54F"></div>เหตุการณ์</div>
+            <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border:1px solid #FF9800"></div>อาชีพ</div>
+            <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(135deg,#E0F7FA,#B2EBF2);border:1px solid #4DD0E1"></div>โบนัส</div>
+          </div>
+        </div>
+      </div>
+      <br>
+      <div class="panel">
+        <div class="panel-header">📝 บันทึก</div>
+        <div class="panel-body" id="eventLog">
+          <div class="log-entry event"><div class="log-round">เริ่มเกม</div>ยินดีต้อนรับสู่ TAX WAR!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TAX CALC MODAL ════════════════════════════════════ -->
+<div class="modal-overlay" id="taxModal" style="display:none">
+  <div class="modal">
+    <span class="modal-icon">🏛️</span>
+    <div class="modal-title">คำนวณภาษีประจำปี</div>
+    <div class="modal-desc" id="taxCalcDesc"></div>
+    <div class="tax-choices" id="taxChoices"></div>
+    <div class="choice-feedback" id="choiceFeedback"></div>
+    <button class="modal-btn" id="taxModalBtn" style="display:none" onclick="closeTaxModal()">รับทราบ</button>
+  </div>
+</div>
+
+<!-- ══ MODAL ══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal" style="display:none">
+  <div class="modal">
+    <span class="modal-icon" id="modalIcon">💰</span>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-desc" id="modalDesc"></div>
+    <div class="modal-amount" id="modalAmount"></div>
+    <div class="learning-tip" id="learningTip" style="display:none">
+      <div class="tip-label">📚 ความรู้ภาษี</div>
+      <div class="tip-text" id="learningTipText"></div>
+    </div>
+    <div class="hint-box" id="hintBox">
+      <div class="hint-label">💡 คำใบ้</div>
+      <div class="hint-text" id="hintText"></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="hint-btn" id="hintBtn" onclick="showHint()" style="display:none">💡 ขอคำใบ้</button>
+      <button class="modal-btn" onclick="closeModal()">รับทราบ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  DATA
+// ══════════════════════════════════════════════════════════
+const DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+
+// ── CAREERS ───────────────────────────────────────────────
+const CAREERS = {
+  employee:   { name:'พนักงานบริษัท', icon:'👔', color:'#1976D2', baseIncome:45000,
+    deductRate:.5, deductMax:100000, tag:'ม.40(1)',
+    perks:['ลดหย่อนค่าใช้จ่าย 50% สูงสุด 100,000 ฿','ถูกหักภาษี ณ ที่จ่ายอัตโนมัติ'],
+    events:[
+      {icon:'🏆',title:'เลื่อนตำแหน่ง!',desc:'ได้รับเงินเดือนเพิ่ม 20%',amount:54000,isIncome:true,
+       tip:'รายได้จากเงินเดือนจัดเป็น ม.40(1) สะสมรายปีแล้วค่อยคำนวณภาษี'},
+      {icon:'💼',title:'โบนัส 3 เดือน',desc:'บริษัทประกาศโบนัสประจำปี',amount:135000,isIncome:true,
+       tip:'โบนัสรวมกับเงินเดือนเป็นรายได้เดียวกัน ยิ่งสูงยิ่งขึ้น Bracket ภาษี'},
+      {icon:'🤝',title:'ถูกเลิกจ้าง',desc:'ได้รับเงินชดเชยตามกฎหมาย แต่ต้องเสียภาษีส่วนเกิน',amount:-20000,
+       tip:'เงินชดเชยบางส่วนยกเว้นภาษีได้ตาม ม.42(17) แต่ส่วนเกินต้องเสียภาษีปกติ'},
+      {icon:'📊',title:'ได้รับ Stock Option',desc:'หุ้นพนักงานราคาพุ่ง!',amount:80000,isIncome:true,
+       tip:'กำไรจาก Stock Option ถือเป็นรายได้จากการทำงาน ต้องนำรวมเป็น ม.40(1)'},
+    ]},
+  freelance:  { name:'ฟรีแลนซ์', icon:'💻', color:'#7B1FA2', baseIncome:40000,
+    deductRate:.6, deductMax:600000, tag:'ม.40(2)',
+    perks:['ลดหย่อนค่าใช้จ่ายได้ 60% สูงสุด 600,000 ฿','วางแผนรายได้ได้เองมากกว่า'],
+    events:[
+      {icon:'🎯',title:'ได้งานต่างประเทศ',desc:'ลูกค้าต่างชาติว่าจ้างโปรเจกต์ใหญ่',amount:180000,isIncome:true,
+       tip:'รายได้จากต่างประเทศต้องนำมารวมคำนวณภาษีในไทย หากนำเงินเข้าในปีเดียวกัน'},
+      {icon:'😰',title:'ลูกค้าไม่จ่าย',desc:'งาน 3 เดือน ลูกค้าเบี้ยวหนี้',amount:-120000,
+       tip:'ฟรีแลนซ์ไม่มีประกันสังคมคุ้มครอง ควรทำสัญญาจ้างงานเพื่อป้องกันความเสี่ยง'},
+      {icon:'🌟',title:'ไวรัลโซเชียล',desc:'ผลงานดัง Sponsor แห่มา',amount:200000,isIncome:true,
+       tip:'รายได้จาก Sponsor และโฆษณาออนไลน์เป็น ม.40(8) หักค่าใช้จ่ายจริงได้'},
+      {icon:'📱',title:'แอปติด Top Chart',desc:'ได้รับค่า Royalty ต่อเนื่อง',amount:150000,isIncome:true,
+       tip:'ค่า Royalty จากทรัพย์สินทางปัญญา จัดเป็น ม.40(3) ลดหย่อนได้ 50% สูงสุด 100,000 ฿'},
+    ]},
+  business:   { name:'เจ้าของธุรกิจ', icon:'🏪', color:'#E65100', baseIncome:80000,
+    deductRate:.6, deductMax:600000, tag:'ม.40(8)',
+    perks:['รายได้สูงสุด หักค่าใช้จ่ายได้จริง','สามารถวางแผนภาษีได้หลายรูปแบบ'],
+    events:[
+      {icon:'🚀',title:'เปิดสาขาใหม่',desc:'รายได้เพิ่มขึ้น 3 เท่า',amount:240000,isIncome:true,
+       tip:'รายได้จากธุรกิจ ม.40(8) หักค่าใช้จ่ายได้ตามจริงหรือแบบเหมา 60%'},
+      {icon:'🔥',title:'ไฟไหม้คลังสินค้า',desc:'สินค้าเสียหาย เบี้ยประกันชดใช้บางส่วน',amount:-150000,
+       tip:'ค่าเสียหายจากเหตุสุดวิสัยบางกรณีนำมาหักค่าใช้จ่ายได้ ต้องมีเอกสารประกอบ'},
+      {icon:'🤝',title:'M&A ดีล',desc:'บริษัทใหญ่เสนอซื้อกิจการ',amount:500000,isIncome:true,
+       tip:'กำไรจากการขายกิจการถือเป็นรายได้ อาจเสียภาษีในอัตราก้าวหน้าสูงมาก'},
+      {icon:'⚖️',title:'ถูกฟ้องร้อง',desc:'จ่ายค่าเสียหายตามคำพิพากษา',amount:-200000,
+       tip:'ค่าปรับและค่าเสียหายจากคดีความ โดยทั่วไปไม่สามารถนำมาหักค่าใช้จ่ายได้'},
+    ]},
+  investor:   { name:'นักลงทุน', icon:'📈', color:'#388E3C', baseIncome:30000,
+    deductRate:.5, deductMax:100000, tag:'ม.40(4)',
+    perks:['ภาษีกำไรหุ้น 15% แบบสุดท้าย (ไม่รวมรายได้อื่น)','เงินปันผลเครดิตภาษีได้'],
+    events:[
+      {icon:'📊',title:'หุ้น Growth พุ่ง 200%',desc:'พอร์ตใหญ่โตกว่าเดิมมาก',amount:600000,isIncome:true,
+       tip:'กำไรจากหุ้นในตลาดหลักทรัพย์ เสียภาษี 15% แบบสุดท้าย ณ วันที่ขาย'},
+      {icon:'💥',title:'ตลาดหมีมา',desc:'หุ้นร่วง 50% ขาดทุนหนัก',amount:-300000,
+       tip:'ขาดทุนจากหุ้นไม่สามารถนำมาหักรายได้อื่นได้ในการคำนวณภาษีบุคคลธรรมดา'},
+      {icon:'💎',title:'เงินปันผลพิเศษ',desc:'บริษัทประกาศปันผลพิเศษ',amount:180000,isIncome:true,
+       tip:'เงินปันผล ม.40(4)(ข) เลือกเสีย 10% ณ ที่จ่าย หรือนำรวมคำนวณปลายปีได้'},
+      {icon:'🏠',title:'Passive Income',desc:'ค่าเช่าคอนโดรายเดือน',amount:120000,isIncome:true,
+       tip:'รายได้ค่าเช่า ม.40(5) หักค่าใช้จ่ายได้ 30% หรือตามจริง ต้องยื่นภาษีทุกปี'},
+    ]},
+  government: { name:'ข้าราชการ', icon:'🏛️', color:'#5D4037', baseIncome:35000,
+    deductRate:.5, deductMax:100000, tag:'ม.40(1)',
+    perks:['ลดหย่อน กบข. สูงสุด 500,000 ฿','สวัสดิการรักษาพยาบาลราชการ'],
+    events:[
+      {icon:'🎖️',title:'ได้เครื่องราชฯ',desc:'รับบำเหน็จพิเศษพร้อมเครื่องราชฯ',amount:50000,isIncome:true,
+       tip:'เงินบำเหน็จดำรงชีพและบำนาญต้องนำมาคำนวณภาษีเงินได้บุคคลธรรมดาตามปกติ'},
+      {icon:'📋',title:'โยกย้ายตำแหน่ง',desc:'ได้รับเงินค่าตอบแทนพิเศษ',amount:30000,isIncome:true,
+       tip:'เงินเพิ่มพิเศษและค่าตอบแทนพิเศษของราชการ ถือเป็นรายได้ ม.40(1)'},
+      {icon:'🏥',title:'ใช้สิทธิ์เบิกค่ารักษา',desc:'รักษาพยาบาลฟรี ประหยัดเงิน',amount:40000,isIncome:true,
+       tip:'สวัสดิการรักษาพยาบาลข้าราชการไม่ถือเป็นรายได้ จึงไม่ต้องเสียภาษี'},
+      {icon:'⚠️',title:'ถูกสอบสวนวินัย',desc:'ถูกตัดเงินเดือนชั่วคราว',amount:-35000,
+       tip:'การถูกลงโทษทางวินัยและตัดเงินเดือน ไม่มีผลต่อการคำนวณภาษีของเดือนที่ผ่านมา'},
+    ]},
+  celebrity:  { name:'ดารา/ยูทูบเบอร์', icon:'🎬', color:'#C62828', baseIncome:60000,
+    deductRate:.6, deductMax:600000, tag:'ม.40(8)',
+    perks:['รายได้สูงมาก หักค่าเครื่องแต่งกาย/อุปกรณ์ได้','ภาษีก้าวหน้าสูงสุด 35%'],
+    events:[
+      {icon:'⭐',title:'คลิปไวรัลข้ามคืน',desc:'Sponsor แห่มาจ้างจำนวนมาก',amount:800000,isIncome:true,
+       tip:'รายได้จาก Content Creator และ Sponsor เป็น ม.40(8) เสียภาษีก้าวหน้า หักค่าใช้จ่าย 60%'},
+      {icon:'📸',title:'ถูกแฉ!',desc:'ข่าวฉาว Sponsor ถอนตัว',amount:-400000,
+       tip:'รายได้ที่หายไปไม่ถือเป็น "รายจ่าย" ทางภาษี จะลดภาระภาษีในปีนั้นโดยตรง'},
+      {icon:'🎵',title:'เพลงติดชาร์ต',desc:'Streaming Royalty สม่ำเสมอ',amount:350000,isIncome:true,
+       tip:'ค่า Royalty จากเพลงเป็น ม.40(3) ลดหย่อนได้ 50% ต่างจากรายได้จากการแสดง ม.40(8)'},
+      {icon:'🎤',title:'Concert Tour 10 จังหวัด',desc:'รายได้ก้อนใหญ่ในปีเดียว',amount:600000,isIncome:true,
+       tip:'รายได้ก้อนใหญ่ในปีเดียวทำให้ขึ้น Bracket สูง อาจวางแผนกระจายรายได้ข้ามปีได้'},
+    ]},
+  doctor:     { name:'แพทย์/ทนายความ', icon:'⚕️', color:'#00695C', baseIncome:70000,
+    deductRate:.6, deductMax:600000, tag:'ม.40(6)',
+    perks:['ลดหย่อนค่าใช้จ่ายวิชาชีพ 60%','ค่าวิชาชีพสูง แต่ต้องจ่ายภาษีก้าวหน้า'],
+    events:[
+      {icon:'🏥',title:'ชนะคดีสำคัญ',desc:'ค่าทนาย/ค่าตรวจพิเศษสูง',amount:500000,isIncome:true,
+       tip:'รายได้วิชาชีพอิสระ ม.40(6) หักค่าใช้จ่ายได้ 60% เป็นหนึ่งในอัตราหักสูงสุด'},
+      {icon:'⚖️',title:'ถูกฟ้องละเมิดวิชาชีพ',desc:'จ่ายค่าประกันวิชาชีพ',amount:-200000,
+       tip:'เบี้ยประกันวิชาชีพบางส่วนนำมาหักเป็นค่าใช้จ่ายในการคำนวณภาษีได้'},
+      {icon:'🌏',title:'วิทยากรนานาชาติ',desc:'เบี้ยประชุมต่างประเทศ',amount:150000,isIncome:true,
+       tip:'รายได้จากการเป็นวิทยากรในต่างประเทศ ต้องนำกลับมารวมคำนวณภาษีในไทย'},
+      {icon:'📚',title:'เขียนตำราวิชาการ',desc:'ได้รับค่า Royalty จากสำนักพิมพ์',amount:100000,isIncome:true,
+       tip:'ค่า Royalty จากตำรา ม.40(3) หักค่าใช้จ่ายได้ 50% แตกต่างจากรายได้วิชาชีพ ม.40(6)'},
+    ]},
+  farmer:     { name:'เกษตรกร', icon:'🌾', color:'#827717', baseIncome:25000,
+    deductRate:.6, deductMax:600000, tag:'ม.40(8)',
+    perks:['ยกเว้นภาษีรายได้เกษตรบางส่วน','ต้นทุนการผลิตหักได้จริง'],
+    events:[
+      {icon:'🌧️',title:'ฝนแล้ง!',desc:'ผลผลิตเสียหายหนัก',amount:-80000,
+       tip:'เกษตรกรที่ได้รับความเสียหายจากภัยธรรมชาติ อาจขอยกเว้นหรือลดหย่อนภาษีได้ตามหลักเกณฑ์'},
+      {icon:'💰',title:'ราคาสินค้าเกษตรพุ่ง',desc:'ขายผลผลิตได้ราคาดีมาก',amount:120000,isIncome:true,
+       tip:'รายได้จากการขายผลิตผลทางเกษตร เป็น ม.40(8) หักค่าใช้จ่ายได้ 60% หรือตามจริง'},
+      {icon:'🚜',title:'โครงการรัฐบาลช่วย',desc:'ได้รับเงินอุดหนุนจากรัฐ',amount:60000,isIncome:true,
+       tip:'เงินอุดหนุนจากรัฐบาลบางประเภทอาจได้รับการยกเว้นภาษี ขึ้นอยู่กับประเภทโครงการ'},
+      {icon:'🏆',title:'เกษตรกรดีเด่น',desc:'รับรางวัลระดับชาติ',amount:50000,isIncome:true,
+       tip:'เงินรางวัลจากหน่วยงานของรัฐบางประเภทอาจได้รับการยกเว้นภาษีตาม ม.42'},
+    ]},
+};
+
+// ── BOARD CELLS ────────────────────────────────────────────
+const CELLS = [
+  {type:'start',  icon:'🏛️',text:'ยื่นภาษี\nเริ่ม'},
+  {type:'income', icon:'💼',text:'เงินเดือน'},
+  {type:'deduct', icon:'🏠',text:'ลดหย่อน\nบ้าน'},
+  {type:'expense',icon:'🏥',text:'ค่าแพทย์'},
+  {type:'career', icon:'🌟',text:'เหตุการณ์\nอาชีพ'},
+  {type:'income', icon:'💰',text:'โบนัส'},
+  {type:'deduct', icon:'📚',text:'ลดหย่อน\nการศึกษา'},
+  {type:'tax',    icon:'📋',text:'ภาษี\nหัก ณ ที่จ่าย'},
+  {type:'income', icon:'🏢',text:'ค่าเช่า'},
+  {type:'audit',  icon:'🔍',text:'ตรวจสอบ\nภาษี'},
+  {type:'deduct', icon:'❤️',text:'ลดหย่อน\nประกันชีวิต'},
+  {type:'expense',icon:'🚗',text:'ค่าซ่อมรถ'},
+  {type:'career', icon:'🌟',text:'เหตุการณ์\nอาชีพ'},
+  {type:'income', icon:'💸',text:'Freelance'},
+  {type:'penalty',icon:'⚠️',text:'ค่าปรับ'},
+  {type:'deduct', icon:'👶',text:'ลดหย่อน\nบุตร'},
+  {type:'bonus',  icon:'🎁',text:'คืนภาษี!'},
+  {type:'income', icon:'📈',text:'กำไรหุ้น'},
+  {type:'tax',    icon:'🏦',text:'ภาษีหุ้น'},
+  {type:'career', icon:'🌟',text:'เหตุการณ์\nอาชีพ'},
+  {type:'expense',icon:'🍔',text:'ค่าอาหาร'},
+  {type:'income', icon:'💻',text:'รายได้\nออนไลน์'},
+  {type:'deduct', icon:'🤲',text:'บริจาค'},
+  {type:'audit',  icon:'🕵️',text:'สรรพากร\nมาเยือน'},
+  {type:'income', icon:'🏭',text:'รายได้\nธุรกิจ'},
+  {type:'penalty',icon:'❌',text:'เสียสิทธิ์'},
+  {type:'bonus',  icon:'✨',text:'เงินคืน\nภาษี'},
+  {type:'career', icon:'🌟',text:'เหตุการณ์\nอาชีพ'},
+  {type:'deduct', icon:'💊',text:'ลดหย่อน\nประกันสุขภาพ'},
+  {type:'tax',    icon:'📑',text:'ยื่นแบบ\nครึ่งปี'},
+  {type:'income', icon:'🤝',text:'ขายทรัพย์สิน'},
+  {type:'expense',icon:'💳',text:'ดอกเบี้ย\nบัตรเครดิต'},
+];
+
+// ── CELL EVENTS ────────────────────────────────────────────
+const CELL_EVENTS = {
+  income:[
+    {icon:'💼',title:'เงินเดือนประจำ',desc:'ได้รับเงินเดือนเดือนนี้',amount:45000,
+     tip:'รายได้จากเงินเดือนสะสมตลอดปี เมื่อยื่นภาษีจะคำนวณจากรายได้รวมทั้งปีหักค่าใช้จ่าย 50%'},
+    {icon:'💰',title:'โบนัสพิเศษ',desc:'นายจ้างให้โบนัสพิเศษ',amount:80000,
+     tip:'โบนัสรวมกับเงินเดือนในปีเดียวกัน ทำให้รายได้รวมสูงขึ้น อาจขึ้น Bracket ภาษีได้'},
+    {icon:'🏢',title:'ค่าเช่าอสังหาฯ',desc:'รายได้จากค่าเช่า',amount:30000,
+     tip:'รายได้จากการให้เช่า ม.40(5) หักค่าใช้จ่ายได้ 30% ต้องยื่นภาษีทุกปี ไม่ว่าจะมีรายได้อื่นหรือไม่'},
+    {icon:'💻',title:'งาน Freelance',desc:'รับงานออกแบบเว็บ',amount:55000,
+     tip:'รายได้นอกเวลางานที่รับเองเป็น ม.40(2) ต้องนำไปรวมคำนวณภาษีปลายปี'},
+    {icon:'📈',title:'กำไรจากหุ้น',desc:'ขายหุ้นได้กำไร',amount:40000,
+     tip:'กำไรจากหุ้นในตลาดหลักทรัพย์ไทย ได้รับการยกเว้นภาษี แต่เงินปันผลต้องเสีย 10%'},
+  ],
+  expense:[
+    {icon:'🏥',title:'ค่ารักษาพยาบาล',desc:'ค่าผ่าตัดโรงพยาบาล',amount:-35000,
+     tip:'ค่ารักษาพยาบาลที่จ่ายเองไม่ใช่รายจ่ายทางภาษี แต่เบี้ยประกันสุขภาพลดหย่อนได้ถึง 25,000 ฿'},
+    {icon:'🚗',title:'ค่าซ่อมรถ',desc:'อุบัติเหตุต้องซ่อมรถ',amount:-18000,
+     tip:'ค่าซ่อมรถส่วนตัวไม่สามารถนำมาหักเป็นค่าใช้จ่ายทางภาษีได้ ยกเว้นใช้ในธุรกิจ'},
+    {icon:'🍔',title:'ค่าเลี้ยงลูกค้า',desc:'จัดเลี้ยงลูกค้าสำคัญ',amount:-12000,
+     tip:'ค่าใช้จ่ายเลี้ยงรับรองที่มีใบเสร็จ นำมาหักเป็นค่าใช้จ่ายธุรกิจได้ตามหลักเกณฑ์'},
+    {icon:'💳',title:'ดอกเบี้ยบัตรเครดิต',desc:'ลืมจ่ายบัตรเครดิต',amount:-8000,
+     tip:'ดอกเบี้ยเงินกู้ส่วนตัวไม่สามารถหักเป็นค่าใช้จ่ายภาษีได้ แต่ดอกเบี้ยบ้านลดหย่อนได้ถึง 100,000 ฿'},
+  ],
+  deduct:[
+    {icon:'🏠',title:'ลดหย่อนดอกเบี้ยบ้าน',desc:'สิทธิ์ลดหย่อนดอกเบี้ยบ้าน',amount:-15000,isDeduct:true,
+     tip:'ดอกเบี้ยเงินกู้ซื้อที่อยู่อาศัย ลดหย่อนได้สูงสุด 100,000 ฿/ปี ต้องมีใบรับรองจากธนาคาร'},
+    {icon:'❤️',title:'ลดหย่อนประกันชีวิต',desc:'เบี้ยประกันชีวิต',amount:-25000,isDeduct:true,
+     tip:'เบี้ยประกันชีวิตที่มีความคุ้มครอง 10 ปีขึ้นไป ลดหย่อนได้สูงสุด 100,000 ฿/ปี'},
+    {icon:'👶',title:'ลดหย่อนบุตร',desc:'ลดหย่อนบุตร 1 คน',amount:-30000,isDeduct:true,
+     tip:'ลดหย่อนบุตรได้ 30,000 ฿/คน สำหรับบุตรที่ชอบด้วยกฎหมายและบุตรบุญธรรม ไม่จำกัดจำนวน'},
+    {icon:'💊',title:'ลดหย่อนประกันสุขภาพ',desc:'เบี้ยประกันสุขภาพ',amount:-25000,isDeduct:true,
+     tip:'ประกันสุขภาพลดหย่อนได้สูงสุด 25,000 ฿ และรวมกับประกันชีวิตต้องไม่เกิน 100,000 ฿'},
+    {icon:'🤲',title:'บริจาคการกุศล',desc:'บริจาคให้มูลนิธิ',amount:-20000,isDeduct:true,
+     tip:'บริจาคให้มูลนิธิและสถาบันที่กรมสรรพากรรับรอง ลดหย่อนได้ 2 เท่า สูงสุด 10% ของรายได้หลังหักค่าใช้จ่าย'},
+  ],
+  tax:[
+    {icon:'📋',title:'ภาษีหัก ณ ที่จ่าย',desc:'นายจ้างหักภาษีอัตรา 5%',amount:-9000,
+     tip:'ภาษีหัก ณ ที่จ่าย ม.50(1) นายจ้างหักทุกเดือน เมื่อสิ้นปีนำมาหักออกจากภาษีที่ต้องจ่าย'},
+    {icon:'📑',title:'ยื่นแบบภาษีครึ่งปี',desc:'ยื่น ภ.ง.ด.94 ครึ่งปี',amount:-20000,
+     tip:'ผู้มีรายได้ ม.40(5)-(8) ต้องยื่น ภ.ง.ด.94 ภายในกันยายนของทุกปี เพื่อประมาณการภาษีครึ่งปี'},
+    {icon:'🏦',title:'ภาษีกำไรขายหุ้น',desc:'กำไรจากตลาดหลักทรัพย์',amount:-12000,
+     tip:'กำไรจากการขายหุ้นในตลาดหลักทรัพย์ได้รับการยกเว้นภาษี แต่หุ้นนอกตลาดต้องเสีย 15%'},
+  ],
+  penalty:[
+    {icon:'⚠️',title:'ค่าปรับยื่นภาษีช้า',desc:'ยื่นล่าช้า ปรับ 2,000 บาท + 1.5%/เดือน',amount:-15000,
+     tip:'การยื่นแบบล่าช้า โทษปรับ 100–2,000 บาท + เงินเพิ่ม 1.5%/เดือนของภาษีที่ค้างชำระ'},
+    {icon:'❌',title:'เสียสิทธิ์ลดหย่อน',desc:'ลืมยื่นเอกสาร',amount:-20000,
+     tip:'สิทธิ์ลดหย่อนบางรายการต้องยื่นเอกสารภายในกำหนด หากพลาดอาจสูญเสียสิทธิ์นั้นในปีนั้น'},
+  ],
+  event:[
+    {icon:'🎲',title:'ลอตเตอรี่ถูก!',desc:'ถูกลอตเตอรี่ แต่ต้องเสียภาษี 0.5%',amount:49000,
+     tip:'รางวัลสลากกินแบ่งรัฐบาลเสียภาษี ณ ที่จ่าย 0.5% ของมูลค่ารางวัล และไม่ต้องนำมารวมคำนวณปลายปี'},
+    {icon:'📊',title:'หุ้นปั่นขึ้น',desc:'หุ้นราคาพุ่ง 30%',amount:60000,
+     tip:'กำไรจากหุ้นที่ยังไม่ขายยังไม่ถือเป็นรายได้ทางภาษี จะเป็นรายได้ก็ต่อเมื่อขายออกแล้ว'},
+    {icon:'🌐',title:'รายได้ต่างประเทศ',desc:'งานจากบริษัทต่างชาติ',amount:75000,
+     tip:'รายได้จากต่างประเทศ หากนำเงินเข้าไทยในปีภาษีเดียวกัน ต้องนำมารวมคำนวณภาษีในไทย'},
+    {icon:'📰',title:'โปรแกรมคืนภาษี',desc:'สรรพากรออกโปรแกรมพิเศษ',amount:10000,
+     tip:'การยื่นภาษีออนไลน์ผ่าน e-Filing สะดวกกว่า และได้รับเงินคืนเร็วกว่าการยื่นกระดาษ'},
+  ],
+  bonus:[
+    {icon:'🎁',title:'คืนภาษี!',desc:'จ่ายเกิน ได้รับเงินคืน',amount:35000,
+     tip:'เงินภาษีคืนเกิดขึ้นเมื่อภาษีหัก ณ ที่จ่ายมากกว่าภาษีจริง ยื่นแบบ ภ.ง.ด.90/91 ภายในมีนาคม'},
+    {icon:'✨',title:'รับเงินคืนภาษี',desc:'ยื่นแบบถูกต้อง ได้คืน',amount:28000,
+     tip:'การวางแผนภาษีดี เช่น ซื้อกองทุน RMF/SSF จะช่วยลดภาษีและเพิ่มโอกาสได้รับเงินคืน'},
+  ],
+  audit:[
+    {icon:'🔍',title:'ตรวจสอบภาษี',desc:'สรรพากรขอดูเอกสาร',amount:-5000,
+     tip:'กรมสรรพากรมีสิทธิ์ตรวจสอบย้อนหลัง 5 ปี ควรเก็บเอกสารประกอบการลดหย่อนทุกรายการ'},
+    {icon:'🕵️',title:'สรรพากรมาเยือน',desc:'ตรวจสอบบัญชีอย่างละเอียด',amount:-30000,
+     tip:'หากตรวจพบรายได้ที่ไม่ได้แจ้ง นอกจากต้องจ่ายภาษีย้อนหลัง ยังมีเบี้ยปรับเพิ่มอีก 1–2 เท่า'},
+  ],
+};
+
+// ── PLAYER STATE ───────────────────────────────────────────
+let players = [];
+let currentPlayer = 0;
+let round = 1;
+let isRolling = false;
+const MAX_ROUNDS = 5;
+let lifeStats = [];
+let learningLog = []; // {round, player, concept}
+let careerEventCount = {}; // track career events per player
+
+// ══════════════════════════════════════════════════════════
+//  SETUP SCREEN
+// ══════════════════════════════════════════════════════════
+function initSetup() {
+  const row = document.getElementById('playerSetupRow');
+  const AVATARS = ['👨‍💼','👩‍💼','👨‍🔧','👩‍🎓','👨‍🏫','👩‍🍳','🧑‍💻','👩‍⚕️'];
+  const DEFAULT_NAMES = ['มนัส','วิไล','สมชาย','แนน'];
+  const COLORS = ['#E53935','#1976D2','#388E3C','#7B1FA2'];
+  const careerIds = Object.keys(CAREERS);
+
+  row.innerHTML = [0,1,2,3].map(i => {
+    const careerOpts = careerIds.map(id =>
+      `<option value="${id}" ${i===0&&id==='employee'||i===1&&id==='freelance'||i===2&&id==='business'||i===3&&id==='investor'?'selected':''}>${CAREERS[id].icon} ${CAREERS[id].name}</option>`
+    ).join('');
+    return `
+    <div class="player-slot ${i<2?'active':''}" id="slot${i}" onclick="toggleSlot(${i})">
+      <div class="slot-av">${AVATARS[i]}</div>
+      <div style="font-size:11px;color:#888;margin-bottom:4px">${i<2?'✅ เล่น':'➕ คลิกเพิ่ม'}</div>
+      <div class="slot-name">ผู้เล่น ${i+1}</div>
+      <input class="slot-input" id="pname${i}" value="${DEFAULT_NAMES[i]}" placeholder="ชื่อ" onclick="event.stopPropagation()">
+      <select class="career-sel" id="pcareer${i}" onclick="event.stopPropagation()" onchange="updateCareerBadge(${i})">${careerOpts}</select>
+      <div class="career-badge" id="cbadge${i}" style="background:${COLORS[i]}">
+        ${CAREERS[careerIds[i===0?0:i===1?1:i===2?2:3]].tag}
+      </div>
+    </div>`;
+  }).join('');
+
+  [0,1,2,3].forEach(i => updateCareerBadge(i));
+}
+
+function updateCareerBadge(i) {
+  const sel = document.getElementById(`pcareer${i}`);
+  const badge = document.getElementById(`cbadge${i}`);
+  if (!sel || !badge) return;
+  const c = CAREERS[sel.value];
+  badge.textContent = `${c.tag} · ลดหย่อน ${Math.round(c.deductRate*100)}%`;
+  badge.style.background = c.color;
+}
+
+function toggleSlot(i) {
+  if (i < 2) return; // first 2 always active
+  const slot = document.getElementById(`slot${i}`);
+  const active = slot.classList.toggle('active');
+  slot.children[1].textContent = active ? '✅ เล่น' : '➕ คลิกเพิ่ม';
+}
+
+// ══════════════════════════════════════════════════════════
+//  GAME INIT
+// ══════════════════════════════════════════════════════════
+function initGame() {
+  const COLORS = ['#E53935','#1976D2','#388E3C','#7B1FA2'];
+  const AVATARS = ['👨‍💼','👩‍💼','👨‍🔧','👩‍🎓','👨‍🏫','👩‍🍳','🧑‍💻','👩‍⚕️'];
+  players = [];
+  [0,1,2,3].forEach(i => {
+    const slot = document.getElementById(`slot${i}`);
+    if (!slot.classList.contains('active')) return;
+    const name = document.getElementById(`pname${i}`).value.trim() || `ผู้เล่น${i+1}`;
+    const careerId = document.getElementById(`pcareer${i}`).value;
+    players.push({
+      id: players.length, name, careerId,
+      avatar: AVATARS[i], color: COLORS[i],
+      pos:0, money:500000, income:0, deduct:0, taxPaid:0
+    });
+  });
+  lifeStats = players.map(() => ({totalIncome:0,totalTax:0,totalDeduct:0,totalPenalty:0,careerEvents:0}));
+  careerEventCount = {};
+  learningLog = [];
+  currentPlayer = 0; round = 1; isRolling = false;
+
+  showScreen('gameScreen');
+  buildBoard();
+  renderPlayers();
+
+  // show career intro modal for first player
+  showCareerIntro(players[0]);
+}
+
+function showCareerIntro(p) {
+  const c = CAREERS[p.careerId];
+  document.getElementById('modalIcon').textContent = c.icon;
+  document.getElementById('modalTitle').textContent = `${p.name} · ${c.name}`;
+  document.getElementById('modalDesc').innerHTML =
+    `<div class="career-modal-card" style="background:${c.color}">
+      <div style="font-size:13px;font-weight:700;letter-spacing:1px">${c.tag}</div>
+      <div style="font-size:12px;margin-top:4px;opacity:.9">${c.perks.join(' · ')}</div>
+     </div>
+     <div style="font-size:12px;color:#5A3A10;margin-top:6px">
+       รายได้พื้นฐาน: <b>${c.baseIncome.toLocaleString()} ฿/รอบ</b> · ลดหย่อนค่าใช้จ่าย: <b>${Math.round(c.deductRate*100)}%</b>
+     </div>`;
+  document.getElementById('modalAmount').textContent = '';
+  document.getElementById('learningTip').style.display = 'none';
+  document.getElementById('modal').style.display = 'flex';
+  // Override close to advance
+  document.querySelector('#modal .modal-btn').onclick = () => {
+    document.getElementById('modal').style.display = 'none';
+    document.querySelector('#modal .modal-btn').onclick = closeModal;
+  };
+}
+
+// ══════════════════════════════════════════════════════════
+//  BOARD
+// ══════════════════════════════════════════════════════════
+function buildBoard() {
+  const grid = document.getElementById('boardGrid');
+  grid.innerHTML = '';
+
+  // ── แมปตำแหน่ง 32 ช่องบนกระดาน 9×9 ──
+  // เดินตามเข็มนาฬิกาจากช่อง 0 (มุมซ้ายบน)
+  const cm = new Array(81).fill(null);
+  for(let i=0;i<9;i++)       cm[i]=i;            // แถวบน: ช่อง 0-8 (col 0→8, row 0)
+  for(let r=1;r<=8;r++)      cm[r*9+8]=8+r;      // ขอบขวา: ช่อง 9-16 (col 8, row 1→8)
+  for(let c=7;c>=0;c--)      cm[8*9+c]=17+(7-c); // แถวล่าง: ช่อง 17-24 (col 7→0, row 8)
+  for(let r=7;r>=1;r--)      cm[r*9]=25+(7-r);   // ขอบซ้าย: ช่อง 25-31 (col 0, row 7→1)
+
+  // ── สร้าง div ทุกช่อง ──
+  for(let idx=0;idx<81;idx++){
+    const row=Math.floor(idx/9), col=idx%9;
+    const cid=cm[idx];
+
+    if(cid===null){
+      // ช่อง interior (ไม่ใช่ขอบ)
+      if(row===1 && col===1){
+        // วาง center logo เพียงครั้งเดียว ครอบ rows 2-9, cols 2-9
+        const div=document.createElement('div');
+        div.className='cell cell-center';
+        div.style.gridColumn='2/10';
+        div.style.gridRow='2/10';
+        div.style.zIndex='5';
+        div.innerHTML=`<div class="center-logo">
+          <span class="big-icon">⚔️</span>
+          <div class="center-title">TAX WAR</div>
+          <div class="center-sub">⚔️ สงครามภาษี 2568 ⚔️</div>
+          <div class="tax-rates">
+            <div class="rate-row"><span>0–150,000 ฿</span><span class="rate-pct">ยกเว้น</span></div>
+            <div class="rate-row"><span>150,001–300,000 ฿</span><span class="rate-pct">5%</span></div>
+            <div class="rate-row"><span>300,001–500,000 ฿</span><span class="rate-pct">10%</span></div>
+            <div class="rate-row"><span>500,001–750,000 ฿</span><span class="rate-pct">15%</span></div>
+            <div class="rate-row"><span>750,001–1,000,000 ฿</span><span class="rate-pct">20%</span></div>
+            <div class="rate-row"><span>1,000,001–2,000,000 ฿</span><span class="rate-pct">25%</span></div>
+            <div class="rate-row"><span>2,000,001–5,000,000 ฿</span><span class="rate-pct">30%</span></div>
+            <div class="rate-row"><span>5,000,001+ ฿</span><span class="rate-pct">35%</span></div>
+          </div>
+        </div>`;
+        grid.appendChild(div);
+      }
+      // ช่อง interior อื่นๆ: ไม่ append (span ครอบแล้ว)
+      continue;
+    }
+
+    // ── ช่องขอบ (perimeter) ──
+    const div=document.createElement('div');
+    div.dataset.gi=idx;
+    const cell=CELL_DEFS[cid];
+    div.className=`cell cell-${cell.type}`;
+    div.dataset.cid=String(cid);
+    div.innerHTML=`<span class="cell-num">${cid}</span>
+      <span class="cell-icon">${cell.icon}</span>
+      <span class="cell-text">${cell.text.replace(/\n/g,'<br>')}</span>`;
+    grid.appendChild(div);
+  }
+  renderTokens();
+}
+
+
+function getGridPos(cid) {
+  if (cid<=8) return {r:0,c:cid};
+  if (cid<=16) return {r:cid-8,c:8};
+  if (cid<=24) return {r:8,c:8-(cid-16)};
+  return {r:8-(cid-24),c:0};
+}
+
+function renderTokens() {
+  document.querySelectorAll('.token').forEach(t=>t.remove());
+  document.querySelectorAll('.cell-current').forEach(c=>c.classList.remove('cell-current'));
+  players.forEach((p,i)=>{
+    const pos=getGridPos(p.pos);
+    const gi=pos.r*9+pos.c;
+    const ce=document.querySelector(`[data-gi="${gi}"]`);
+    if(ce) ce.classList.add('cell-current');
+    const tok=document.createElement('div');
+    tok.className='token'; tok.style.background=p.color;
+    tok.style.left=`calc(${(100/9)*pos.c+100/18}%)`;
+    tok.style.top=`calc(${(100/9)*pos.r+100/18}%)`;
+    tok.style.animationDelay=`${i*.3}s`;
+    tok.textContent=p.avatar; tok.style.fontSize='10px';
+    document.querySelector('.board').appendChild(tok);
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+//  PLAYERS UI
+// ══════════════════════════════════════════════════════════
+function renderPlayers() {
+  const list = document.getElementById('playerList');
+  list.innerHTML = players.map((p,i) => {
+    const c = CAREERS[p.careerId];
+    const pct = Math.min(100,(p.income/1000000)*100);
+    return `<div class="player-card ${i===currentPlayer?'active':''}">
+      <div class="player-name">
+        <span class="player-av" style="background:${p.color}20;border:2px solid ${p.color}">${p.avatar}</span>
+        ${p.name}
+        <span class="player-career-tag" style="background:${c.color}">${c.icon}</span>
+      </div>
+      <div class="player-money">${p.money.toLocaleString('th-TH')} ฿</div>
+      <div class="player-stats">
+        <span>รายได้</span><span class="stat-val">${p.income.toLocaleString()} ฿</span>
+        <span>ลดหย่อน</span><span class="stat-val">${p.deduct.toLocaleString()} ฿</span>
+        <span>ภาษีจ่าย</span><span class="stat-val">${p.taxPaid.toLocaleString()} ฿</span>
+      </div>
+      <div class="bracket-bar"><div class="bracket-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+  document.getElementById('turnBanner').textContent = `🎲 ตาของ ${players[currentPlayer].name} ${CAREERS[players[currentPlayer].careerId].icon}`;
+  document.getElementById('roundCounter').textContent = `รอบที่ ${Math.min(round,MAX_ROUNDS)} จาก 5 · ปีภาษี 2568`;
+}
+
+// ══════════════════════════════════════════════════════════
+//  DICE & MOVEMENT
+// ══════════════════════════════════════════════════════════
+function rollDice() {
+  if (isRolling) return;
+  isRolling = true;
+  sfxDice();
+  const d1=document.getElementById('die1'), d2=document.getElementById('die2');
+  d1.classList.add('rolling'); d2.classList.add('rolling');
+  let ticks=0;
+  const iv=setInterval(()=>{
+    d1.textContent=DICE_FACES[Math.floor(Math.random()*6)];
+    d2.textContent=DICE_FACES[Math.floor(Math.random()*6)];
+    if(++ticks>8){
+      clearInterval(iv);
+      d1.classList.remove('rolling'); d2.classList.remove('rolling');
+      const v1=Math.floor(Math.random()*6)+1, v2=Math.floor(Math.random()*6)+1;
+      d1.textContent=DICE_FACES[v1-1]; d2.textContent=DICE_FACES[v2-1];
+      movePlayer(v1+v2);
+    }
+  },75);
+}
+
+function movePlayer(steps) {
+  const p=players[currentPlayer];
+  const prev=p.pos;
+  p.pos=(p.pos+steps)%32;
+  if(p.pos<prev||p.pos===0){
+    round++;
+    addLog(`🏛️ ${p.name} ผ่านช่องยื่นภาษี — คำนวณภาษีประจำปี`,'tax');
+    renderTokens(); renderPlayers();
+    calcTax(p, ()=>{
+      if(round>MAX_ROUNDS){
+        setTimeout(()=>showEndScreen(),600);
+      } else {
+        setTimeout(()=>triggerCell(p),400);
+      }
+    });
+    return;
+  }
+  renderTokens(); renderPlayers();
+  setTimeout(()=>triggerCell(p),600);
+}
+
+// ══════════════════════════════════════════════════════════
+//  TAX CALCULATION
+// ══════════════════════════════════════════════════════════
+function calcTaxAmount(p) {
+  const c=CAREERS[p.careerId];
+  const deductable=Math.min(p.income*c.deductRate, c.deductMax);
+  const taxable=Math.max(0, p.income - deductable - p.deduct - 60000);
+  let tax=0;
+  const brackets=[[150000,.05],[200000,.10],[250000,.15],[250000,.20],[500000,.25],[3000000,.30],[Infinity,.35]];
+  let rem=taxable;
+  for(const[sz,rate]of brackets){if(rem<=0)break;tax+=Math.min(rem,sz)*rate;rem-=sz;}
+  return { tax:Math.round(tax), deductable, taxable };
+}
+
+function calcTax(p, onDone) {
+  const c=CAREERS[p.careerId];
+  const {tax, deductable} = calcTaxAmount(p);
+  const diff=tax-p.taxPaid;
+  const ls=lifeStats[p.id];
+  ls.totalIncome+=p.income; ls.totalDeduct+=p.deduct+deductable;
+
+  function applyTax() {
+    if(diff>0){p.money-=diff;p.taxPaid+=diff;ls.totalTax+=diff;
+      addLog(`📑 ${p.name} จ่ายภาษีเพิ่ม ${diff.toLocaleString()} ฿`,'tax');
+      sfxTax();
+    } else if(diff<0){p.money+=Math.abs(diff);
+      addLog(`💸 ${p.name} ได้คืนภาษี ${Math.abs(diff).toLocaleString()} ฿`,'income');
+      sfxBonus();
+    } else {ls.totalTax+=p.taxPaid;}
+    p.income=0;p.deduct=0;p.taxPaid=0;
+    renderPlayers();
+    if(onDone) onDone();
+  }
+
+  if(diff !== 0) {
+    // แสดง Multiple Choice ถามผู้เล่นก่อน
+    showTaxChoiceModal(p, diff, applyTax);
+  } else {
+    p.income=0;p.deduct=0;p.taxPaid=0;
+    if(onDone) onDone();
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  CELL TRIGGER
+// ══════════════════════════════════════════════════════════
+function triggerCell(p) {
+  const cell=CELLS[p.pos];
+  if(cell.type==='career'){
+    triggerCareerEvent(p); return;
+  }
+  const events=CELL_EVENTS[cell.type];
+  if(!events){nextTurn();return;}
+  const ev=events[Math.floor(Math.random()*events.length)];
+
+  if(ev.isDeduct){
+    p.deduct+=Math.abs(ev.amount);
+    lifeStats[p.id].totalDeduct+=Math.abs(ev.amount);
+    if(ev.tip) logLearning(p,ev.tip);
+    showModal(ev.icon,ev.title,ev.desc,`ลดหย่อน ${Math.abs(ev.amount).toLocaleString()} ฿`,'positive',ev.tip,'deduct');
+    addLog(`${ev.icon} ${p.name}: ${ev.title} (ลดหย่อน ${Math.abs(ev.amount).toLocaleString()} ฿)`,'tax');
+  } else {
+    p.money+=ev.amount;
+    if(ev.amount>0&&['income','event','bonus'].includes(cell.type)){
+      p.income+=ev.amount; lifeStats[p.id].totalIncome+=ev.amount;
+    }
+    if(cell.type==='tax'){p.taxPaid+=Math.abs(ev.amount);lifeStats[p.id].totalTax+=Math.abs(ev.amount);}
+    if(cell.type==='penalty') lifeStats[p.id].totalPenalty+=Math.abs(ev.amount);
+    if(ev.tip) logLearning(p,ev.tip);
+    const sign=ev.amount>=0?'+':'';
+    const cls=ev.amount>=0?'positive':'negative';
+    showModal(ev.icon,ev.title,ev.desc,`${sign}${ev.amount.toLocaleString()} ฿`,cls,ev.tip,cell.type);
+    addLog(`${ev.icon} ${p.name}: ${ev.title} (${sign}${ev.amount.toLocaleString()} ฿)`,cell.type);
+  }
+  renderPlayers();
+}
+
+function triggerCareerEvent(p) {
+  const c=CAREERS[p.careerId];
+  const ev=c.events[Math.floor(Math.random()*c.events.length)];
+  lifeStats[p.id].careerEvents=(lifeStats[p.id].careerEvents||0)+1;
+  if(ev.isIncome){p.money+=ev.amount;p.income+=ev.amount;lifeStats[p.id].totalIncome+=ev.amount;}
+  else {p.money+=ev.amount; if(ev.amount<0) lifeStats[p.id].totalPenalty+=Math.abs(ev.amount);}
+  if(ev.tip) logLearning(p,ev.tip);
+  const sign=ev.amount>=0?'+':'';
+  showModal(ev.icon,`[${c.name}] ${ev.title}`,ev.desc,`${sign}${ev.amount.toLocaleString()} ฿`,
+    ev.amount>=0?'positive':'negative',ev.tip,'career');
+  addLog(`${ev.icon} ${p.name} (${c.icon}${c.name}): ${ev.title} (${sign}${ev.amount.toLocaleString()} ฿)`,'career');
+  renderPlayers();
+}
+
+function logLearning(p, tip) {
+  learningLog.push({round, player:p.name, tip});
+}
+
+// ══════════════════════════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════════════════════════
+function showModal(icon,title,desc,amount,cls,tip,cellType) {
+  document.getElementById('modalIcon').textContent=icon;
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalDesc').textContent=desc;
+  const amtEl=document.getElementById('modalAmount');
+  amtEl.textContent=amount; amtEl.className=`modal-amount ${cls}`;
+  const tipBox=document.getElementById('learningTip');
+  const tipText=document.getElementById('learningTipText');
+  if(tip){tipText.textContent=tip;tipBox.style.display='block';}
+  else{tipBox.style.display='none';}
+  // Hint
+  currentHint = tip || '';
+  const hintBtn=document.getElementById('hintBtn');
+  const hintBox=document.getElementById('hintBox');
+  hintBox.style.display='none';
+  if(tip){ hintBtn.style.display='inline-block'; } else { hintBtn.style.display='none'; }
+  // Sound
+  if(cellType) playSfxForType(cellType);
+  document.getElementById('modal').style.display='flex';
+}
+
+function closeModal() {
+  document.getElementById('modal').style.display='none';
+  nextTurn();
+}
+
+function nextTurn() {
+  isRolling=false;
+  currentPlayer=(currentPlayer+1)%players.length;
+  renderPlayers();
+}
+
+function addLog(text,type='event') {
+  const log=document.getElementById('eventLog');
+  const e=document.createElement('div');
+  e.className=`log-entry ${type}`;
+  e.innerHTML=`<div class="log-round">รอบ ${round} · ${players[currentPlayer]?.name||''}</div>${text}`;
+  log.insertBefore(e,log.firstChild);
+  while(log.children.length>25) log.removeChild(log.lastChild);
+}
+
+// ══════════════════════════════════════════════════════════
+//  END SCREEN
+// ══════════════════════════════════════════════════════════
+function showEndScreen() {
+  sfxWin();
+  const sorted=[...players].sort((a,b)=>b.money-a.money);
+  const rankEmoji=['🥇','🥈','🥉','4️⃣'];
+  const pdOrder=[sorted[1],sorted[0],sorted[2],sorted[3]].filter(Boolean);
+  const pdCls=['rank-2','rank-1','rank-3','rank-4'],pdLbl=['🥈','🥇','🥉','4'];
+
+  const podHTML=pdOrder.map((p,i)=>{
+    const c=CAREERS[p.careerId];
+    return `<div class="pd-slot ${pdCls[i]}">
+      <div class="pd-av">${p.avatar}</div>
+      <div class="pd-nm">${p.name}</div>
+      <div class="pd-career">${c.icon} ${c.name}</div>
+      <div class="pd-mo">${p.money.toLocaleString()} ฿</div>
+      <div class="pd-block">${pdLbl[i]}</div>
+    </div>`;
+  }).join('');
+
+  const scHTML=sorted.map((p,i)=>{
+    const ls=lifeStats[p.id];
+    const eff=ls.totalIncome>0?((ls.totalTax/ls.totalIncome)*100).toFixed(1):'0.0';
+    const c=CAREERS[p.careerId];
+    return `<div class="sc-row ${i===0?'winner':''}">
+      <div class="sc-rank" style="color:${['#FFD700','#C0C0C0','#CD7F32','#78909C'][i]}">${rankEmoji[i]}</div>
+      <div class="sc-nm"><span>${p.avatar}</span>${p.name}<span style="font-size:9px;background:${c.color};color:white;padding:1px 5px;border-radius:6px">${c.icon}</span></div>
+      <div class="sc-n" style="color:${p.money>=500000?'#1A6B3A':'#C0392B'}">${p.money.toLocaleString()} ฿</div>
+      <div class="sc-n" style="color:#5A3A10">${ls.totalIncome.toLocaleString()} ฿</div>
+      <div class="sc-n" style="color:#1B4F8A">${ls.totalTax.toLocaleString()} ฿</div>
+      <div class="sc-n" style="color:#6B2D8A">${eff}%</div>
+      <div class="sc-n" style="color:#E65100">${ls.careerEvents||0} ครั้ง</div>
+    </div>`;
+  }).join('');
+
+  const maxBy=(arr,fn)=>arr.reduce((a,b)=>fn(a)>=fn(b)?a:b);
+  const minBy=(arr,fn)=>arr.reduce((a,b)=>fn(a)<=fn(b)?a:b);
+  const ls=i=>lifeStats[i];
+  const mI=maxBy(players,p=>ls(p.id).totalIncome);
+  const mT=maxBy(players,p=>ls(p.id).totalTax);
+  const mD=maxBy(players,p=>ls(p.id).totalDeduct);
+  const mP=minBy(players,p=>ls(p.id).totalPenalty);
+
+
+
+  // learning log summary
+  const uniqueTips=[...new Set(learningLog.slice(0,6).map(l=>l.tip))];
+  const learnHTML=uniqueTips.length>0?`<div class="learning-summary">
+    <h4>💡 ความรู้ที่ได้จากเกม</h4>
+    ${uniqueTips.map(t=>`<div class="ls-item"><span>📌</span><span>${t}</span></div>`).join('')}
+  </div>`:'';
+
+  const colors=['#FFD700','#E53935','#1976D2','#4CAF50','#9C27B0','#FF9800'];
+  const particles=Array.from({length:16},(_,i)=>{
+    const c=colors[i%6],l=Math.random()*100,d=Math.random()*3,du=2.5+Math.random()*2,s=6+Math.random()*8;
+    return `<div class="particle" style="left:${l}%;background:${c};width:${s}px;height:${s}px;animation-duration:${du}s;animation-delay:${d}s"></div>`;
+  }).join('');
+
+  document.body.insertAdjacentHTML('beforeend',`
+  <div class="endscreen-overlay" id="endScreen">
+    <div class="endscreen">
+      <div class="confetti-bar"></div>${particles}
+      <span class="end-trophy">🏆</span>
+      <div class="end-title">จบเกม!</div>
+      <div class="end-subtitle">⚔️ ครบ 5 ปีภาษี · จอมภาษีแห่งสงคราม ⚔️</div>
+      <div class="podium">${podHTML}</div>
+      <div class="scoreboard">
+        <div class="sc-hd">📊 ตารางสถิติ</div>
+        <div class="sc-cols">
+          <div></div><div></div>
+          <div class="sc-ch">เงินคงเหลือ</div>
+          <div class="sc-ch">รายได้รวม</div>
+          <div class="sc-ch">ภาษีรวม</div>
+          <div class="sc-ch">อัตราจริง</div>
+          <div class="sc-ch">เหตุการณ์อาชีพ</div>
+        </div>${scHTML}
+      </div>
+      <div class="awards">
+        <div class="award-card"><div class="award-icon">💸</div><div class="award-label">รายได้สูงสุด</div><div class="award-winner">${mI.avatar} ${mI.name}</div><div class="award-detail">${ls(mI.id).totalIncome.toLocaleString()} ฿</div></div>
+        <div class="award-card"><div class="award-icon">🏦</div><div class="award-label">จ่ายภาษีมากสุด</div><div class="award-winner">${mT.avatar} ${mT.name}</div><div class="award-detail">${ls(mT.id).totalTax.toLocaleString()} ฿</div></div>
+        <div class="award-card"><div class="award-icon">📋</div><div class="award-label">ลดหย่อนเก่งสุด</div><div class="award-winner">${mD.avatar} ${mD.name}</div><div class="award-detail">${ls(mD.id).totalDeduct.toLocaleString()} ฿</div></div>
+        <div class="award-card"><div class="award-icon">✅</div><div class="award-label">ปรับน้อยสุด</div><div class="award-winner">${mP.avatar} ${mP.name}</div><div class="award-detail">${ls(mP.id).totalPenalty.toLocaleString()} ฿</div></div>
+      </div>
+      ${learnHTML}
+      <div>
+        <button class="end-btn" onclick="restartFull()">🔄 เล่นใหม่</button>
+        <button class="end-btn-sec" onclick="printSummary()">🖨️ พิมพ์ผล</button>
+      </div>
+    </div>
+  </div>`);
+}
+
+function restartFull() {
+  document.getElementById('endScreen')?.remove();
+  learningLog=[];
+  showScreen('setupScreen');
+}
+
+function printSummary() { window.print(); }
+
+// ══════════════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+
+// ══════════════════════════════════════════════════════════
+//  SOUND SYSTEM
+// ══════════════════════════════════════════════════════════
+let soundOn = true;
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let actx = null;
+
+function getActx() {
+  if (!actx) actx = new AudioCtx();
+  return actx;
+}
+
+function playTone(freq, type, duration, vol=0.3) {
+  if (!soundOn) return;
+  try {
+    const ctx = getActx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = type; osc.frequency.value = freq;
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.start(); osc.stop(ctx.currentTime + duration);
+  } catch(e) {}
+}
+
+function sfxDice()   { playTone(300,'sawtooth',.08,.2); setTimeout(()=>playTone(400,'sawtooth',.08,.2),90); setTimeout(()=>playTone(500,'sawtooth',.1,.2),180); }
+function sfxIncome() { playTone(523,'sine',.12,.25); setTimeout(()=>playTone(659,'sine',.12,.25),130); setTimeout(()=>playTone(784,'sine',.2,.25),260); }
+function sfxExpense(){ playTone(300,'square',.08,.3); setTimeout(()=>playTone(220,'square',.15,.3),100); }
+function sfxTax()    { playTone(440,'triangle',.1,.2); setTimeout(()=>playTone(350,'triangle',.2,.2),120); }
+function sfxBonus()  { [523,659,784,1047].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',.15,.3),i*100)); }
+function sfxCareer() { playTone(660,'sine',.08,.3); setTimeout(()=>playTone(880,'sine',.15,.3),100); }
+function sfxPenalty(){ playTone(200,'sawtooth',.05,.4); setTimeout(()=>playTone(180,'sawtooth',.3,.4),60); }
+function sfxWin()    { [523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',.2,.35),i*120)); }
+
+function playSfxForType(type) {
+  const map = {income:sfxIncome,expense:sfxExpense,tax:sfxTax,bonus:sfxBonus,
+    career:sfxCareer,penalty:sfxPenalty,audit:sfxPenalty,deduct:sfxIncome,event:sfxCareer};
+  (map[type]||sfxDice)();
+}
+
+function toggleSound() {
+  soundOn = !soundOn;
+  const btn = document.getElementById('soundToggle');
+  if (btn) { btn.textContent = soundOn ? 'เปิด' : 'ปิด'; btn.classList.toggle('on', soundOn); }
+}
+
+// ══════════════════════════════════════════════════════════
+//  KNOWLEDGE GUIDE
+// ══════════════════════════════════════════════════════════
+function showGuide() { document.getElementById('guideOverlay').style.display = 'flex'; }
+function hideGuide() { document.getElementById('guideOverlay').style.display = 'none'; }
+
+// ══════════════════════════════════════════════════════════
+//  HINT SYSTEM
+// ══════════════════════════════════════════════════════════
+let currentHint = '';
+
+function showHint() {
+  const hintBox = document.getElementById('hintBox');
+  const hintText = document.getElementById('hintText');
+  const hintBtn = document.getElementById('hintBtn');
+  hintText.textContent = currentHint;
+  hintBox.style.display = 'block';
+  hintBtn.style.display = 'none';
+}
+
+// ══════════════════════════════════════════════════════════
+//  TAX CALCULATION MODAL (Multiple Choice)
+// ══════════════════════════════════════════════════════════
+let taxModalCallback = null;
+
+function showTaxChoiceModal(p, taxDiff, onClose) {
+  taxModalCallback = onClose;
+  const c = CAREERS[p.careerId];
+
+  // คำนวณค่าใช้จ่าย
+  const deductable = Math.min(p.income * c.deductRate, c.deductMax);
+  const taxable = Math.max(0, p.income - deductable - p.deduct - 60000);
+
+  document.getElementById('taxCalcDesc').innerHTML =
+    `<div style="background:rgba(212,160,23,.1);border-radius:6px;padding:10px;margin-bottom:10px;text-align:left;font-size:12px">
+      <b>${p.name}</b> · ${c.icon} ${c.name}<br>
+      รายได้รวม: <b>${p.income.toLocaleString()} ฿</b><br>
+      หักค่าใช้จ่าย ${Math.round(c.deductRate*100)}%: <b>${deductable.toLocaleString()} ฿</b><br>
+      หักลดหย่อนในเกม: <b>${p.deduct.toLocaleString()} ฿</b><br>
+      หักส่วนตัว 60,000 ฿<br>
+      <b style="color:#1B4F8A">เงินได้สุทธิ: ${taxable.toLocaleString()} ฿</b>
+    </div>
+    ภาษีที่ต้องจ่ายเพิ่ม/รับคืนคือเท่าไร?`;
+
+  // สร้าง 4 ตัวเลือก (1 ถูก 3 ผิด)
+  const correct = Math.abs(taxDiff);
+  const isRefund = taxDiff < 0;
+  const wrongs = [
+    Math.round(correct * 0.6 / 100) * 100,
+    Math.round(correct * 1.4 / 100) * 100,
+    Math.round((correct + 15000) / 100) * 100
+  ].filter(v => v !== correct && v >= 0);
+
+  const choices = [...new Set([correct, ...wrongs.slice(0,3)])].sort(() => Math.random() - 0.5);
+
+  const choicesEl = document.getElementById('taxChoices');
+  choicesEl.innerHTML = choices.map(v => {
+    const label = isRefund ? `คืน ${v.toLocaleString()} ฿` : `จ่าย ${v.toLocaleString()} ฿`;
+    return `<button class="tax-choice" onclick="answerTaxChoice(this, ${v}, ${correct}, ${isRefund?1:0})">${label}</button>`;
+  }).join('');
+
+  document.getElementById('choiceFeedback').classList.remove('show');
+  document.getElementById('choiceFeedback').innerHTML = '';
+  document.getElementById('taxModalBtn').style.display = 'none';
+  document.getElementById('taxModal').style.display = 'flex';
+}
+
+function answerTaxChoice(btn, chosen, correct, isRefund) {
+  document.querySelectorAll('.tax-choice').forEach(b => b.disabled = true);
+  const feedback = document.getElementById('choiceFeedback');
+  const c = CAREERS[players[currentPlayer]?.careerId] || {};
+
+  if (chosen === correct) {
+    btn.classList.add('correct-ans');
+    sfxBonus();
+    const msg = isRefund
+      ? `✅ ถูกต้อง! ได้รับเงินคืน ${correct.toLocaleString()} ฿ เพราะจ่ายภาษีหัก ณ ที่จ่ายไว้มากกว่าที่ต้องจ่ายจริง`
+      : `✅ ถูกต้อง! ต้องจ่ายภาษีเพิ่ม ${correct.toLocaleString()} ฿ คำนวณจากเงินได้สุทธิตามอัตราก้าวหน้า`;
+    feedback.innerHTML = msg;
+  } else {
+    btn.classList.add('wrong-ans');
+    document.querySelectorAll('.tax-choice').forEach(b => {
+      if (parseInt(b.textContent.replace(/[^0-9]/g,'')) === correct || b.textContent.includes(correct.toLocaleString())) b.classList.add('reveal-ans');
+    });
+    sfxPenalty();
+    const deductHint = `อาชีพ${c.name||''} หักค่าใช้จ่ายได้ ${Math.round((c.deductRate||.5)*100)}% สูงสุด ${(c.deductMax||100000).toLocaleString()} ฿ จากนั้นหักลดหย่อนและส่วนตัว 60,000 ฿ แล้วคำนวณภาษีตามอัตราก้าวหน้า`;
+    feedback.innerHTML = `❌ ยังไม่ถูก — ${isRefund?'เงินคืนที่ถูกต้องคือ':'ภาษีที่ถูกต้องคือ'} ${correct.toLocaleString()} ฿<br><br>💡 ${deductHint}`;
+  }
+
+  feedback.classList.add('show');
+  document.getElementById('taxModalBtn').style.display = 'block';
+}
+
+function closeTaxModal() {
+  document.getElementById('taxModal').style.display = 'none';
+  if (taxModalCallback) { taxModalCallback(); taxModalCallback = null; }
+}
+
+// ══ INIT ══
+initSetup();
+</script>
+</body>
+</html>
