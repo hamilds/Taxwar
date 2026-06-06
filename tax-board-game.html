@@ -97,8 +97,9 @@ hr.divider{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
   color:var(--gold);letter-spacing:4px;line-height:1;
   text-shadow:0 0 40px rgba(212,160,23,.5),3px 3px 0 #8B6000;animation:glow 3s ease-in-out infinite}
 .game-subtitle{color:var(--paper);font-size:13px;font-weight:600;letter-spacing:5px;opacity:.7}
-.round-counter{text-align:center;color:var(--paper);font-family:'Teko',sans-serif;
-  font-size:13px;letter-spacing:2px;opacity:.6;margin-bottom:4px}
+.round-counter{text-align:center;color:var(--gold-l);font-family:'Teko',sans-serif;
+  font-size:18px;letter-spacing:2px;opacity:1;margin-bottom:6px;
+  text-shadow:0 0 10px rgba(212,160,23,.4)}
 .game-layout{display:grid;grid-template-columns:185px 1fr 185px;gap:8px;align-items:start}
 .panel{background:var(--paper);border:2px solid var(--gold);border-radius:8px;overflow:hidden;
   box-shadow:4px 4px 0 rgba(0,0,0,.5)}
@@ -332,6 +333,8 @@ hr.divider{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
 
 @media(max-width:1060px){.game-layout{grid-template-columns:170px 1fr 170px;gap:6px}}
 @media(max-width:860px){.game-layout{grid-template-columns:1fr}#gameScreen{padding:4px}}
+.cell-lucky{background:linear-gradient(135deg,#FFF9C4,#FFF176);
+  border-color:#F9A825 !important;border-width:2px !important}
 </style>
 </head>
 <body>
@@ -413,7 +416,7 @@ hr.divider{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
     <div class="game-title">⚔️ TAX WAR</div>
     <div class="game-subtitle">สงครามภาษี(เงินได้)บุคคลธรรมดา</div>
   </div>
-  <div class="round-counter" id="roundCounter">รอบที่ 1 จาก 5 · ปีภาษี 2568</div>
+  <div class="round-counter" id="roundCounter">รอบที่ 1 จาก 3 · ปีภาษี 2568</div>
   <div class="game-layout">
     <div>
       <div class="turn-banner" id="turnBanner">รอเริ่ม...</div>
@@ -433,9 +436,10 @@ hr.divider{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
     <div>
       <div class="board" id="boardEl"><div class="board-grid" id="boardGrid"></div></div>
       <div class="dice-section">
-        <div class="dice-display">
-          <div class="die" id="die1">⚀</div>
-          <div class="die" id="die2">⚁</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+          <div class="die" id="die1" style="width:52px;height:52px;font-size:32px">⚀</div>
+          <div style="font-family:'Teko',sans-serif;font-size:13px;color:var(--paper);
+            opacity:.7;letter-spacing:1px" id="diceSteps"></div>
         </div>
         <div id="rollArea"></div>
       </div>
@@ -452,10 +456,10 @@ hr.divider{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
             <div class="li"><div class="ld" style="background:linear-gradient(135deg,#F3E5F5,#E1BEE7);border:1px solid #CE93D8"></div>ลดหย่อน</div>
             <div class="li"><div class="ld" style="background:linear-gradient(135deg,#FFF8E1,#FFECB3);border:1px solid #FFD54F"></div>เหตุการณ์</div>
             <div class="li"><div class="ld" style="background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border:1px solid #FF9800"></div>อาชีพ🌟</div>
-            <div class="li"><div class="ld" style="background:linear-gradient(135deg,#E0F7FA,#B2EBF2);border:1px solid #4DD0E1"></div>โบนัส</div>
+            <div class="li"><div class="ld" style="background:linear-gradient(135deg,#E8EAF6,#C5CAE9);border:1px solid #7986CB"></div>รายได้เสริม</div>
           </div>
           <br>
-          <div class="rules-box"><h4>🎯 ชนะ</h4><p>เงินมากสุดหลัง 5 รอบ</p></div>
+          <div class="rules-box"><h4>🎯 ชนะ</h4><p>เงินมากสุดหลัง 3 รอบ</p></div>
           <div class="rules-box"><h4>⚔️ อาชีพ</h4><p>ช่อง 🟠 = เหตุการณ์เฉพาะอาชีพ</p></div>
           <div class="rules-box"><h4>🏛️ ภาษี</h4><p>ผ่านช่องเริ่ม = ยื่นภาษีปีนั้น</p></div>
         </div>
@@ -466,6 +470,29 @@ hr.divider{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
         <div class="panel-body" id="logEl"></div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ══ LUCKY CARD MODAL ══════════════════════════════════ -->
+<div class="lucky-overlay" id="luckyModal" style="display:none">
+  <div class="lucky-modal">
+    <div style="font-family:'Teko',sans-serif;font-size:26px;color:#E65100;
+      letter-spacing:3px;margin-bottom:4px">⭐ การ์ดพิเศษ</div>
+    <div style="font-size:12px;color:#5A3A10;opacity:.7;margin-bottom:14px">
+      ลาภลอยมาถึง! กดจั่วการ์ดเลย</div>
+    <div class="lucky-deck" id="luckyDeck" onclick="flipLuckyCard()">🃏</div>
+    <div class="lucky-deck-label">กดเพื่อจั่วการ์ด</div>
+    <div class="lucky-card-reveal" id="luckyReveal">
+      <span class="lucky-card-icon" id="luckyCardIcon">⭐</span>
+      <div class="lucky-card-name" id="luckyCardName"></div>
+      <div class="lucky-card-desc" id="luckyCardDesc"></div>
+      <div class="lucky-card-amt" id="luckyCardAmt"></div>
+      <div class="lucky-tax-note" id="luckyTaxNote"></div>
+    </div>
+    <button class="lucky-btn" id="luckyBtn" onclick="closeLucky()" style="display:none">
+      รับเงิน ✓
+    </button>
+    <div class="lucky-flip" id="luckyFlipHint">คลิกที่การ์ดเพื่อจั่ว</div>
   </div>
 </div>
 
@@ -581,7 +608,7 @@ const CELL_DEFS = [
   {type:'deduct', icon:'🏠',text:'ลดหย่อน\nบ้าน'},
   {type:'expense',icon:'🏥',text:'ค่าแพทย์'},
   {type:'career', icon:'🌟',text:'เหตุการณ์\nอาชีพ'},
-  {type:'income', icon:'💰',text:'โบนัส'},
+  {type:'lucky',  icon:'⭐',text:'การ์ด\nพิเศษ'},
   {type:'deduct', icon:'📚',text:'ลดหย่อน\nการศึกษา'},
   {type:'tax',    icon:'📋',text:'ภาษี\nหัก ณ ที่จ่าย'},
   {type:'income', icon:'🏢',text:'ค่าเช่า'},
@@ -592,20 +619,20 @@ const CELL_DEFS = [
   {type:'income', icon:'💸',text:'Freelance'},
   {type:'penalty',icon:'⚠️',text:'ค่าปรับ'},
   {type:'deduct', icon:'👶',text:'ลดหย่อน\nบุตร'},
-  {type:'bonus',  icon:'🎁',text:'คืนภาษี!'},
+  {type:'event',  icon:'📰',text:'เหตุการณ์\nพิเศษ'},
   {type:'income', icon:'📈',text:'กำไรหุ้น'},
   {type:'tax',    icon:'🏦',text:'ภาษีหุ้น'},
   {type:'career', icon:'🌟',text:'เหตุการณ์\nอาชีพ'},
   {type:'expense',icon:'🍔',text:'ค่าอาหาร'},
-  {type:'income', icon:'💻',text:'รายได้\nออนไลน์'},
+  {type:'lucky',  icon:'⭐',text:'การ์ด\nพิเศษ'},
   {type:'deduct', icon:'🤲',text:'บริจาค'},
   {type:'audit',  icon:'🕵️',text:'สรรพากร\nมาเยือน'},
   {type:'income', icon:'🏭',text:'รายได้\nธุรกิจ'},
   {type:'penalty',icon:'❌',text:'เสียสิทธิ์'},
-  {type:'bonus',  icon:'✨',text:'เงินคืน\nภาษี'},
+  {type:'income', icon:'💹',text:'รายได้\nเสริม'},
   {type:'career', icon:'🌟',text:'เหตุการณ์\nอาชีพ'},
   {type:'deduct', icon:'💊',text:'ลดหย่อน\nสุขภาพ'},
-  {type:'tax',    icon:'📑',text:'ยื่นแบบ\nครึ่งปี'},
+  {type:'event',  icon:'📊',text:'วิเคราะห์\nการลงทุน'},
   {type:'income', icon:'🤝',text:'ขายทรัพย์สิน'},
   {type:'expense',icon:'💳',text:'ดอกเบี้ย\nบัตรเครดิต'},
 ];
@@ -746,6 +773,7 @@ function buildBoard(){
           <span class="big-icon">⚔️</span>
           <div class="ct">TAX WAR</div>
           <div class="cs">⚔️ สงครามภาษี 2568 ⚔️</div>
+          <div class="deck-pile">🃏 การ์ดพิเศษ · จั่วเมื่อหยุด ⭐</div>
           <div class="tax-rates">
             <div class="rr"><span>0 – 150,000</span><span class="rp">ยกเว้น</span></div>
             <div class="rr"><span>150,001 – 300,000</span><span class="rp">5%</span></div>
@@ -781,7 +809,8 @@ function renderTokens(players){
     const pos=getGridPos(p.pos);
     const ce=document.querySelector(`[data-gi="${pos.r*9+pos.c}"]`);
     if(ce)ce.classList.add('cell-current');
-    const tok=document.createElement('div');tok.className='token';tok.style.background=p.color;
+    const isMe2=!isTeacher&&p.id===myPlayerId;
+    const tok=document.createElement('div');tok.className=`token${isMe2?' token-me':''}`;tok.style.background=p.color;
     tok.style.left=`calc(${(100/9)*pos.c+100/18}%)`;tok.style.top=`calc(${(100/9)*pos.r+100/18}%)`;
     tok.style.animationDelay=`${i*.3}s`;tok.textContent=p.avatar;tok.style.fontSize='10px';
     document.getElementById('boardEl').appendChild(tok);
@@ -790,10 +819,10 @@ function renderTokens(players){
 
 function renderGame(state){
   if(!state)return;gameState=state;
-  document.getElementById('roundCounter').textContent=`รอบที่ ${Math.min(state.round,5)} จาก 5 · ปีภาษี 2568`;
+  document.getElementById('roundCounter').textContent=`⚔️ กำลังเล่น รอบที่ ${Math.min(state.round,3)} จาก 3 รอบ · ปีภาษี 2568`;
   const cp=state.players[state.currentPlayer];const cCareer=cp?CAREERS[cp.careerId]:null;
   document.getElementById('turnBanner').textContent=
-    state.status==='playing'?`⚔️ ตาของ ${cp?.name||'?'} ${cCareer?.icon||''}`:
+    state.status==='playing'?`⚔️ ตาของ ${cp?.name||'?'} ${cCareer?.icon||''} · รอบ ${Math.min(state.round,3)}/3`:  
     state.status==='paused'?'⏸ หยุดชั่วคราว':'รอเริ่มเกม';
   document.getElementById('pausedOverlay').style.display=state.status==='paused'?'flex':'none';
   const list=document.getElementById('playerListEl');
@@ -813,7 +842,7 @@ function renderGame(state){
   renderTokens(state.players);
   const ra=document.getElementById('rollArea');
   const isMyTurn=!isTeacher&&state.currentPlayer===myPlayerId&&state.status==='playing';
-  if(isMyTurn)ra.innerHTML=`<button class="roll-btn" onclick="doRoll()">⚔️ ทอยลูกเต๋า</button>`;
+  if(isMyTurn)ra.innerHTML=`<button class="roll-btn" onclick="doRoll()">🎲 ทอย (1 ลูก)</button>`;
   else if(isTeacher)ra.innerHTML=`<div class="not-my-turn">🎓 ครูดูแลห้อง</div>`;
   else{const cur=state.players[state.currentPlayer];
     ra.innerHTML=`<div class="not-my-turn">⏳ ตาของ ${cur?.name||'?'}...</div>`;}
@@ -834,26 +863,87 @@ function renderLog(log){
 // ══ ROLL ══════════════════════════════════════════════════
 async function doRoll(){
   if(isRolling)return;isRolling=true;sfxDice();
-  const d1=document.getElementById('die1'),d2=document.getElementById('die2');
-  d1.classList.add('rolling');d2.classList.add('rolling');
+  const d1=document.getElementById('die1');
+  const stepsEl=document.getElementById('diceSteps');
+  d1.classList.add('rolling');
+  // แอนิเมชัน 1 ลูก
   let ticks=0;
   const iv=setInterval(()=>{
     d1.textContent=DICE_FACES[Math.floor(Math.random()*6)];
-    d2.textContent=DICE_FACES[Math.floor(Math.random()*6)];
-    if(++ticks>8)clearInterval(iv);
-  },70);
-  try{const data=await api({action:'rollDice',room:myRoomCode,playerId:myPlayerId});
-    d1.classList.remove('rolling');d2.classList.remove('rolling');
+    if(++ticks>10)clearInterval(iv);
+  },65);
+  try{
+    const data=await api({action:'rollDice',room:myRoomCode,playerId:myPlayerId});
+    d1.classList.remove('rolling');
     if(!data.ok){alert(data.error);return;}
-    const[v1,v2]=data.dice||[1,1];d1.textContent=DICE_FACES[v1-1];d2.textContent=DICE_FACES[v2-1];
-    gameState=data.state;renderGame(data.state);
+    // แสดงผลลูกเต๋า 1 ลูก (ใช้ dice[0] หรือ dice[0]+dice[1] จาก server แต่แสดงแค่ 1)
+    const diceArr=data.dice||[1,1];
+    const steps=diceArr[0]; // ใช้ลูกแรกลูกเดียว
+    d1.textContent=DICE_FACES[steps-1];
+    if(stepsEl) stepsEl.textContent=`เดิน ${steps} ช่อง`;
+    gameState=data.state;
+    // animate token เดินทีละช่อง
+    await animateMove(myPlayerId, steps, data.state);
+    renderGame(data.state);
     if(data.taxEvent) showTaxYearQuizFlow(data.taxEvent, data.state);
     else if(data.cellEvent) showEventModal(data.cellEvent, data.state);
   }catch(e){alert('เชื่อมต่อไม่ได้');}
   finally{isRolling=false;}
 }
 
+// animate token เดินทีละช่อง
+async function animateMove(pid, steps, finalState){
+  if(!finalState||pid===null||pid===undefined)return;
+  const p=finalState.players.find(pl=>pl.id===pid);
+  if(!p)return;
+  // คำนวณตำแหน่งเริ่มต้น (ก่อน roll)
+  const endPos=p.pos;
+  const startPos=((endPos - steps) % 32 + 32) % 32;
+  // เดินทีละช่อง
+  for(let step=1;step<=steps;step++){
+    const pos=(startPos+step)%32;
+    // highlight ชั่วคราว
+    document.querySelectorAll('.cell-current').forEach(c=>c.classList.remove('cell-current'));
+    const gp=getGridPos(pos);
+    const ce=document.querySelector(`[data-gi="${gp.r*9+gp.c}"]`);
+    if(ce)ce.classList.add('cell-current');
+    // เลื่อน token
+    const board=document.getElementById('boardEl');
+    let tok=board.querySelector('.token-me');
+    if(!tok){
+      // สร้าง token ชั่วคราวถ้าไม่มี
+      renderTokens(finalState.players);
+      break;
+    }
+    tok.style.left=`calc(${(100/9)*gp.c+100/18}%)`;
+    tok.style.top=`calc(${(100/9)*gp.r+100/18}%)`;
+    await new Promise(r=>setTimeout(r,180));
+    sfxDice();
+  }
+}
+
 function showEventModal(ev, state){
+  // ช่อง lucky → เปิด lucky card modal
+  if(ev.cellType === 'lucky'){
+    const isMyTurn = !isTeacher && state && state.currentPlayer === myPlayerId;
+    if(isMyTurn){
+      sfxBonus();
+      showLuckyModal((amount)=>{
+        if(amount > 0 && state){
+          const p = state.players[state.currentPlayer];
+          if(p){ p.money += amount; p.income += amount; renderGame(state); }
+        }
+        // แสดง info modal ต่อ
+        _showInfoModal({icon:'⭐',title:'การ์ดพิเศษ!',
+          desc:`ได้รับ ${amount?.toLocaleString()||0} ฿ จากลาภลอย`,
+          amount:amount||0, cellType:'lucky'});
+      });
+      return;
+    }
+    _showInfoModal({icon:'⭐',title:'การ์ดพิเศษ!',desc:'ผู้เล่นจั่วการ์ดพิเศษ',amount:ev.amount||0});
+    return;
+  }
+
   // ประเภทที่ต้องคิดเอง: income, deduct, tax
   const calcTypes = ['income','deduct','tax'];
   const isMyTurn = !isTeacher && state && state.currentPlayer === myPlayerId;
@@ -944,7 +1034,7 @@ function showEndScreen(state){
     <div class="endscreen"><div class="confetti-bar"></div>${particles}
       <span class="end-trophy">🏆</span>
       <div class="end-title">จบสงคราม!</div>
-      <div class="end-sub">⚔️ ครบ 5 ปีภาษี · จอมภาษีแห่งสงคราม ⚔️</div>
+      <div class="end-sub">⚔️ ครบ 3 ปีภาษี · จอมภาษีแห่งสงคราม ⚔️</div>
       <div class="podium">${podHTML}</div>
       <div class="scoreboard"><div class="sc-hd">📊 ตารางสถิติ</div>
         <div class="sc-cols"><div></div><div></div>
@@ -1110,6 +1200,123 @@ function showTaxYearQuizFlow(taxEv,state){
     if(bonus!==0&&state){const pl=state.players[state.currentPlayer];if(pl){pl.money+=bonus;renderGame(state);}}
     _showInfoModal(taxEv);
   });
+}
+
+
+// ══════════════════════════════════════════════════════════
+//  LUCKY CARD SYSTEM — การ์ดพิเศษลาภลอย
+// ══════════════════════════════════════════════════════════
+const LUCKY_CARDS = [
+  {icon:'🎰',name:'ถูกลอตเตอรี่!',
+   desc:'สลากกินแบ่งรัฐบาลงวดนี้ถูกรางวัลที่ 1 หักภาษี ณ ที่จ่าย 0.5% แล้ว',
+   amount:4980000,
+   tip:'รางวัลสลากกินแบ่ง 5,000,000 ฿ หักภาษี 0.5% = 25,000 ฿ เหลือสุทธิ 4,975,000 ฿ (ในเกมประมาณใกล้เคียง)'},
+  {icon:'🏠',name:'ได้รับมรดก',
+   desc:'ผู้ใหญ่ในครอบครัวยกทรัพย์สินให้ มูลค่าที่ดิน 3 ล้านบาท',
+   amount:3000000,
+   tip:'มรดกจากบิดามารดาได้รับยกเว้นภาษีเงินได้ แต่อาจมีภาษีมรดกหากมูลค่าเกิน 100 ล้านบาท'},
+  {icon:'💼',name:'ขายหุ้น IPO ได้กำไร',
+   desc:'หุ้น IPO ที่ซื้อไว้ราคาพุ่งขึ้น 10 เท่า ขายทำกำไรได้',
+   amount:2000000,
+   tip:'กำไรจากหุ้นในตลาดหลักทรัพย์ได้รับยกเว้นภาษีเงินได้บุคคลธรรมดา'},
+  {icon:'🎁',name:'รับรางวัลประกวด',
+   desc:'ผลงานชนะการประกวดระดับชาติ ได้รับเงินรางวัล',
+   amount:1000000,
+   tip:'เงินรางวัลจากการประกวด ถือเป็นรายได้ ม.40(8) ต้องนำมารวมคำนวณภาษีปลายปี'},
+  {icon:'🌟',name:'Viral! ดังข้ามคืน',
+   desc:'โพสต์โซเชียลไวรัล มีแบรนด์ดังเสนอสัญญา Sponsor ก้อนใหญ่',
+   amount:1500000,
+   tip:'รายได้จาก Influencer และ Sponsor เป็น ม.40(8) หักค่าใช้จ่ายได้ 60% สูงสุด 600,000 ฿'},
+  {icon:'🏆',name:'ชนะคดีความ',
+   desc:'ฟ้องร้องและชนะคดี ศาลสั่งให้คู่กรณีจ่ายค่าเสียหาย',
+   amount:800000,
+   tip:'ค่าเสียหายที่ได้รับจากคดีความ บางประเภทได้รับการยกเว้นภาษี ขึ้นอยู่กับลักษณะค่าเสียหาย'},
+  {icon:'💎',name:'พบสมบัติโบราณ',
+   desc:'ขุดดินปลูกบ้านพบโบราณวัตถุ รัฐจ่ายค่าตอบแทนการค้นพบ',
+   amount:500000,
+   tip:'ค่าตอบแทนจากรัฐในกรณีพิเศษ อาจได้รับยกเว้นหรือลดหย่อนภาษีตามหลักเกณฑ์'},
+  {icon:'🎪',name:'ถูกรางวัลเกมโชว์',
+   desc:'ไปออกรายการโทรทัศน์และชนะรางวัลใหญ่',
+   amount:600000,
+   tip:'เงินรางวัลจากรายการโทรทัศน์ถือเป็น ม.40(8) ต้องเสียภาษีเงินได้บุคคลธรรมดา'},
+  {icon:'🚀',name:'Startup Exit',
+   desc:'บริษัท Startup ที่ลงทุนไว้ถูก Acquire ได้กำไรจากหุ้น',
+   amount:4000000,
+   tip:'กำไรจากการขายหุ้น Startup นอกตลาดหลักทรัพย์ ต้องเสียภาษีหัก ณ ที่จ่าย 15%'},
+  {icon:'🌈',name:'ได้รับทุนการศึกษา',
+   desc:'ได้รับทุนการศึกษาต่อต่างประเทศพร้อมค่าครองชีพก้อนใหญ่',
+   amount:300000,
+   tip:'ทุนการศึกษาจากสถาบันการศึกษาที่ได้รับการรับรองได้รับยกเว้นภาษีเงินได้'},
+  {icon:'🎯',name:'ลงทุน Crypto ถูกจังหวะ',
+   desc:'ซื้อ Cryptocurrency ไว้ก่อนราคาพุ่ง ขายทำกำไรได้',
+   amount:2500000,
+   tip:'กำไรจาก Cryptocurrency ในไทยถือเป็นรายได้ ม.40(4) หรือ ม.40(8) ต้องเสียภาษี'},
+  {icon:'🏡',name:'ขายบ้านได้กำไร',
+   desc:'บ้านที่ซื้อไว้ 10 ปีก่อนราคาสูงขึ้นมาก ขายได้กำไร',
+   amount:1800000,
+   tip:'กำไรจากการขายอสังหาริมทรัพย์ที่ถือครองนานกว่า 5 ปี เสียภาษีในอัตราพิเศษ'},
+];
+
+let luckyCardCallback = null;
+let currentLuckyCard = null;
+let luckyDeckShuffled = [...LUCKY_CARDS];
+
+function shuffleDeck(){
+  for(let i=luckyDeckShuffled.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [luckyDeckShuffled[i],luckyDeckShuffled[j]]=[luckyDeckShuffled[j],luckyDeckShuffled[i]];
+  }
+}
+
+function drawLuckyCard(){
+  if(luckyDeckShuffled.length===0) luckyDeckShuffled=[...LUCKY_CARDS];
+  if(luckyDeckShuffled.length===LUCKY_CARDS.length) shuffleDeck();
+  return luckyDeckShuffled.pop();
+}
+
+function showLuckyModal(callback){
+  luckyCardCallback = callback;
+  currentLuckyCard = null;
+  // รีเซ็ต modal
+  document.getElementById('luckyReveal').style.display='none';
+  document.getElementById('luckyBtn').style.display='none';
+  document.getElementById('luckyDeck').style.opacity='1';
+  document.getElementById('luckyDeck').style.cursor='pointer';
+  document.getElementById('luckyDeck').textContent='🃏';
+  document.getElementById('luckyFlipHint').textContent='คลิกที่การ์ดเพื่อจั่ว';
+  document.getElementById('luckyModal').style.display='flex';
+}
+
+function flipLuckyCard(){
+  const deck=document.getElementById('luckyDeck');
+  if(deck.style.opacity==='0.5') return;
+  deck.style.opacity='0.5'; deck.style.cursor='default';
+  deck.textContent='✨';
+  sfxBonus();
+  const card=drawLuckyCard(); currentLuckyCard=card;
+  setTimeout(()=>{
+    document.getElementById('luckyCardIcon').textContent=card.icon;
+    document.getElementById('luckyCardName').textContent=card.name;
+    document.getElementById('luckyCardDesc').textContent=card.desc;
+    document.getElementById('luckyCardAmt').textContent=`+${card.amount.toLocaleString()} ฿`;
+    if(card.tip){
+      document.getElementById('luckyTaxNote').innerHTML=`📚 <b>ความรู้ภาษี:</b> ${card.tip}`;
+      document.getElementById('luckyTaxNote').style.display='block';
+    }else{
+      document.getElementById('luckyTaxNote').style.display='none';
+    }
+    document.getElementById('luckyReveal').style.display='block';
+    document.getElementById('luckyBtn').style.display='inline-block';
+    document.getElementById('luckyFlipHint').textContent='';
+  },400);
+}
+
+function closeLucky(){
+  document.getElementById('luckyModal').style.display='none';
+  if(luckyCardCallback && currentLuckyCard){
+    luckyCardCallback(currentLuckyCard.amount);
+    luckyCardCallback=null; currentLuckyCard=null;
+  }
 }
 
 // ══ INIT ══════════════════════════════════════════════════
