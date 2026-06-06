@@ -469,6 +469,24 @@ hr.divider{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
   </div>
 </div>
 
+<!-- ══ QUIZ MODAL ════════════════════════════════════════ -->
+<div class="quiz-overlay" id="quizModal" style="display:none">
+  <div class="quiz-modal">
+    <div class="quiz-header">
+      <div class="quiz-step-bar" id="quizStepBar"></div>
+      <span class="quiz-icon" id="quizIcon">📊</span>
+      <div class="quiz-title" id="quizTitle">คำนวณภาษี</div>
+      <div class="quiz-subtitle" id="quizSubtitle"></div>
+    </div>
+    <div class="quiz-summary" id="quizSummary" style="display:none"></div>
+    <div class="quiz-q" id="quizQuestion"></div>
+    <div class="quiz-choices" id="quizChoices"></div>
+    <div class="quiz-feedback" id="quizFeedback"></div>
+    <div class="quiz-explain" id="quizExplain"></div>
+    <button class="quiz-next-btn" id="quizNextBtn" onclick="quizNext()">ถัดไป →</button>
+  </div>
+</div>
+
 <!-- ══ MODAL ══════════════════════════════════════════════ -->
 <div class="modal-overlay" id="modal" style="display:none">
   <div class="modal">
@@ -829,13 +847,40 @@ async function doRoll(){
     if(!data.ok){alert(data.error);return;}
     const[v1,v2]=data.dice||[1,1];d1.textContent=DICE_FACES[v1-1];d2.textContent=DICE_FACES[v2-1];
     gameState=data.state;renderGame(data.state);
-    if(data.taxEvent)showEventModal(data.taxEvent);
-    else if(data.cellEvent)showEventModal(data.cellEvent);
+    if(data.taxEvent) showTaxYearQuizFlow(data.taxEvent, data.state);
+    else if(data.cellEvent) showEventModal(data.cellEvent, data.state);
   }catch(e){alert('เชื่อมต่อไม่ได้');}
   finally{isRolling=false;}
 }
 
-function showEventModal(ev){
+function showEventModal(ev, state){
+  // ประเภทที่ต้องคิดเอง: income, deduct, tax
+  const calcTypes = ['income','deduct','tax'];
+  const isMyTurn = !isTeacher && state && state.currentPlayer === myPlayerId;
+
+  if(isMyTurn && calcTypes.includes(ev.cellType)){
+    // สร้าง quiz ก่อน
+    const p = state ? state.players[state.currentPlayer] : null;
+    if(p){
+      const quizList = buildQuizForEvent(ev, ev.cellType, p);
+      if(quizList.length > 0){
+        showQuiz(quizList, (bonus)=>{
+          // หลัง quiz เสร็จ ปรับเงินตาม bonus แล้วแสดง modal ปกติ
+          if(bonus !== 0 && state){
+            const player = state.players[state.currentPlayer];
+            if(player){ player.money += bonus; renderGame(state); }
+          }
+          // แสดง modal ปกติ
+          _showInfoModal(ev);
+        });
+        return;
+      }
+    }
+  }
+  _showInfoModal(ev);
+}
+
+function _showInfoModal(ev){
   if(ev.cellType)playSfxForType(ev.cellType);
   document.getElementById('mIcon').textContent=ev.icon||'💰';
   document.getElementById('mTitle').textContent=ev.title||'เหตุการณ์';
@@ -933,6 +978,139 @@ function stopPolling(){if(pollTimer){clearInterval(pollTimer);pollTimer=null;}}
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');}
+
+
+// ══════════════════════════════════════════════════════════
+//  QUIZ SYSTEM — ระบบคำนวณภาษีแบบ Multiple Choice
+// ══════════════════════════════════════════════════════════
+let quizQueue=[],quizCallback=null,quizCurrent=0,quizAnswered=false,quizTotalBonus=0;
+
+function randWrong(correct,count=3){
+  const w=new Set();
+  [.5,1.5,1,20000,-15000,.75,1.25].forEach(v=>{
+    const r=typeof v==='number'&&v<5?Math.round(correct*v/1000)*1000:Math.round((correct+v)/1000)*1000;
+    if(r!==correct&&r>0&&w.size<count)w.add(r);
+  });
+  while(w.size<count){const r=Math.round((correct+(Math.random()-.5)*correct*.8)/1000)*1000;if(r!==correct&&r>0)w.add(r);}
+  return[...w].slice(0,count);
+}
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+
+function calcTaxBracket(taxable){
+  const B=[[150000,.05],[200000,.10],[250000,.15],[250000,.20],[500000,.25],[3000000,.30],[Infinity,.35]];
+  let tax=0,rem=taxable;
+  for(const[sz,rate]of B){if(rem<=0)break;tax+=Math.min(rem,sz)*rate;rem-=sz;}
+  return Math.round(tax);
+}
+
+function buildQuizForEvent(ev,cellType,player){
+  const c=CAREERS[player.careerId]||{};
+  const amt=Math.abs(ev.amount||0);
+  const quizzes=[];
+  if(cellType==='income'&&amt>0){
+    const deductAmt=Math.min(Math.round(amt*(c.deductRate||.5)),c.deductMax||100000);
+    quizzes.push({
+      icon:'💼',title:'รายได้เข้า!',
+      subtitle:`${ev.title} — ${amt.toLocaleString()} ฿\nอาชีพ: ${c.name} หักค่าใช้จ่าย ${Math.round((c.deductRate||.5)*100)}%`,
+      summary:`รายได้: <b>${amt.toLocaleString()} ฿</b><br>อาชีพ: <b>${c.icon||''} ${c.name||''}</b> (${c.tag||''})<br>หักค่าใช้จ่ายได้: ${Math.round((c.deductRate||.5)*100)}% สูงสุด ${(c.deductMax||100000).toLocaleString()} ฿`,
+      question:`ค่าใช้จ่ายที่หักได้จากรายได้นี้ = ? ฿`,
+      correct:deductAmt,choices:shuffle([deductAmt,...randWrong(deductAmt)]),
+      explain:`${c.name||'อาชีพนี้'} หักค่าใช้จ่ายได้ ${Math.round((c.deductRate||.5)*100)}% × ${amt.toLocaleString()} = ${Math.round(amt*(c.deductRate||.5)).toLocaleString()} ฿ สูงสุด ${(c.deductMax||100000).toLocaleString()} ฿ → ได้ ${deductAmt.toLocaleString()} ฿`,
+      penalty:10000,type:'income'
+    });
+  } else if(cellType==='deduct'&&ev.isDeduct){
+    const correct=Math.abs(ev.amount);
+    quizzes.push({
+      icon:'📋',title:'ลดหย่อนภาษี!',
+      subtitle:`${ev.title}\nลดหย่อนได้สูงสุดเท่าไร?`,
+      summary:`รายการ: <b>${ev.title}</b>`,
+      question:`ลดหย่อน "${(ev.title||'').replace('ลดหย่อน','').trim()}" ได้สูงสุด = ? ฿`,
+      correct,choices:shuffle([correct,...randWrong(correct)]),
+      explain:ev.tip||`สิทธิ์ลดหย่อนนี้ = ${correct.toLocaleString()} ฿`,
+      penalty:10000,type:'deduct'
+    });
+  } else if(cellType==='tax'){
+    const correct=Math.abs(ev.amount);
+    quizzes.push({
+      icon:'🏦',title:'ภาษีถูกหัก!',
+      subtitle:`${ev.title}`,
+      summary:`ประเภท: <b>${ev.title}</b><br>รายได้สะสม: <b>${player.income.toLocaleString()} ฿</b>`,
+      question:`ภาษีที่ถูกหัก = ? ฿`,
+      correct,choices:shuffle([correct,...randWrong(correct)]),
+      explain:ev.tip||`ภาษีที่ถูกหัก ณ ที่จ่าย = ${correct.toLocaleString()} ฿`,
+      penalty:10000,type:'tax'
+    });
+  }
+  return quizzes;
+}
+
+function showQuiz(list,cb){quizQueue=list;quizCallback=cb;quizCurrent=0;quizTotalBonus=0;renderQuiz();}
+
+function renderQuiz(){
+  const q=quizQueue[quizCurrent];
+  if(!q){closeQuiz();return;}
+  quizAnswered=false;
+  document.getElementById('quizStepBar').innerHTML=quizQueue.map((_,i)=>
+    `<div class="quiz-step ${i<quizCurrent?'done':i===quizCurrent?'active':''}"></div>`).join('');
+  document.getElementById('quizIcon').textContent=q.icon;
+  document.getElementById('quizTitle').textContent=q.title;
+  document.getElementById('quizSubtitle').textContent=q.subtitle||'';
+  const su=document.getElementById('quizSummary');
+  if(q.summary){su.innerHTML=q.summary;su.style.display='block';}else su.style.display='none';
+  document.getElementById('quizQuestion').textContent=q.question;
+  document.getElementById('quizChoices').innerHTML=q.choices.map(v=>
+    `<button class="quiz-choice" onclick="answerQuiz(this,${v},${q.correct})">${v.toLocaleString()} ฿</button>`
+  ).join('');
+  ['quizFeedback','quizExplain'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('quizNextBtn').style.display='none';
+  document.getElementById('quizModal').style.display='flex';
+}
+
+function answerQuiz(btn,chosen,correct){
+  if(quizAnswered)return;quizAnswered=true;
+  const q=quizQueue[quizCurrent];
+  document.querySelectorAll('.quiz-choice').forEach(b=>{
+    b.disabled=true;
+    const v=parseInt(b.textContent.replace(/[^0-9]/g,''));
+    if(v===correct)b.classList.add('reveal');
+  });
+  const isCorrect=chosen===correct;
+  const fb=document.getElementById('quizFeedback');
+  const exp=document.getElementById('quizExplain');
+  if(isCorrect){btn.classList.remove('reveal');btn.classList.add('correct');quizTotalBonus+=5000;
+    fb.className='quiz-feedback correct';fb.innerHTML=`✅ ถูกต้อง! ได้รับโบนัส <b>+5,000 ฿</b>`;sfxBonus();
+  }else{btn.classList.add('wrong');quizTotalBonus-=(q.penalty||10000);
+    fb.className='quiz-feedback wrong';fb.innerHTML=`❌ ตอบผิด เสียเพิ่ม <b>${(q.penalty||10000).toLocaleString()} ฿</b>`;sfxPenalty();
+  }
+  fb.style.display='block';
+  if(q.explain){exp.textContent=`💡 ${q.explain}`;exp.style.display='block';}
+  const nb=document.getElementById('quizNextBtn');nb.style.display='block';
+  nb.textContent=quizCurrent===quizQueue.length-1?'✓ รับทราบ':'ข้อถัดไป →';
+}
+
+function quizNext(){quizCurrent++;if(quizCurrent<quizQueue.length)renderQuiz();else closeQuiz();}
+function closeQuiz(){document.getElementById('quizModal').style.display='none';if(quizCallback){quizCallback(quizTotalBonus);quizCallback=null;}}
+
+function showTaxYearQuizFlow(taxEv,state){
+  const isMyTurn=!isTeacher&&state&&state.currentPlayer===myPlayerId;
+  if(!isMyTurn||!taxEv||Math.abs(taxEv.amount||0)===0){_showInfoModal(taxEv||{icon:'🏛️',title:'ยื่นภาษี',desc:'คำนวณเสร็จแล้ว',amount:0});return;}
+  const p=state.players[state.currentPlayer];
+  const amt=Math.abs(taxEv.amount||0);
+  const isRefund=(taxEv.amount||0)>0;
+  const quiz=[{
+    icon:'🏛️',title:'ยื่นภาษีประจำปี',
+    subtitle:isRefund?'จ่ายภาษีไว้มากกว่าที่ต้องจ่าย → ได้รับเงินคืน':'คำนวณภาษีตามเงินได้สุทธิ',
+    summary:`รายได้รวม: <b>${(p?.income||0).toLocaleString()} ฿</b> · ลดหย่อน: <b>${(p?.deduct||0).toLocaleString()} ฿</b><br>ภาษีที่จ่ายแล้ว: <b>${(p?.taxPaid||0).toLocaleString()} ฿</b>`,
+    question:isRefund?'ได้รับเงินคืนภาษี = ? ฿':'ภาษีที่ต้องจ่ายเพิ่ม = ? ฿',
+    correct:amt,choices:shuffle([amt,...randWrong(Math.max(amt,5000))]),
+    explain:taxEv.desc||(isRefund?`ได้รับคืน ${amt.toLocaleString()} ฿`:`ต้องจ่ายเพิ่ม ${amt.toLocaleString()} ฿`),
+    penalty:10000,type:'tax'
+  }];
+  showQuiz(quiz,(bonus)=>{
+    if(bonus!==0&&state){const pl=state.players[state.currentPlayer];if(pl){pl.money+=bonus;renderGame(state);}}
+    _showInfoModal(taxEv);
+  });
+}
 
 // ══ INIT ══════════════════════════════════════════════════
 initUI();
