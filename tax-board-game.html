@@ -480,7 +480,7 @@ hr.dv{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
   <div class="game-hd">
     <div class="game-title">⚔️ TAX WAR</div>
   </div>
-  <div class="round-ctr" id="roundCtr">⚔️ กำลังเล่น รอบที่ 1 จาก 3 รอบ · ปีภาษี 2568</div>
+  <div class="round-ctr" id="roundCtr">⚔️ กำลังเล่น รอบที่ 1 จาก 3 รอบ</div>
   <div class="game-layout">
     <div>
       <div class="turn-banner" id="turnBanner">รอเริ่ม...</div>
@@ -932,30 +932,32 @@ function submitFill(){
   const inp=document.getElementById('fillInput');
   const val=parseInt(inp.value.replace(/,/g,''))||0;
   const correct=fillCorrectVal;
-  const tolerance=Math.max(1000, Math.round(correct*0.01)); // ±1% หรือ ±1,000
+  const tolerance=Math.max(1000,Math.round(correct*0.01));
   const isClose=Math.abs(val-correct)<=tolerance;
   const fb=document.getElementById('fillFeedback');
-  const exp=document.getElementById('fillExplain');
   const nb=document.getElementById('fillNextBtn');
   inp.disabled=true;
   document.getElementById('fillSubmitBtn').style.display='none';
   if(isClose){
     inp.classList.add('correct');
     fb.className='q-fb cor';
-    fb.innerHTML=`✅ ถูกต้อง! รายได้สุทธิ = <b>${correct.toLocaleString()} ฿</b>`;
+    fb.innerHTML=`✅ ถูกต้อง! รายได้สุทธิ = <b>${correct.toLocaleString()} ฿</b><br><small>+5,000 ฿ โบนัสความแม่น</small>`;
     fb.style.display='block';
     sfxBonus();
-    if(fillCallback){fillCallback(true, correct);}
   } else {
     inp.classList.add('wrong');
     fb.className='q-fb wro';
-    fb.innerHTML=`❌ ไม่ถูกต้อง คำตอบที่ถูกคือ <b>${correct.toLocaleString()} ฿</b>`;
+    fb.innerHTML=`❌ ไม่ถูกต้อง คำตอบที่ถูกคือ <b>${correct.toLocaleString()} ฿</b><br><small>−10,000 ฿</small>`;
     fb.style.display='block';
     sfxPenalty();
-    if(fillCallback){fillCallback(false, correct);}
   }
+  // เก็บผลไว้ก่อน กด "ขั้นถัดไป" ค่อยเรียก callback
   nb.style.display='block';
-  nb.textContent='ขั้นถัดไป →';
+  nb.textContent='ขั้นที่ 2: คำนวณภาษี →';
+  nb.onclick=function(){
+    document.getElementById('fillModal').style.display='none';
+    if(fillCallback){fillCallback(isClose, correct); fillCallback=null;}
+  };
 }
 
 function closeFill(){
@@ -1030,10 +1032,10 @@ function showTaxQuizFlow(taxEv, state){
       // apply bonus/penalty
       if(bonusTotal!==0&&state){
         const pl=state.players[state.currentPlayer];
-        if(pl){pl.money+=bonusTotal;renderGame(state);}
+        if(pl){pl.money+=bonusTotal;}
       }
       // แสดงสรุปผล
-      showEventModal({
+      const summaryEv={
         icon:'🏛️',
         title:'สรุปภาษีประจำปี',
         desc:isRefund
@@ -1041,7 +1043,21 @@ function showTaxQuizFlow(taxEv, state){
           :`ต้องจ่ายภาษีเพิ่ม ${finalTax.toLocaleString()} ฿`,
         amount:taxEv?.amount||0,
         tip:`รายได้สุทธิ ${netIncome.toLocaleString()} ฿ × อัตราก้าวหน้า = ภาษี ${taxDue.toLocaleString()} ฿`
-      });
+      };
+      // ถ้าจบเกมแล้ว (รอบที่ 3) → แสดงสรุปแล้วค่อย end screen
+      if(state&&state.status==='ended'){
+        renderGame(state);
+        showEventModal(summaryEv);
+        // override closeEventModal ให้ไป showEnd
+        const origClose=closeEventModal;
+        document.querySelector('#eventModal .m-btn').onclick=function(){
+          document.getElementById('eventModal').style.display='none';
+          setTimeout(()=>showEnd(state),400);
+        };
+      } else {
+        renderGame(state);
+        showEventModal(summaryEv);
+      }
     });
   });
 }
@@ -1163,23 +1179,28 @@ function onCenterClick(){
   if(!gameState||!gameState.luckyPending)return;
   if(isTeacher)return;
   if(gameState.luckyPlayerId!==myPid)return;
-  // แสดง lucky modal ให้พลิกการ์ดก่อน
   showLuckyModal(async()=>{
     if(!currentCard)return;
+    const cardAmt=currentCard.amt;
     try{
-      const d=await api({action:'drawCard',room:myRoom});
-      if(!d.ok){alert(d.error);return;}
-      // server บันทึกเงิน+รายได้แล้ว อัปเดต state
-      gameState=d.state;
-      renderGame(d.state);
-      // แสดง event modal สรุป
-      showEventModal({icon:currentCard.ic,title:currentCard.name,
-        desc:currentCard.desc+`
-ได้รับ ${(d.luckyAmount||currentCard.amt).toLocaleString()} ฿ (รวมในรายได้แล้ว)`,
-        amount:d.luckyAmount||currentCard.amt,
-        tip:currentCard.tip,cellType:'lucky'});
-    }catch(e){console.error(e);alert('เชื่อมต่อไม่ได้');}
-  });}
+      const d=await api({action:'drawCard',room:myRoom,amount:String(cardAmt)});
+      if(d.ok){gameState=d.state;renderGame(d.state);}
+      else{
+        const lp=gameState.players[gameState.currentPlayer];
+        if(lp){lp.money+=cardAmt;lp.income+=cardAmt;}
+        gameState.luckyPending=false;
+        gameState.currentPlayer=(gameState.currentPlayer+1)%gameState.players.length;
+        renderGame(gameState);}
+    }catch(e){
+      const lp=gameState.players[gameState.currentPlayer];
+      if(lp){lp.money+=cardAmt;lp.income+=cardAmt;}
+      gameState.luckyPending=false;
+      gameState.currentPlayer=(gameState.currentPlayer+1)%gameState.players.length;
+      renderGame(gameState);}
+    showEventModal({icon:currentCard.ic,title:currentCard.name,
+      desc:currentCard.desc,amount:cardAmt,
+      tip:(currentCard.tip||'')+'\n💰 '+cardAmt.toLocaleString()+' ฿ บันทึกลงรายได้แล้ว',
+      cellType:'lucky'});});}
 
 function gpPos(cid){
   if(cid<=8)return{r:0,c:cid};if(cid<=16)return{r:cid-8,c:8};
@@ -1214,7 +1235,7 @@ function renderTokens(players){
 function renderGame(s){
   if(!s)return;gameState=s;
   const r=Math.min(s.round,MAX_ROUNDS);
-  document.getElementById('roundCtr').textContent=`⚔️ กำลังเล่น รอบที่ ${r} จาก 3 รอบ · ปีภาษี ${2565+r}`;
+  document.getElementById('roundCtr').textContent=`⚔️ กำลังเล่น รอบที่ ${r} จาก 3 รอบ`;
   const cp=s.players[s.currentPlayer];const cc=cp?CAREERS[cp.careerId]:null;
   document.getElementById('turnBanner').textContent=
     s.status==='playing'?`⚔️ ตาของ ${cp?.name||'?'} ${cc?.icon||''} · รอบ ${r}/3`:
@@ -1242,7 +1263,8 @@ function renderGame(s){
   else{const cur=s.players[s.currentPlayer];ra.innerHTML=`<div class="not-my-turn">⏳ ตาของ ${cur?.name||'?'} รอบ ${r}/3...</div>`;}
   if(isTeacher){const pb=document.getElementById('pauseBtn');if(pb)pb.textContent=s.status==='paused'?'▶ เล่นต่อ':'⏸ หยุด';}
   renderLog(s.log||[]);
-  if(s.status==='ended'&&!document.getElementById('endScreen'))setTimeout(()=>showEnd(s),1000);}
+  // end screen จะถูกเรียกจาก showTaxQuizFlow หลังคำนวณภาษีเสร็จ
+  if(s.status==='ended'&&!document.getElementById('endScreen')&&!s._taxPending)setTimeout(()=>showEnd(s),1200);}
 
 function renderLog(log){
   if(log.length===lastLogLen)return;lastLogLen=log.length;
@@ -1310,13 +1332,7 @@ function handleEvent(ev,state){
   }
   showEventModal(ev);}
 
-function showTaxQuizFlow(taxEv,state){
-  const isMyTurn=!isTeacher&&state&&state.currentPlayer===myPid;
-  if(!isMyTurn||!taxEv||Math.abs(taxEv.amount||0)===0){showEventModal(taxEv||{icon:'🏛️',title:'ยื่นภาษี',desc:'คำนวณเสร็จแล้ว',amount:0});return;}
-  const qs=buildTaxQuiz(taxEv,state);
-  showQuiz(qs,(bonus)=>{
-    if(bonus!==0&&state){const p=state.players[state.currentPlayer];if(p){p.money+=bonus;renderGame(state);}}
-    showEventModal(taxEv);});}
+
 
 function showEventModal(ev){
   if(!ev)return;if(ev.cellType)sfxForType(ev.cellType);
@@ -1391,7 +1407,7 @@ function showEnd(s){
     <div class="endscreen"><div class="confetti-bar"></div>${parts}
       <span class="end-trophy">🏆</span>
       <div class="end-title">จบสงคราม!</div>
-      <div class="end-sub">⚔️ ครบ 3 ปีภาษี · จอมภาษีแห่งสงคราม ⚔️</div>
+      <div class="end-sub">⚔️ ครบ 3 รอบ · จอมภาษีแห่งสงคราม ⚔️</div>
       <div class="podium">${podHTML}</div>
       <div class="sc-tbl"><div class="sc-hd">📊 ตารางสถิติ</div>
         <div class="sc-cols"><div></div><div></div>
