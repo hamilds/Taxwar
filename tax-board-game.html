@@ -795,8 +795,12 @@ function rndWrong(c,n=3){const s=new Set();
   while(s.size<n){const r=Math.round((c+(Math.random()-.5)*c*.8)/1000)*1000;if(r!==c&&r>0)s.add(r);}
   return[...s].slice(0,n);}
 function shuf(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
-function taxCalc(n){const B=[[150000,.05],[200000,.10],[250000,.15],[250000,.20],[500000,.25],[3000000,.30],[Infinity,.35]];
-  let t=0,r=n;for(const[s,ra]of B){if(r<=0)break;t+=Math.min(r,s)*ra;r-=s;}return Math.round(t);}
+function taxCalc(n){
+  if(n<=150000)return 0;
+  const B=[[150000,.05],[200000,.10],[250000,.15],[250000,.20],[1000000,.25],[3000000,.30],[Infinity,.35]];
+  let t=0,r=n-150000;
+  for(const[s,ra]of B){if(r<=0)break;t+=Math.min(r,s)*ra;r-=s;}
+  return Math.round(t);}
 
 function buildQuiz(ev,type,p){
   const c=CAREERS[p.careerId]||{dr:.5,dm:100000};const amt=Math.abs(ev.amount||0);const qs=[];
@@ -1028,9 +1032,8 @@ function showTaxQuizFlow(taxEv, state){
     showQuiz([{
       ic:'🏛️',
       title:'ขั้นที่ 2/2 — คำนวณภาษีที่ต้องจ่าย',
-      sub:'นำรายได้สุทธิคำนวณภาษีตามอัตราก้าวหน้า',
+      sub:'เลือกคำตอบที่ถูกต้อง — ภาษีที่ต้องจ่ายเพิ่มหรือได้รับคืน',
       sum:`<b>รายได้สุทธิ:</b> ${netIncome.toLocaleString()} ฿<br>`+
-          `<b>ภาษีตามอัตราก้าวหน้า:</b> ${taxDue.toLocaleString()} ฿<br>`+
           `<b>ภาษีที่จ่ายไปแล้ว (หัก ณ ที่จ่าย):</b> ${(p.taxPaid||0).toLocaleString()} ฿`,
       q:isRefund?`ได้รับเงินคืนภาษี = ? ฿`:`ภาษีที่ต้องจ่ายเพิ่ม = ? ฿`,
       correct:finalTax,
@@ -1114,10 +1117,9 @@ function showEndTaxFlow(state){
     showQuiz([{
       ic:'🏛️',
       title:'ขั้นที่ 2/2 — ภาษีที่ต้องจ่าย',
-      sub:'นำรายได้สุทธิคำนวณภาษีตามอัตราก้าวหน้า',
+      sub:'เลือกคำตอบที่ถูกต้อง — ภาษีที่ต้องจ่ายเพิ่มหรือได้รับคืน',
       sum:'<b>รายได้สุทธิ:</b> '+netIncome.toLocaleString()+' ฿<br>'+
-          '<b>ภาษีตามอัตราก้าวหน้า:</b> '+taxDue.toLocaleString()+' ฿<br>'+
-          '<b>ภาษีที่จ่ายไปแล้ว:</b> '+taxPaid.toLocaleString()+' ฿',
+          '<b>ภาษีที่จ่ายไปแล้ว (หัก ณ ที่จ่าย):</b> '+taxPaid.toLocaleString()+' ฿',
       q:isRefund?'ได้รับเงินคืนภาษี = ? ฿':'ภาษีที่ต้องจ่ายเพิ่ม = ? ฿',
       correct:Math.max(finalTax,0),
       choices,
@@ -1339,6 +1341,72 @@ function enterGame(){showScreen('gameScreen');buildBoard();
   if(isTeacher)document.getElementById('tcBox').style.display='';
   renderGame(gameState);}
 
+
+
+function showWaitingForOthers(state){
+  // แสดง overlay รอผู้เล่นคนอื่นคำนวณภาษีเสร็จ
+  const existing = document.getElementById('waitTaxOv');
+  if(existing) existing.remove();
+  const nPlayers = state.players.length;
+  const doneSoFar = state.players.filter(p=>p.taxDone).length + 1;
+  document.body.insertAdjacentHTML('beforeend',`
+    <div id="waitTaxOv" style="position:fixed;inset:0;background:rgba(0,0,0,.75);
+      display:flex;align-items:center;justify-content:center;z-index:199;backdrop-filter:blur(4px)">
+      <div style="background:var(--paper);border:3px solid var(--gold);border-radius:14px;
+        padding:28px;text-align:center;max-width:360px;width:92%;box-shadow:8px 8px 0 rgba(0,0,0,.5)">
+        <div style="font-size:44px">⏳</div>
+        <div style="font-family:'Teko',sans-serif;font-size:26px;color:var(--gold);letter-spacing:2px;margin:8px 0">
+          รอผู้เล่นคนอื่น...</div>
+        <div style="font-size:14px;color:#5A3A10;margin-bottom:8px">
+          คำนวณภาษีเสร็จแล้ว ${doneSoFar}/${nPlayers} คน</div>
+        <div style="font-size:12px;color:#8A6A30;opacity:.7">
+          รอจนทุกคนคำนวณเสร็จ จึงสรุปผลการแข่งขัน</div>
+      </div></div>`);
+  // เริ่ม poll รอ taxFlowComplete
+  startTaxWaitPoll(state);
+}
+
+function startTaxWaitPoll(origState){
+  let pollCount=0;
+  const taxPoll=setInterval(async()=>{
+    pollCount++;
+    try{
+      const d=await api({action:'getState',room:myRoom});
+      if(!d.ok)return;
+      const s=d.state;
+      // อัปเดตจำนวนคนที่คำนวณเสร็จ
+      const done=s.players.filter(p=>p.taxDone).length;
+      const total=s.players.length;
+      const el=document.getElementById('waitTaxOv');
+      if(el){
+        const txt=el.querySelector('div>div:nth-child(3)');
+        if(txt)txt.textContent=`คำนวณภาษีเสร็จแล้ว ${done}/${total} คน`;
+      }
+      // ถ้าทุกคนเสร็จแล้ว หรือรอนานเกิน 2 นาที
+      if(s.taxFlowComplete || pollCount > 48){
+        clearInterval(taxPoll);
+        const ov=document.getElementById('waitTaxOv');
+        if(ov)ov.remove();
+        // sync taxWin จาก server state
+        const myP=s.players.find(p=>p.id===myPid);
+        if(myP){
+          const origP=origState.players.find(p=>p.id===myPid);
+          if(origP){origP.taxScore=myP.taxScore;origP.taxWin=myP.taxWin;}
+        }
+        showEnd(s);
+      }
+    }catch(e){console.error(e);}
+  },2500);
+}
+
+
+// ═══ REPORT TAX DONE ══════════════════════════════════════
+async function reportTaxDone(score, win){
+  try{
+    await api({action:'reportTaxDone',room:myRoom,
+      playerId:String(myPid),taxScore:String(score),taxWin:String(win)});
+  }catch(e){console.error('reportTaxDone error:',e);}
+}
 
 // ═══ INIT UI ═════════════════════════════════════════════
 function initUI(){
