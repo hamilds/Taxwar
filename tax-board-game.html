@@ -1073,86 +1073,86 @@ let endTaxDone = false;
 
 function showEndTaxFlow(state){
   if(endTaxDone)return;
-  // หา player ที่เป็น "ตัวเรา" ถ้าเป็นครูหรือไม่ใช่ผู้เล่น → ข้ามไป end screen
-  if(isTeacher){showEnd(state);return;}
-  const myPlayer = state.players.find(p=>p.id===myPid);
-  if(!myPlayer){showEnd(state);return;}
+  endTaxDone=true;
+  stopPoll(); // หยุด poll ก่อนเริ่ม flow
 
-  endTaxDone = true;
+  // ถ้าไม่ใช่ผู้เล่น → ข้ามไป end screen
+  if(isTeacher){setTimeout(()=>showEnd(state),300);return;}
+  const myPlayer=state.players.find(p=>p.id===myPid);
+  if(!myPlayer){setTimeout(()=>showEnd(state),300);return;}
 
-  const c = CAREERS[myPlayer.careerId]||{dr:.5,dm:100000,name:'?'};
-  const gross = myPlayer.income||0;
-  const expDed = Math.min(Math.round(gross*(c.dr||.5)), c.dm||100000);
-  const perDed = 60000;
-  const otherDed = myPlayer.deduct||0;
-  const totalDed = expDed + perDed + otherDed;
-  const netIncome = Math.max(0, gross - totalDed);
-  const taxDue = taxCalc(netIncome);
-  const taxPaid = myPlayer.taxPaid||0;
-  const diff = taxDue - taxPaid;
-  const finalTax = Math.abs(diff);
-  const isRefund = diff < 0;
-  let bonusTotal = 0;
+  const c=CAREERS[myPlayer.careerId]||{dr:.5,dm:100000,name:'?'};
+  const gross=myPlayer.income||0;
+  const expDed=Math.min(Math.round(gross*(c.dr||.5)),c.dm||100000);
+  const perDed=60000;
+  const otherDed=myPlayer.deduct||0;
+  const totalDed=expDed+perDed+otherDed;
+  const netIncome=Math.max(0,gross-totalDed);
+  const taxDue=taxCalc(netIncome);
+  const taxPaid=myPlayer.taxPaid||0;
+  const diff=taxDue-taxPaid;
+  const finalTax=Math.abs(diff);
+  const isRefund=diff<0;
+  let bonusTotal=0;
 
-  // แสดง overlay แจ้งก่อนเข้าสู่การคำนวณภาษี
-  showEventModal({
-    icon:'🏛️',
-    title:'ครบ 3 รอบ! ถึงเวลายื่นภาษี',
-    desc:`${myPlayer.name} มีรายได้รวม ${gross.toLocaleString()} ฿
-ตลอด 3 ปีภาษี
-กดรับทราบเพื่อเริ่มคำนวณภาษี`,
-    amount:0,
-    tip:'การยื่นภาษีจะเกิดขึ้น 1 ครั้งหลังเล่นครบ 3 รอบ ตามระบบภาษีเงินได้บุคคลธรรมดาจริง'
-  });
+  // ── แจ้งเตือนก่อนเข้าคำนวณ ──
+  document.getElementById('mIcon').textContent='🏛️';
+  document.getElementById('mTitle').textContent='ครบ 3 รอบ! ถึงเวลายื่นภาษี';
+  document.getElementById('mDesc').textContent=
+    myPlayer.name+' มีรายได้รวมตลอด 3 รอบ: '+gross.toLocaleString()+' ฿
+กด "รับทราบ" เพื่อเริ่มคำนวณภาษี';
+  document.getElementById('mAmt').textContent='';
+  document.getElementById('tipBox').style.display='none';
+  document.getElementById('eventModal').style.display='flex';
 
-  // Override closeEventModal ชั่วคราว
-  const origClose = window._origClose || closeEventModal;
-  window._origClose = origClose;
-  window.closeEventModal = function(){
+  // ── แทนที่ปุ่มรับทราบชั่วคราว ──
+  const mBtn=document.querySelector('#eventModal .m-btn');
+  const origOnclick=mBtn.getAttribute('onclick');
+  mBtn.setAttribute('onclick','startTaxStep1()');
+  window.startTaxStep1=function(){
     document.getElementById('eventModal').style.display='none';
-    window.closeEventModal = origClose; // restore
+    mBtn.setAttribute('onclick',origOnclick); // restore
+
     // ── ขั้น 1: Fill-in รายได้สุทธิ ──
     showFillModal({
       icon:'📊',
       title:'ขั้นที่ 1/2 — คำนวณรายได้สุทธิ',
       formula:
-        `<b>เงินได้พึงประเมิน:</b> ${gross.toLocaleString()} ฿<br>`+
-        `<b>หักค่าใช้จ่าย</b> (${Math.round((c.dr||.5)*100)}% สูงสุด ${(c.dm||100000).toLocaleString()} ฿): `+
-          `<span style="color:var(--red)">− ${expDed.toLocaleString()} ฿</span><br>`+
-        `<b>หักลดหย่อนส่วนตัว 60,000 ฿:</b> <span style="color:var(--red)">− ${perDed.toLocaleString()} ฿</span><br>`+
-        `<b>หักลดหย่อนอื่นๆ ในเกม:</b> <span style="color:var(--red)">− ${otherDed.toLocaleString()} ฿</span><br>`+
-        `<span style="display:block;border-top:1px solid rgba(212,160,23,.4);margin-top:5px;padding-top:5px">`+
-        `<b>รวมลดหย่อน = ${totalDed.toLocaleString()} ฿</b></span>`,
-      desc:'กรอกผลลัพธ์ → เงินได้พึงประเมิน − ลดหย่อนทั้งหมด = ?',
-      correct: netIncome,
-    }, (isCorrect, correctVal)=>{
-      if(isCorrect) bonusTotal += 5000; else bonusTotal -= 10000;
-      // ── ขั้น 2: Multiple Choice ภาษี ──
-      const choices = shuf([finalTax, ...rndWrong(Math.max(finalTax,5000))]);
+        '<b>เงินได้พึงประเมิน:</b> '+gross.toLocaleString()+' ฿<br>'+
+        '<b>หักค่าใช้จ่าย ('+Math.round((c.dr||.5)*100)+'% สูงสุด '+(c.dm||100000).toLocaleString()+' ฿):</b> '+
+        '<span style="color:var(--red)">− '+expDed.toLocaleString()+' ฿</span><br>'+
+        '<b>หักลดหย่อนส่วนตัว:</b> <span style="color:var(--red)">− '+perDed.toLocaleString()+' ฿</span><br>'+
+        '<b>หักลดหย่อนอื่นๆ:</b> <span style="color:var(--red)">− '+otherDed.toLocaleString()+' ฿</span><br>'+
+        '<span style="display:block;border-top:1px solid rgba(212,160,23,.4);margin-top:5px;padding-top:5px">'+
+        '<b>รวมลดหย่อน = '+totalDed.toLocaleString()+' ฿</b></span>',
+      desc:'กรอก: เงินได้พึงประเมิน − ลดหย่อนทั้งหมด = ?',
+      correct:netIncome,
+    },(isCorrect)=>{
+      if(isCorrect)bonusTotal+=5000; else bonusTotal-=10000;
+
+      // ── ขั้น 2: Multiple Choice ──
+      const choices=shuf([finalTax,...rndWrong(Math.max(finalTax,5000))]);
       showQuiz([{
         ic:'🏛️',
         title:'ขั้นที่ 2/2 — คำนวณภาษีที่ต้องจ่าย',
         sub:'นำรายได้สุทธิคำนวณภาษีตามอัตราก้าวหน้า',
-        sum:
-          `<b>รายได้สุทธิ:</b> ${netIncome.toLocaleString()} ฿<br>`+
-          `<b>ภาษีตามอัตราก้าวหน้า:</b> ${taxDue.toLocaleString()} ฿<br>`+
-          `<b>ภาษีที่จ่ายไปแล้ว (หัก ณ ที่จ่าย):</b> ${taxPaid.toLocaleString()} ฿`,
-        q: isRefund ? `ได้รับเงินคืนภาษี = ? ฿` : `ภาษีที่ต้องจ่ายเพิ่ม = ? ฿`,
-        correct: Math.max(finalTax,0),
+        sum:'<b>รายได้สุทธิ:</b> '+netIncome.toLocaleString()+' ฿<br>'+
+            '<b>ภาษีตามอัตราก้าวหน้า:</b> '+taxDue.toLocaleString()+' ฿<br>'+
+            '<b>ภาษีที่จ่ายไปแล้ว:</b> '+taxPaid.toLocaleString()+' ฿',
+        q:isRefund?'ได้รับเงินคืนภาษี = ? ฿':'ภาษีที่ต้องจ่ายเพิ่ม = ? ฿',
+        correct:Math.max(finalTax,0),
         choices,
-        exp: isRefund
-          ? `ภาษีจริง ${taxDue.toLocaleString()} ฿ จ่ายไปแล้ว ${taxPaid.toLocaleString()} ฿ → ได้คืน ${finalTax.toLocaleString()} ฿`
-          : `ภาษีที่ต้องจ่าย ${taxDue.toLocaleString()} ฿ จ่ายไปแล้ว ${taxPaid.toLocaleString()} ฿ → จ่ายเพิ่ม ${finalTax.toLocaleString()} ฿`,
-        penalty: 10000,
-      }], (quizBonus)=>{
-        bonusTotal += quizBonus;
-        // apply bonus/penalty ลงตัวผู้เล่น
-        if(bonusTotal !== 0){
-          myPlayer.money += bonusTotal;
-          renderGame(state);
+        exp:isRefund
+          ?'ภาษีจริง '+taxDue.toLocaleString()+' ฿ จ่ายไปแล้ว '+taxPaid.toLocaleString()+' ฿ → ได้คืน '+finalTax.toLocaleString()+' ฿'
+          :'ภาษีที่ต้องจ่าย '+taxDue.toLocaleString()+' ฿ จ่ายไปแล้ว '+taxPaid.toLocaleString()+' ฿ → จ่ายเพิ่ม '+finalTax.toLocaleString()+' ฿',
+        penalty:10000,
+      }],(quizBonus)=>{
+        bonusTotal+=quizBonus;
+        if(bonusTotal!==0){
+          myPlayer.money+=bonusTotal;
         }
-        // แสดง end screen
-        setTimeout(()=>showEnd(state), 600);
+        // แสดง end screen หลัง tax flow เสร็จ
+        setTimeout(()=>showEnd(state),400);
       });
     });
   };
@@ -1360,7 +1360,8 @@ function renderGame(s){
   if(isTeacher){const pb=document.getElementById('pauseBtn');if(pb)pb.textContent=s.status==='paused'?'▶ เล่นต่อ':'⏸ หยุด';}
   renderLog(s.log||[]);
   // end screen จะถูกเรียกจาก showTaxQuizFlow หลังคำนวณภาษีเสร็จ
-  if(s.status==='ended'&&!document.getElementById('endScreen')&&!s._taxPending)setTimeout(()=>showEnd(s),1200);}
+  // end screen ถูกจัดการโดย showEndTaxFlow เท่านั้น
+}
 
 function renderLog(log){
   if(log.length===lastLogLen)return;lastLogLen=log.length;
@@ -1408,9 +1409,12 @@ async function doRoll(){
     if(data.cellEvent&&data.cellEvent.cellType!=='lucky')
       handleEvent(data.cellEvent,data.state);
     updateLuckyPill(data.state);
-    // ถ้าเกมจบ (ครบ 3 รอบ) → เริ่มขั้นตอนภาษีก่อนแสดงผล
+    // ถ้าเกมจบ (ครบ 3 รอบ) → หยุด poll แล้วเริ่ม tax flow
     if(data.state.status==='ended'){
-      setTimeout(()=>showEndTaxFlow(data.state), 800);
+      stopPoll(); // หยุด poll ทันที ป้องกันเรียกซ้ำ
+      if(!endTaxDone){
+        setTimeout(()=>showEndTaxFlow(data.state), 800);
+      }
     }
   }catch(e){console.error(e);alert('เชื่อมต่อไม่ได้ กรุณาลองใหม่');}
   finally{isRolling=false;}}
@@ -1540,12 +1544,12 @@ function startPoll(){stopPoll();
         else renderGame(s);
       } else if(s.status==='ended'){
         if(!document.getElementById('gameScreen').classList.contains('active'))enterGame();
-        else renderGame(s);
-        // trigger tax flow สำหรับผู้เล่นที่ยังไม่ได้คำนวณ
-        if(!endTaxDone&&!document.getElementById('endScreen')&&
-           !document.getElementById('fillModal').style.display!=='none'&&
-           !document.getElementById('quizModal').style.display!=='none'){
-          setTimeout(()=>showEndTaxFlow(s), 1000);
+        // หยุด poll ทันทีเมื่อ ended — ป้องกันการเรียกซ้ำ
+        stopPoll();
+        renderGame(s);
+        // trigger tax flow เพียงครั้งเดียว
+        if(!endTaxDone){
+          setTimeout(()=>showEndTaxFlow(s), 800);
         }
       } else renderWait(s);
     }catch(e){}},POLL_MS);}
