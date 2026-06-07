@@ -1212,6 +1212,61 @@ function verifyPin(){
   }
 }
 
+// ═══ API ═════════════════════════════════════════════════
+async function api(p){const url=SCRIPT_URL+'?'+new URLSearchParams(p).toString();const r=await fetch(url);return r.json();}
+
+// ═══ LOBBY ═══════════════════════════════════════════════
+async function createRoom(){
+  const btn=document.getElementById('createBtn');btn.disabled=true;btn.textContent='กำลังสร้าง...';
+  try{const d=await api({action:'createRoom',teacherName:document.getElementById('teaName').value.trim()||'ครู'});
+    if(!d.ok){showMsg('teaMsg',d.error,'err');return;}
+    isTeacher=true;myRoom=d.roomCode;enterWait(d.roomCode);
+  }catch(e){showMsg('teaMsg','เชื่อมต่อไม่ได้','err');}
+  finally{btn.disabled=false;btn.textContent='🏛️ สร้างห้องเรียน';}}
+
+async function joinRoom(){
+  const room=document.getElementById('roomIn').value.trim().toUpperCase();
+  const name=document.getElementById('nameIn').value.trim();
+  const cid=document.getElementById('careerSel').value;
+  if(!room||room.length<4){showMsg('stuMsg','กรุณากรอกรหัสห้อง','err');return;}
+  if(!name){showMsg('stuMsg','กรุณากรอกชื่อ','err');return;}
+  const btn=document.getElementById('joinBtn');btn.disabled=true;btn.textContent='กำลังเข้าร่วม...';
+  try{const d=await api({action:'joinRoom',room,name,avatar:selAv,careerId:cid,color:CAREERS[cid].color});
+    if(!d.ok){showMsg('stuMsg',d.error,'err');return;}
+    myPid=d.playerId;myRoom=room;isTeacher=false;gameState=d.state;enterWait(room);
+  }catch(e){showMsg('stuMsg','เชื่อมต่อไม่ได้','err');}
+  finally{btn.disabled=false;btn.textContent='⚔️ เข้าร่วมสงคราม';}}
+
+async function teacherJoin(){
+  const room=document.getElementById('teaRoomIn').value.trim().toUpperCase();
+  if(!room){showMsg('teaMsg','กรุณากรอกรหัสห้อง','err');return;}
+  const d=await api({action:'getState',room});
+  if(!d.ok){showMsg('teaMsg',d.error,'err');return;}
+  isTeacher=true;myRoom=room;gameState=d.state;enterWait(room);}
+
+// ═══ WAIT ════════════════════════════════════════════════
+function enterWait(code){showScreen('waitScreen');document.getElementById('waitCode').textContent=code;startPoll();}
+function renderWait(s){
+  document.getElementById('playerCount').textContent=s.players.length;
+  document.getElementById('playerChips').innerHTML=s.players.map(p=>{const c=CAREERS[p.careerId]||{};
+    return `<div class="p-chip"><span style="font-size:20px">${p.avatar}</span>
+      <span style="font-weight:700;font-size:13px;color:var(--ink)">${p.name}</span>
+      <span class="ctag" style="background:${c.color||'#888'};margin-left:auto">${c.icon||''}</span></div>`;
+  }).join('')+Array(Math.max(0,2-s.players.length)).fill('<div class="empty-slot">รอผู้เล่น...</div>').join('');
+  const ctrl=document.getElementById('waitCtrl');
+  if(isTeacher){const ok=s.players.length>=2;
+    ctrl.innerHTML=`${ok?'':'<div class="msg inf">รอผู้เล่นอย่างน้อย 2 คน...</div>'}
+      <button class="btn-p" ${ok?'':'disabled'} onclick="startGame()">⚔️ เริ่มสงครามภาษี (${s.players.length} คน)</button>`;
+  }else ctrl.innerHTML='<div class="msg inf">⏳ รอครูกดเริ่มเกม...</div>';}
+
+async function startGame(){const d=await api({action:'startGame',room:myRoom});
+  if(!d.ok){alert(d.error);return;}gameState=d.state;enterGame();}
+
+// ═══ GAME ════════════════════════════════════════════════
+function enterGame(){showScreen('gameScreen');buildBoard();
+  if(isTeacher)document.getElementById('tcBox').style.display='';
+  renderGame(gameState);}
+
 
 // ═══ INIT UI ═════════════════════════════════════════════
 function initUI(){
