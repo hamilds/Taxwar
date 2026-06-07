@@ -1017,7 +1017,7 @@ function showTaxQuizFlow(taxEv, state){
       `<b>หักค่าใช้จ่าย</b> (${Math.round((c.dr||.5)*100)}% สูงสุด ${(c.dm||100000).toLocaleString()} ฿): `+
         `<b style="color:var(--red)">− ${expDed.toLocaleString()} ฿</b><br>`+
       `<b>หักลดหย่อนส่วนตัว:</b> <b style="color:var(--red)">− ${perDed.toLocaleString()} ฿</b><br>`+
-      `<b>หักลดหย่อนอื่นๆ:</b> <b style="color:var(--red)">− ${otherDed.toLocaleString()} ฿</b><br>`+,
+      `<b>หักลดหย่อนอื่นๆ:</b> <b style="color:var(--red)">− ${otherDed.toLocaleString()} ฿</b><br>`,
     desc:'กรอกผลลัพธ์: เงินได้พึงประเมิน − ลดหย่อนทั้งหมด = ?',
     correct:netIncome,
   }, (isCorrect, correctVal)=>{
@@ -1212,16 +1212,20 @@ function verifyPin(){
   }
 }
 
-// reset PIN เมื่อสลับแท็บ
-const _origSwitchTab = window.switchTab;
 
 // ═══ INIT UI ═════════════════════════════════════════════
 function initUI(){
   const ar=document.getElementById('avRow');
-  ar.innerHTML=AVATARS.map((av,i)=>
-    `<button class="av-btn ${i===0?'sel':''}" onclick="pickAv(${i},'${av}')">${av}</button>`).join('');
-  document.getElementById('careerSel').innerHTML=Object.entries(CAREERS).map(([id,c])=>
-    `<option value="${id}">${c.icon} ${c.name} (${c.tag})</option>`).join('');}
+  if(ar){
+    ar.innerHTML=AVATARS.map((av,i)=>
+      `<button class="av-btn ${i===0?'sel':''}" onclick="pickAv(${i},'${av}')">${av}</button>`).join('');
+  }
+  const cs=document.getElementById('careerSel');
+  if(cs){
+    cs.innerHTML=Object.entries(CAREERS).map(([id,c])=>
+      `<option value="${id}">${c.icon} ${c.name} (${c.tag})</option>`).join('');
+  }
+}
 function pickAv(i,av){selAv=av;document.querySelectorAll('.av-btn').forEach((b,j)=>b.classList.toggle('sel',j===i));}
 function switchTab(t){
   const isTea=t==='tea';
@@ -1485,7 +1489,12 @@ function stopPoll(){if(pollTimer){clearInterval(pollTimer);pollTimer=null;}}
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
 
 // ═══ INIT ════════════════════════════════════════════════
-initUI();
+// รัน initUI หลัง DOM โหลดเสร็จสมบูรณ์
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', initUI);
+} else {
+  initUI();
+}
 </script>
 </body>
 </html>
