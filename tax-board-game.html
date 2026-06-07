@@ -440,13 +440,27 @@ hr.dv{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
       </div>
       <div id="teaTab" style="display:none">
         <div id="teaMsg"></div>
-        <div class="form-group"><label>ชื่อครู</label>
-          <input id="teaName" value="ครู" maxlength="30"></div>
-        <button class="btn-p" id="createBtn" onclick="createRoom()">🏛️ สร้างห้องเรียน</button>
-        <hr class="dv">
-        <div class="form-group"><label>เข้าห้องเดิม</label>
-          <input class="code-input" id="teaRoomIn" maxlength="6" placeholder="XXXXXX" oninput="this.value=this.value.toUpperCase()"></div>
-        <button class="btn-s" onclick="teacherJoin()">เข้าห้องเดิม →</button>
+        <!-- PIN verification -->
+        <div id="pinSection">
+          <div class="form-group"><label>🔐 Teacher PIN (ครูเท่านั้น)</label>
+            <input id="teaPin" type="password" placeholder="กรอก PIN" maxlength="10"
+              onkeydown="if(event.key==='Enter')verifyPin()"></div>
+          <button class="btn-p" onclick="verifyPin()">ยืนยัน PIN →</button>
+          <div style="font-size:11px;color:#8A6A30;text-align:center;margin-top:8px;opacity:.7">
+            PIN สำหรับครูผู้ควบคุมห้องเรียนเท่านั้น</div>
+        </div>
+        <!-- Teacher controls (แสดงหลังใส่ PIN ถูก) -->
+        <div id="teaControls" style="display:none">
+          <div class="form-group"><label>ชื่อครู</label>
+            <input id="teaName" value="ครู" maxlength="30"></div>
+          <button class="btn-p" id="createBtn" onclick="createRoom()">🏛️ สร้างห้องเรียน</button>
+          <hr class="dv">
+          <div class="form-group"><label>เข้าห้องเดิม</label>
+            <input class="code-input" id="teaRoomIn" maxlength="6" placeholder="XXXXXX" oninput="this.value=this.value.toUpperCase()"></div>
+          <button class="btn-s" onclick="teacherJoin()">เข้าห้องเดิม →</button>
+          <div style="font-size:11px;color:var(--green);text-align:center;margin-top:8px">
+            ✅ ยืนยัน PIN แล้ว — โหมดครู</div>
+        </div>
       </div>
     </div>
     <div class="snd-row">
@@ -1164,6 +1178,42 @@ function showEndTaxFlow(state){
   };
   document.getElementById('eventModal').style.display='flex';
 }
+
+
+// ═══════════════════════════════════════════════════════
+//  TEACHER PIN SYSTEM
+// ═══════════════════════════════════════════════════════
+// PIN สำหรับครู 10 ชุด — แจ้งแต่ละท่านแยกกัน
+const TEACHER_PINS = [
+  'TW-001',  // ครูคนที่ 1
+  'TW-002',  // ครูคนที่ 2
+  'TW-003',  // ครูคนที่ 3
+  'TW-004',  // ครูคนที่ 4
+  'TW-005',  // ครูคนที่ 5
+  'TW-006',  // ครูคนที่ 6
+  'TW-007',  // ครูคนที่ 7
+  'TW-008',  // ครูคนที่ 8
+  'TW-009',  // ครูคนที่ 9
+  'TW-010',  // ครูคนที่ 10
+];
+
+function verifyPin(){
+  const pin = document.getElementById('teaPin').value.trim();
+  if(TEACHER_PINS.includes(pin)){
+    const pinNo = TEACHER_PINS.indexOf(pin) + 1;
+    document.getElementById('pinSection').style.display = 'none';
+    document.getElementById('teaControls').style.display = 'block';
+    showMsg('teaMsg', '✅ ยืนยัน PIN สำเร็จ! (ครูคนที่ '+pinNo+') คุณมีสิทธิ์ควบคุมห้อง', 'inf');
+  } else {
+    document.getElementById('teaPin').value = '';
+    document.getElementById('teaPin').style.border = '2px solid var(--red)';
+    setTimeout(()=>document.getElementById('teaPin').style.border = '', 1500);
+    showMsg('teaMsg', '❌ PIN ไม่ถูกต้อง กรุณาลองใหม่', 'err');
+  }
+}
+
+// reset PIN เมื่อสลับแท็บ
+const _origSwitchTab = window.switchTab;
 
 // ═══ INIT UI ═════════════════════════════════════════════
 function initUI(){
