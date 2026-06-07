@@ -2,14 +2,12 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>TAX WAR สงครามภาษี(เงินได้)</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&family=Teko:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-:root{
-  --gold:#D4A017;--gold-l:#F5C842;--dark:#1A1208;--paper:#F5EDD6;
-  --paper-d:#E8D9B5;--red:#C0392B;--green:#1A6B3A;--blue:#1B4F8A;--ink:#2C1A05;
-}
+:root{--gold:#D4A017;--gold-l:#F5C842;--dark:#1A1208;--paper:#F5EDD6;--paper-d:#E8D9B5;
+  --red:#C0392B;--green:#1A6B3A;--blue:#1B4F8A;--ink:#2C1A05}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--dark);font-family:'Sarabun',sans-serif;min-height:100vh;
   display:flex;flex-direction:column;align-items:center;padding:6px 8px;
@@ -18,20 +16,24 @@ body{background:var(--dark);font-family:'Sarabun',sans-serif;min-height:100vh;
 .screen{display:none}.screen.active{display:block}
 @keyframes glow{0%,100%{text-shadow:0 0 40px rgba(212,160,23,.5),3px 3px 0 #8B6000}
   50%{text-shadow:0 0 60px rgba(212,160,23,.9),3px 3px 0 #8B6000}}
+@keyframes mp{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes si{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes cardFlip{0%{transform:rotateY(0)}50%{transform:rotateY(90deg)}100%{transform:rotateY(0)}}
 
 /* ── LOBBY ── */
 #lobbyScreen{max-width:500px;margin:0 auto;width:100%;padding-top:16px}
 .logo-title{font-family:'Teko',sans-serif;font-size:clamp(52px,12vw,80px);font-weight:700;
   color:var(--gold);letter-spacing:4px;line-height:1;text-align:center;
-  text-shadow:0 0 40px rgba(212,160,23,.5),3px 3px 0 #8B6000;animation:glow 3s ease-in-out infinite}
+  animation:glow 3s ease-in-out infinite}
 .logo-sub{color:var(--paper);font-size:13px;font-weight:600;letter-spacing:4px;
-  text-transform:uppercase;opacity:.8;text-align:center;margin:4px 0 20px}
+  opacity:.8;text-align:center;margin:4px 0 20px}
 .lobby-card{background:var(--paper);border:2px solid var(--gold);border-radius:12px;
   padding:22px;box-shadow:5px 5px 0 rgba(0,0,0,.5);margin-bottom:12px}
 .tab-row{display:flex;gap:8px;margin-bottom:18px}
 .tab{flex:1;padding:10px;border-radius:8px;border:2px solid rgba(212,160,23,.3);
   background:var(--paper-d);font-family:'Teko',sans-serif;font-size:18px;
-  letter-spacing:1px;cursor:pointer;transition:all .2s;color:var(--ink)}
+  letter-spacing:1px;cursor:pointer;color:var(--ink)}
 .tab.active{background:var(--gold);border-color:var(--gold);color:var(--dark)}
 .form-group{margin-bottom:13px}
 label{font-size:11px;font-weight:700;color:#5A3A10;letter-spacing:1px;
@@ -39,78 +41,67 @@ label{font-size:11px;font-weight:700;color:#5A3A10;letter-spacing:1px;
 input,select{width:100%;padding:10px 13px;border-radius:8px;border:2px solid rgba(212,160,23,.4);
   background:white;font-family:'Sarabun',sans-serif;font-size:15px;color:var(--ink);outline:none}
 input:focus,select:focus{border-color:var(--gold)}
-input.code-input{font-family:'Teko',sans-serif;font-size:32px;letter-spacing:6px;
-  text-align:center;text-transform:uppercase}
-.avatar-row{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-bottom:10px}
+.code-input{font-family:'Teko',sans-serif !important;font-size:32px !important;
+  letter-spacing:6px !important;text-align:center;text-transform:uppercase}
+.av-row{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-bottom:10px}
 .av-btn{width:40px;height:40px;border-radius:50%;border:2px solid transparent;
-  background:var(--paper-d);font-size:20px;cursor:pointer;transition:all .2s;
-  display:flex;align-items:center;justify-content:center}
-.av-btn.sel{border-color:var(--gold);background:#FFF8E7;box-shadow:0 0 8px rgba(212,160,23,.5)}
-.btn-primary{width:100%;padding:14px;border-radius:10px;border:none;
+  background:var(--paper-d);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.av-btn.sel{border-color:var(--gold);background:#FFF8E7}
+.btn-p{width:100%;padding:14px;border-radius:10px;border:none;
   background:linear-gradient(135deg,var(--gold),#A87800);font-family:'Teko',sans-serif;
   font-size:22px;font-weight:600;letter-spacing:3px;color:var(--dark);cursor:pointer;
-  box-shadow:0 5px 0 #6B4A00;transition:transform .1s,box-shadow .1s;text-transform:uppercase}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 7px 0 #6B4A00}
-.btn-primary:active{transform:translateY(3px);box-shadow:0 2px 0 #6B4A00}
-.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.btn-secondary{width:100%;padding:11px;border-radius:10px;border:none;
+  box-shadow:0 5px 0 #6B4A00;text-transform:uppercase;margin-top:4px}
+.btn-p:disabled{opacity:.5;cursor:not-allowed}
+.btn-s{width:100%;padding:11px;border-radius:10px;border:none;
   background:linear-gradient(135deg,#5A3A00,#3A2000);font-family:'Teko',sans-serif;
-  font-size:18px;font-weight:600;letter-spacing:2px;color:var(--paper);cursor:pointer;
-  box-shadow:0 4px 0 #1A0A00;transition:transform .1s;text-transform:uppercase;margin-top:8px}
-.btn-secondary:hover{transform:translateY(-2px)}
+  font-size:18px;letter-spacing:2px;color:var(--paper);cursor:pointer;
+  box-shadow:0 4px 0 #1A0A00;margin-top:8px}
 .msg{padding:10px 13px;border-radius:8px;font-size:13px;margin-bottom:10px}
-.msg.error{background:#FFEBEE;border-left:3px solid var(--red);color:var(--red)}
-.msg.info{background:#E3F2FD;border-left:3px solid var(--blue);color:var(--blue)}
-.msg.success{background:#E8F5E9;border-left:3px solid var(--green);color:var(--green)}
-hr.divider{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
-.sound-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px}
-.sound-toggle{background:var(--paper-d);border:2px solid rgba(212,160,23,.4);
-  border-radius:20px;padding:5px 14px;font-size:13px;font-weight:700;color:var(--ink);cursor:pointer}
-.sound-toggle.on{background:var(--gold);border-color:var(--gold);color:var(--dark)}
-.guide-btn-small{background:linear-gradient(135deg,#1B4F8A,#0D2A4A);color:white;border:none;
+.msg.err{background:#FFEBEE;border-left:3px solid var(--red);color:var(--red)}
+.msg.inf{background:#E3F2FD;border-left:3px solid var(--blue);color:var(--blue)}
+hr.dv{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
+.snd-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px}
+.snd-tog{background:var(--paper-d);border:2px solid rgba(212,160,23,.4);border-radius:20px;
+  padding:5px 14px;font-size:13px;font-weight:700;color:var(--ink);cursor:pointer}
+.snd-tog.on{background:var(--gold);border-color:var(--gold);color:var(--dark)}
+.guide-btn{background:linear-gradient(135deg,#1B4F8A,#0D2A4A);color:white;border:none;
   border-radius:8px;padding:8px 16px;font-family:'Teko',sans-serif;font-size:16px;
   letter-spacing:1px;cursor:pointer;box-shadow:0 3px 0 #0A1A2E;width:100%;margin-bottom:8px}
 
-/* ── WAIT ROOM ── */
+/* ── WAIT ── */
 #waitScreen{max-width:540px;margin:0 auto;width:100%;padding-top:16px}
 .wait-card{background:var(--paper);border:3px solid var(--gold);border-radius:12px;
   padding:22px;box-shadow:6px 6px 0 rgba(0,0,0,.5)}
-.room-code-box{background:var(--dark);border-radius:10px;padding:14px;text-align:center;margin-bottom:16px}
-.room-code-box .lbl{color:var(--gold);font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
-.room-code-big{font-family:'Teko',sans-serif;font-size:clamp(36px,8vw,54px);
-  font-weight:700;color:white;letter-spacing:8px;text-shadow:0 0 20px rgba(212,160,23,.5)}
-.player-chips{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.rc-box{background:var(--dark);border-radius:10px;padding:14px;text-align:center;margin-bottom:16px}
+.rc-lbl{color:var(--gold);font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
+.rc-big{font-family:'Teko',sans-serif;font-size:clamp(36px,8vw,54px);font-weight:700;
+  color:white;letter-spacing:8px;text-shadow:0 0 20px rgba(212,160,23,.5)}
+.p-chips{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
 .p-chip{background:var(--paper-d);border:1px solid rgba(212,160,23,.3);border-radius:8px;
   padding:8px 11px;display:flex;align-items:center;gap:7px}
-.p-chip .av{font-size:20px}.p-chip .nm{font-weight:700;font-size:13px;color:var(--ink)}
-.p-chip .ctag{font-size:9px;padding:1px 5px;border-radius:6px;color:white;font-weight:700;margin-left:auto}
 .empty-slot{background:rgba(212,160,23,.06);border:1px dashed rgba(212,160,23,.3);
   border-radius:8px;padding:10px;text-align:center;font-size:12px;color:#8A6A30;opacity:.6}
 .poll-dot{width:7px;height:7px;border-radius:50%;background:#4CAF50;
   display:inline-block;margin-left:5px;animation:pulse 2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
-/* ── GAME SCREEN ── */
+/* ── GAME ── */
 #gameScreen{width:100%;max-width:1160px;margin:0 auto}
-.game-header{text-align:center;margin-bottom:4px}
+.game-hd{text-align:center;margin-bottom:4px}
 .game-title{font-family:'Teko',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:700;
-  color:var(--gold);letter-spacing:4px;line-height:1;
-  text-shadow:0 0 40px rgba(212,160,23,.5),3px 3px 0 #8B6000;animation:glow 3s ease-in-out infinite}
-.game-subtitle{color:var(--paper);font-size:13px;font-weight:600;letter-spacing:5px;opacity:.7}
-.round-counter{text-align:center;color:var(--gold-l);font-family:'Teko',sans-serif;
-  font-size:18px;letter-spacing:2px;opacity:1;margin-bottom:6px;
+  color:var(--gold);letter-spacing:4px;animation:glow 3s ease-in-out infinite}
+.round-ctr{text-align:center;font-family:'Teko',sans-serif;font-size:20px;
+  color:var(--gold-l);letter-spacing:2px;margin-bottom:6px;
   text-shadow:0 0 10px rgba(212,160,23,.4)}
 .game-layout{display:grid;grid-template-columns:185px 1fr 185px;gap:8px;align-items:start}
 .panel{background:var(--paper);border:2px solid var(--gold);border-radius:8px;overflow:hidden;
-  box-shadow:4px 4px 0 rgba(0,0,0,.5)}
-.panel-header{background:var(--gold);color:var(--dark);font-family:'Teko',sans-serif;
-  font-size:16px;font-weight:600;letter-spacing:2px;text-align:center;padding:6px 10px;text-transform:uppercase}
-.panel-body{padding:8px;max-height:240px;overflow-y:auto}
-.panel-body::-webkit-scrollbar{width:3px}
-.panel-body::-webkit-scrollbar-thumb{background:rgba(212,160,23,.4);border-radius:2px}
+  box-shadow:3px 3px 0 rgba(0,0,0,.4)}
+.panel-hd{background:var(--gold);color:var(--dark);font-family:'Teko',sans-serif;
+  font-size:15px;font-weight:600;letter-spacing:2px;text-align:center;padding:6px 10px;text-transform:uppercase}
+.panel-bd{padding:8px;max-height:240px;overflow-y:auto}
+.panel-bd::-webkit-scrollbar{width:3px}
+.panel-bd::-webkit-scrollbar-thumb{background:rgba(212,160,23,.4);border-radius:2px}
 .p-card{background:var(--paper-d);border:1px solid rgba(212,160,23,.3);border-radius:6px;
   padding:6px;margin-bottom:5px;transition:all .2s;position:relative}
-.p-card:last-child{margin-bottom:0}
 .p-card.active{background:#FFF8E7;border-color:var(--gold);
   box-shadow:0 0 10px rgba(212,160,23,.35);transform:translateX(3px)}
 .p-card.active::before{content:'▶';position:absolute;left:-13px;top:50%;
@@ -130,33 +121,33 @@ hr.divider{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
 .tc-box{background:var(--paper);border:2px solid var(--gold);border-radius:8px;
   padding:6px;margin-top:5px;box-shadow:3px 3px 0 rgba(0,0,0,.4)}
 .tc-title{font-family:'Teko',sans-serif;font-size:13px;letter-spacing:2px;
-  color:var(--gold);text-transform:uppercase;margin-bottom:6px;text-align:center}
+  color:var(--gold);text-transform:uppercase;margin-bottom:5px;text-align:center}
 .tc-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
 .tc-btn{padding:7px;border-radius:6px;border:none;cursor:pointer;
-  font-family:'Teko',sans-serif;font-size:13px;letter-spacing:1px;font-weight:600;transition:transform .1s}
-.tc-btn:active{transform:scale(.97)}
+  font-family:'Teko',sans-serif;font-size:13px;letter-spacing:1px;font-weight:600}
 .tc-pause{background:linear-gradient(135deg,#FF9800,#E65100);color:white;box-shadow:0 2px 0 #8B3500}
 .tc-skip{background:linear-gradient(135deg,#1976D2,#0D47A1);color:white;box-shadow:0 2px 0 #0A2F6B}
 .tc-reset{background:linear-gradient(135deg,#E53935,#B71C1C);color:white;
   box-shadow:0 2px 0 #7B0000;grid-column:1/-1}
 
 /* ── BOARD ── */
-.board{background:var(--paper);border:2px solid var(--gold);border-radius:4px;
-  padding:2px;aspect-ratio:1/1;position:relative;overflow:hidden;
-  box-shadow:4px 4px 0 rgba(0,0,0,.5),0 0 20px rgba(212,160,23,.1);
-  width:100%;margin:0 auto;display:flex;align-items:stretch}
+.board{background:var(--paper);border:2px solid var(--gold);border-radius:6px;
+  padding:3px;aspect-ratio:1/1;position:relative;overflow:hidden;
+  box-shadow:4px 4px 0 rgba(0,0,0,.5);width:100%;margin:0 auto;
+  display:flex;align-items:stretch}
 .board::before{content:'';position:absolute;inset:8px;
   border:1px dashed rgba(212,160,23,.2);border-radius:4px;pointer-events:none;z-index:1}
 .board-grid{display:grid;grid-template-columns:repeat(9,1fr);
-  grid-template-rows:repeat(9,1fr);width:100%;gap:1px;flex:1;overflow:hidden}
+  grid-template-rows:repeat(9,1fr);width:100%;gap:1px;flex:1}
 .cell{border-radius:4px;display:flex;flex-direction:column;align-items:center;
   justify-content:center;font-size:clamp(6px,.9vw,9px);font-weight:600;
   text-align:center;padding:2px;border:1px solid transparent;
-  position:relative;line-height:1.1;transition:transform .15s;cursor:default;min-height:0;min-width:0}
-.cell-num{position:absolute;top:1px;left:2px;font-size:8px;opacity:.7;font-family:'Teko',sans-serif;font-weight:700;color:#000}
+  position:relative;line-height:1.1;cursor:default;min-height:0;min-width:0;z-index:6}
+.cell-num{position:absolute;top:1px;left:2px;font-size:8px;opacity:.7;
+  font-family:'Teko',sans-serif;font-weight:700;color:#000}
 .cell-icon{font-size:clamp(10px,1.5vw,16px);margin-bottom:1px}
 .cell-text{font-size:clamp(5px,.65vw,7.5px);color:var(--ink);opacity:.8;line-height:1.1}
-.cell-start{background:linear-gradient(135deg,#FFD700,#FF8C00);border-color:#8B6000;border-width:2px;z-index:8!important}
+.cell-start  {background:linear-gradient(135deg,#FFD700,#FF8C00);border-color:#8B6000;border-width:2px;z-index:8!important}
 .cell-income {background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border-color:#4CAF50}
 .cell-expense{background:linear-gradient(135deg,#FFEBEE,#FFCDD2);border-color:#EF9A9A}
 .cell-tax    {background:linear-gradient(135deg,#E3F2FD,#BBDEFB);border-color:#64B5F6}
@@ -164,53 +155,62 @@ hr.divider{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
 .cell-deduct {background:linear-gradient(135deg,#F3E5F5,#E1BEE7);border-color:#CE93D8}
 .cell-event  {background:linear-gradient(135deg,#FFF8E1,#FFECB3);border-color:#FFD54F}
 .cell-career {background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border-color:#FF9800}
-.cell-bonus  {background:linear-gradient(135deg,#E0F7FA,#B2EBF2);border-color:#4DD0E1}
 .cell-audit  {background:linear-gradient(135deg,#FBE9E7,#FFCCBC);border-color:#FF8A65}
+.cell-lucky  {background:linear-gradient(135deg,#FFF9C4,#FFF176);border-color:#F9A825;border-width:2px}
 .cell-center {background:transparent;border:none;overflow:hidden}
 .cell-current{box-shadow:0 0 0 3px var(--gold),0 0 10px rgba(212,160,23,.6)!important;
   transform:scale(1.08)!important;z-index:20}
-.center-logo{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:5px;padding:4px}
-.center-logo .big-icon{font-size:clamp(22px,3.2vw,38px)}
-.center-logo .ct{font-family:'Teko',sans-serif;font-size:clamp(13px,2vw,24px);
+/* center logo */
+.center-logo{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;gap:4px;padding:4px;cursor:pointer;transition:transform .2s}
+.center-logo:hover{transform:scale(1.02)}
+.cl-icon{font-size:clamp(18px,2.5vw,30px)}
+.cl-title{font-family:'Teko',sans-serif;font-size:clamp(10px,1.6vw,20px);
   font-weight:700;color:var(--gold);letter-spacing:2px}
-.center-logo .cs{font-size:clamp(8px,1vw,11px);color:#5A3A10;font-weight:600;text-align:center;opacity:.8}
+.cl-sub{font-size:clamp(7px,.85vw,10px);color:#5A3A10;font-weight:600;text-align:center;opacity:.8}
 .tax-rates{background:rgba(212,160,23,.12);border:1px solid rgba(212,160,23,.35);
-  border-radius:6px;padding:5px 8px;font-size:clamp(6.5px,.75vw,9.5px);color:var(--ink);
-  line-height:1.85;text-align:left;width:96%;overflow:hidden}
-.rr{display:flex;justify-content:space-between;gap:4px;padding:1px 0;white-space:nowrap}
-.rp{font-weight:700;color:var(--blue);min-width:34px;text-align:right;flex-shrink:0}
+  border-radius:6px;padding:5px 7px;font-size:clamp(6px,.72vw,9px);color:var(--ink);
+  line-height:1.85;width:94%;overflow:hidden}
+.rr{display:flex;justify-content:space-between;gap:4px;white-space:nowrap}
+.rp{font-weight:700;color:var(--blue);min-width:32px;text-align:right;flex-shrink:0}
+.deck-pill{background:linear-gradient(135deg,#E65100,#BF360C);border:1px solid #FFD54F;
+  border-radius:20px;padding:3px 10px;font-family:'Teko',sans-serif;font-size:clamp(8px,1vw,11px);
+  color:#FFD54F;letter-spacing:1px;margin-bottom:3px;cursor:pointer;
+  box-shadow:0 2px 4px rgba(0,0,0,.3);transition:transform .15s}
+.deck-pill:hover{transform:scale(1.05)}
+/* token */
 .token{position:absolute;width:16px;height:16px;border-radius:50%;border:2px solid white;
   display:flex;align-items:center;justify-content:center;font-size:9px;
   transform:translate(-50%,-50%);box-shadow:0 2px 5px rgba(0,0,0,.4);
-  z-index:30;pointer-events:none;animation:tf 2s ease-in-out infinite}
-@keyframes tf{0%,100%{transform:translate(-50%,-50%) translateY(0)}
-  50%{transform:translate(-50%,-50%) translateY(-3px)}}
-.dice-section{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:6px;flex-wrap:wrap}
-.dice-display{display:flex;gap:8px}
-.die{width:40px;height:40px;background:white;border:2px solid var(--ink);border-radius:7px;
-  display:flex;align-items:center;justify-content:center;font-size:26px;
+  z-index:30;pointer-events:none;transition:left .25s ease,top .25s ease}
+/* dice */
+.dice-section{display:flex;align-items:center;justify-content:center;gap:12px;
+  margin-top:7px;flex-wrap:wrap}
+.die{width:50px;height:50px;background:white;border:2px solid var(--ink);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;font-size:30px;
   box-shadow:2px 2px 0 rgba(0,0,0,.25)}
 .die.rolling{animation:dr .45s ease-out}
-@keyframes dr{0%{transform:rotate(0) scale(1.2)}50%{transform:rotate(180deg) scale(.9)}100%{transform:rotate(360deg) scale(1)}}
+@keyframes dr{0%{transform:rotate(0) scale(1.2)}50%{transform:rotate(180deg) scale(.9)}
+  100%{transform:rotate(360deg) scale(1)}}
 .roll-btn{background:linear-gradient(135deg,var(--gold),#A87800);color:var(--dark);border:none;
-  border-radius:8px;padding:9px 22px;font-family:'Teko',sans-serif;font-size:20px;
-  font-weight:600;letter-spacing:2px;cursor:pointer;box-shadow:0 3px 0 #6B4A00;transition:transform .1s,box-shadow .1s}
-.roll-btn:hover{transform:translateY(-2px);box-shadow:0 5px 0 #6B4A00}
-.roll-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #6B4A00}
-.roll-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+  border-radius:8px;padding:9px 20px;font-family:'Teko',sans-serif;font-size:20px;
+  font-weight:600;letter-spacing:2px;cursor:pointer;box-shadow:0 3px 0 #6B4A00}
+.roll-btn:disabled{opacity:.4;cursor:not-allowed}
 .not-my-turn{background:var(--paper-d);color:#8A6A30;border:2px solid rgba(212,160,23,.3);
   border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;text-align:center}
-
-/* log & legend */
+.steps-lbl{font-family:'Teko',sans-serif;font-size:14px;color:var(--paper);
+  opacity:.8;letter-spacing:1px;text-align:center;margin-top:2px}
+/* log */
 .log-entry{background:var(--paper-d);border-left:3px solid var(--gold);
-  border-radius:0 4px 4px 0;padding:6px 9px;margin-bottom:5px;
+  border-radius:0 4px 4px 0;padding:5px 8px;margin-bottom:4px;
   font-size:11px;color:var(--ink);line-height:1.4;animation:si .3s ease-out}
-@keyframes si{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
 .log-entry.income{border-color:#4CAF50}.log-entry.expense{border-color:#E53935}
 .log-entry.tax{border-color:#1976D2}.log-entry.event{border-color:#FF8F00}
 .log-entry.penalty{border-color:#E64A19}.log-entry.career{border-color:#FF9800}
+.log-entry.lucky{border-color:#F9A825}
 .log-rnd{font-family:'Teko',sans-serif;font-size:10px;letter-spacing:1px;
   text-transform:uppercase;opacity:.55;margin-bottom:1px}
+/* legend */
 .legend-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
 .li{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--ink)}
 .ld{width:12px;height:12px;border-radius:3px;flex-shrink:0}
@@ -220,23 +220,17 @@ hr.divider{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
   color:var(--gold);margin-bottom:2px;text-transform:uppercase}
 .rules-box p{font-size:11px;color:var(--ink);line-height:1.5;opacity:.85}
 
-/* paused overlay */
-.paused-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;
-  align-items:center;justify-content:center;z-index:150;backdrop-filter:blur(3px);pointer-events:none}
-.paused-box{background:var(--paper);border:3px solid #FF9800;border-radius:12px;
-  padding:28px 36px;text-align:center;box-shadow:6px 6px 0 rgba(0,0,0,.4)}
-
-/* modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;
+/* ── MODALS ── */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;
   align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px)}
 .modal{background:var(--paper);border:3px solid var(--gold);border-radius:12px;
-  padding:24px;max-width:400px;width:92%;box-shadow:8px 8px 0 rgba(0,0,0,.5);
+  padding:22px;max-width:400px;width:92%;box-shadow:8px 8px 0 rgba(0,0,0,.5);
   text-align:center;animation:mp .25s cubic-bezier(.34,1.56,.64,1)}
-@keyframes mp{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
-.m-icon{font-size:48px;display:block;margin-bottom:8px}
-.m-title{font-family:'Teko',sans-serif;font-size:24px;font-weight:700;color:var(--ink);letter-spacing:1px;margin-bottom:5px}
+.m-icon{font-size:46px;display:block;margin-bottom:7px}
+.m-title{font-family:'Teko',sans-serif;font-size:23px;font-weight:700;
+  color:var(--ink);letter-spacing:1px;margin-bottom:4px}
 .m-desc{font-size:13px;color:#4A3010;line-height:1.6;margin-bottom:8px}
-.m-amt{font-family:'Teko',sans-serif;font-size:32px;font-weight:700;margin-bottom:8px}
+.m-amt{font-family:'Teko',sans-serif;font-size:30px;font-weight:700;margin-bottom:8px}
 .m-amt.pos{color:var(--green)}.m-amt.neg{color:var(--red)}
 .tip-box{background:linear-gradient(135deg,#EEF4FB,#E3EDFA);border:1px solid #90CAF9;
   border-radius:8px;padding:9px 11px;margin-bottom:10px;text-align:left}
@@ -246,102 +240,158 @@ hr.divider{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
 .m-btn{background:linear-gradient(135deg,var(--gold),#A87800);color:var(--dark);
   border:none;border-radius:8px;padding:9px 26px;font-family:'Teko',sans-serif;
   font-size:18px;font-weight:600;letter-spacing:2px;cursor:pointer;
-  box-shadow:0 3px 0 #6B4A00;transition:transform .1s;text-transform:uppercase}
-.m-btn:hover{transform:translateY(-1px)}
+  box-shadow:0 3px 0 #6B4A00;text-transform:uppercase}
 
-/* knowledge guide */
-.guide-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;
-  align-items:center;justify-content:center;z-index:300;backdrop-filter:blur(4px)}
+/* ── QUIZ MODAL ── */
+.quiz-ov{z-index:110}
+.quiz-modal{max-width:440px}
+.qstep-bar{display:flex;gap:5px;justify-content:center;margin-bottom:12px}
+.qstep{width:28px;height:6px;border-radius:3px;background:rgba(212,160,23,.25)}
+.qstep.done{background:var(--green)}.qstep.active{background:var(--gold)}
+.q-sum{background:rgba(212,160,23,.1);border:1px solid rgba(212,160,23,.3);
+  border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;
+  color:var(--ink);line-height:1.8}
+.q-q{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:12px;
+  line-height:1.5;text-align:center}
+.q-choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.q-c{background:var(--paper-d);border:2px solid rgba(212,160,23,.3);
+  border-radius:8px;padding:10px 8px;cursor:pointer;font-family:'Teko',sans-serif;
+  font-size:18px;font-weight:600;color:var(--ink);text-align:center;transition:all .15s}
+.q-c:hover{background:#FFF8E7;border-color:var(--gold)}
+.q-c.correct{background:#E8F5E9;border-color:#4CAF50;color:var(--green)}
+.q-c.wrong{background:#FFEBEE;border-color:#E53935;color:var(--red)}
+.q-c.reveal{background:#E8F5E9;border-color:#4CAF50;color:var(--green)}
+.q-fb{border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;
+  line-height:1.6;display:none}
+.q-fb.cor{background:#E8F5E9;border-left:4px solid #4CAF50;color:#1A6B3A}
+.q-fb.wro{background:#FFEBEE;border-left:4px solid #E53935;color:#C0392B}
+.q-exp{background:linear-gradient(135deg,#EEF4FB,#E3EDFA);border:1px solid #90CAF9;
+  border-radius:8px;padding:9px 11px;margin-bottom:10px;font-size:11px;
+  color:#1B4F8A;line-height:1.6;display:none}
+.q-next{width:100%;padding:10px;border-radius:8px;border:none;
+  background:linear-gradient(135deg,var(--gold),#A87800);font-family:'Teko',sans-serif;
+  font-size:17px;font-weight:600;letter-spacing:2px;color:var(--dark);cursor:pointer;
+  box-shadow:0 3px 0 #6B4A00;display:none}
+
+/* ── LUCKY MODAL ── */
+.lucky-ov{z-index:120}
+.lucky-modal{border-color:#F9A825;max-width:380px}
+.lucky-deck{width:78px;height:105px;background:linear-gradient(135deg,#E65100,#BF360C);
+  border:3px solid #FFD54F;border-radius:10px;margin:0 auto 10px;
+  display:flex;align-items:center;justify-content:center;font-size:34px;
+  box-shadow:4px 4px 0 rgba(0,0,0,.3);cursor:pointer;transition:transform .2s}
+.lucky-deck:hover{transform:scale(1.05)}
+.lucky-deck.flipped{animation:cardFlip .4s ease-in-out}
+.lucky-reveal{background:linear-gradient(135deg,#FFFDE7,#FFF9C4);
+  border:2px solid #F9A825;border-radius:10px;padding:16px;margin-bottom:14px;
+  animation:mp .3s cubic-bezier(.34,1.56,.64,1);display:none}
+.lc-icon{font-size:48px;display:block;margin-bottom:6px}
+.lc-name{font-family:'Teko',sans-serif;font-size:26px;font-weight:700;
+  color:#E65100;letter-spacing:2px;margin-bottom:3px}
+.lc-desc{font-size:12px;color:#5A3A10;line-height:1.5;margin-bottom:8px}
+.lc-amt{font-family:'Teko',sans-serif;font-size:36px;font-weight:700;color:var(--green)}
+.lc-tax{background:rgba(249,168,37,.15);border:1px solid rgba(249,168,37,.4);
+  border-radius:6px;padding:7px 10px;font-size:11px;color:#5A3A10;
+  line-height:1.6;margin:8px 0}
+.lucky-btn{background:linear-gradient(135deg,#F9A825,#E65100);color:white;border:none;
+  border-radius:10px;padding:11px 32px;font-family:'Teko',sans-serif;font-size:20px;
+  font-weight:600;letter-spacing:3px;cursor:pointer;box-shadow:0 4px 0 #8B3500;
+  text-transform:uppercase;display:none}
+
+/* ── GUIDE ── */
+.guide-ov{z-index:300}
 .guide-box{background:var(--paper);border:3px solid var(--gold);border-radius:14px;
-  padding:24px;max-width:580px;width:94%;max-height:88vh;overflow-y:auto;
+  padding:22px;max-width:560px;width:94%;max-height:88vh;overflow-y:auto;
   box-shadow:8px 8px 0 rgba(0,0,0,.5)}
-.guide-box h2{font-family:'Teko',sans-serif;font-size:26px;color:var(--gold);
-  letter-spacing:2px;margin-bottom:14px;text-align:center}
-.guide-section{background:var(--paper-d);border-left:4px solid var(--gold);
-  border-radius:0 8px 8px 0;padding:10px 12px;margin-bottom:9px}
-.guide-section h4{font-family:'Teko',sans-serif;font-size:16px;color:var(--blue);
-  letter-spacing:1px;margin-bottom:5px}
-.guide-section p{font-size:12px;color:var(--ink);line-height:1.7}
-.guide-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:5px}
-.guide-table th{background:rgba(212,160,23,.2);padding:4px 7px;text-align:left;
+.guide-box h2{font-family:'Teko',sans-serif;font-size:24px;color:var(--gold);
+  letter-spacing:2px;margin-bottom:12px;text-align:center}
+.g-sec{background:var(--paper-d);border-left:4px solid var(--gold);
+  border-radius:0 8px 8px 0;padding:10px 12px;margin-bottom:8px}
+.g-sec h4{font-family:'Teko',sans-serif;font-size:15px;color:var(--blue);
+  letter-spacing:1px;margin-bottom:4px}
+.g-sec p{font-size:12px;color:var(--ink);line-height:1.7}
+.g-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-top:5px}
+.g-tbl th{background:rgba(212,160,23,.2);padding:4px 7px;text-align:left;
   font-weight:700;color:var(--ink);border:1px solid rgba(212,160,23,.3)}
-.guide-table td{padding:4px 7px;border:1px solid rgba(212,160,23,.2);color:var(--ink)}
-.guide-table tr:nth-child(even) td{background:rgba(212,160,23,.05)}
-.guide-close{width:100%;margin-top:14px;padding:10px;border-radius:8px;border:none;
+.g-tbl td{padding:4px 7px;border:1px solid rgba(212,160,23,.2);color:var(--ink)}
+.g-tbl tr:nth-child(even) td{background:rgba(212,160,23,.05)}
+.g-close{width:100%;margin-top:12px;padding:10px;border-radius:8px;border:none;
   background:linear-gradient(135deg,var(--gold),#A87800);font-family:'Teko',sans-serif;
   font-size:18px;font-weight:600;letter-spacing:2px;color:var(--dark);cursor:pointer;
   box-shadow:0 3px 0 #6B4A00}
 
-/* end screen */
-.end-overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);display:flex;
+/* ── PAUSED ── */
+.paused-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;
+  align-items:center;justify-content:center;z-index:150;backdrop-filter:blur(3px);pointer-events:none}
+.paused-box{background:var(--paper);border:3px solid #FF9800;border-radius:12px;
+  padding:28px 36px;text-align:center;box-shadow:6px 6px 0 rgba(0,0,0,.4)}
+
+/* ── END SCREEN ── */
+.end-ov{position:fixed;inset:0;background:rgba(0,0,0,.9);display:flex;
   align-items:flex-start;justify-content:center;z-index:200;
   backdrop-filter:blur(8px);overflow-y:auto;padding:16px}
 .endscreen{background:var(--paper);border:4px solid var(--gold);border-radius:16px;
-  padding:26px;max-width:640px;width:100%;
+  padding:24px;max-width:620px;width:100%;
   box-shadow:0 0 60px rgba(212,160,23,.25),10px 10px 0 rgba(0,0,0,.5);
   text-align:center;animation:mp .4s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden}
 .confetti-bar{position:absolute;top:0;left:0;right:0;height:5px;
   background:linear-gradient(90deg,#E53935,#FF9800,#FFD700,#4CAF50,#2196F3,#9C27B0,#E53935);
   background-size:200% 100%;animation:cs 2s linear infinite}
 @keyframes cs{0%{background-position:0%}100%{background-position:200%}}
-.end-trophy{font-size:60px;display:block;margin-bottom:6px;animation:tb 1s ease-out .3s both}
-@keyframes tb{0%{transform:scale(0) rotate(-20deg);opacity:0}70%{transform:scale(1.2) rotate(5deg)}100%{transform:scale(1) rotate(0);opacity:1}}
-.end-title{font-family:'Teko',sans-serif;font-size:38px;font-weight:700;
+.end-trophy{font-size:56px;display:block;margin-bottom:5px;
+  animation:tb 1s ease-out .3s both}
+@keyframes tb{0%{transform:scale(0) rotate(-20deg);opacity:0}
+  70%{transform:scale(1.2) rotate(5deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+.end-title{font-family:'Teko',sans-serif;font-size:36px;font-weight:700;
   color:var(--gold);letter-spacing:3px;margin-bottom:2px}
 .end-sub{font-size:12px;color:#5A3A10;opacity:.7;margin-bottom:14px;letter-spacing:2px}
-.podium{display:flex;align-items:flex-end;justify-content:center;gap:6px;margin-bottom:14px;height:130px}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:6px;
+  margin-bottom:14px;height:125px}
 .pd-slot{display:flex;flex-direction:column;align-items:center;flex:1;max-width:120px}
-.pd-av{font-size:22px;margin-bottom:2px}.pd-nm{font-size:11px;font-weight:700;color:var(--ink);margin-bottom:1px}
+.pd-av{font-size:20px;margin-bottom:2px}.pd-nm{font-size:11px;font-weight:700;color:var(--ink);margin-bottom:1px}
 .pd-career{font-size:9px;color:#5A3A10;opacity:.7;margin-bottom:2px}
 .pd-mo{font-family:'Teko',sans-serif;font-size:13px;color:var(--green);margin-bottom:2px}
 .pd-block{width:100%;border-radius:5px 5px 0 0;display:flex;align-items:center;
-  justify-content:center;font-family:'Teko',sans-serif;font-size:24px;font-weight:700;
+  justify-content:center;font-family:'Teko',sans-serif;font-size:22px;font-weight:700;
   color:white;text-shadow:1px 1px 3px rgba(0,0,0,.3)}
-.rank-1 .pd-block{height:88px;background:linear-gradient(135deg,#FFD700,#B8860B)}
-.rank-2 .pd-block{height:64px;background:linear-gradient(135deg,#C0C0C0,#808080)}
-.rank-3 .pd-block{height:46px;background:linear-gradient(135deg,#CD7F32,#8B4513)}
-.rank-4 .pd-block{height:32px;background:linear-gradient(135deg,#78909C,#455A64);font-size:18px}
-.rank-5 .pd-block{height:26px;background:linear-gradient(135deg,#607D8B,#37474F);font-size:16px}
-.rank-6 .pd-block{height:22px;background:linear-gradient(135deg,#78909C,#455A64);font-size:14px}
-.scoreboard{background:var(--paper-d);border:1px solid rgba(212,160,23,.4);border-radius:8px;overflow:hidden;margin-bottom:12px}
+.rank-1 .pd-block{height:84px;background:linear-gradient(135deg,#FFD700,#B8860B)}
+.rank-2 .pd-block{height:60px;background:linear-gradient(135deg,#C0C0C0,#808080)}
+.rank-3 .pd-block{height:44px;background:linear-gradient(135deg,#CD7F32,#8B4513)}
+.rank-4 .pd-block{height:30px;background:linear-gradient(135deg,#78909C,#455A64);font-size:17px}
+.rank-5 .pd-block{height:24px;background:linear-gradient(135deg,#607D8B,#37474F);font-size:14px}
+.rank-6 .pd-block{height:20px;background:linear-gradient(135deg,#78909C,#455A64);font-size:13px}
+.sc-tbl{background:var(--paper-d);border:1px solid rgba(212,160,23,.4);border-radius:8px;overflow:hidden;margin-bottom:12px}
 .sc-hd{background:linear-gradient(135deg,#8B6000,#5A3A00);color:var(--gold-l);
-  font-family:'Teko',sans-serif;font-size:14px;letter-spacing:2px;padding:6px 12px;text-align:left}
-.sc-cols{display:grid;grid-template-columns:26px 1fr 90px 85px 78px 76px;
+  font-family:'Teko',sans-serif;font-size:13px;letter-spacing:2px;padding:6px 12px;text-align:left}
+.sc-cols{display:grid;grid-template-columns:24px 1fr 85px 80px 75px;
   padding:4px 12px;border-bottom:1px solid rgba(212,160,23,.25);gap:3px}
 .sc-ch{font-size:9px;color:#5A3A10;opacity:.65;text-align:right;font-weight:700}
-.sc-row{display:grid;grid-template-columns:26px 1fr 90px 85px 78px 76px;
-  align-items:center;padding:7px 12px;border-bottom:1px solid rgba(212,160,23,.1);font-size:11px;gap:3px}
-.sc-row:last-child{border-bottom:none}.sc-row.winner{background:rgba(255,215,0,.1)}
-.sc-rank{font-family:'Teko',sans-serif;font-size:17px;font-weight:700;text-align:center}
+.sc-row{display:grid;grid-template-columns:24px 1fr 85px 80px 75px;
+  align-items:center;padding:6px 12px;border-bottom:1px solid rgba(212,160,23,.1);font-size:11px;gap:3px}
+.sc-row:last-child{border-bottom:none}.sc-row.win{background:rgba(255,215,0,.1)}
+.sc-rank{font-family:'Teko',sans-serif;font-size:16px;font-weight:700;text-align:center}
 .sc-nm{font-weight:700;color:var(--ink);display:flex;align-items:center;gap:3px;flex-wrap:wrap}
 .sc-n{font-family:'Teko',sans-serif;font-size:12px;text-align:right}
 .awards{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}
-.aw{background:var(--paper-d);border:1px solid rgba(212,160,23,.25);border-radius:6px;padding:8px 9px;text-align:left}
-.aw-icon{font-size:17px}.aw-lbl{font-size:9px;color:#5A3A10;opacity:.65;text-transform:uppercase;letter-spacing:1px;margin:2px 0}
-.aw-winner{font-weight:700;font-size:12px;color:var(--ink)}.aw-detail{font-size:10px;color:#7A5A20}
-.ls-box{background:linear-gradient(135deg,#F1F8E9,#E8F5E9);border:1px solid #A5D6A7;
-  border-radius:8px;padding:12px;margin-bottom:12px;text-align:left}
-.ls-box h4{font-family:'Teko',sans-serif;font-size:16px;color:var(--green);letter-spacing:1px;margin-bottom:7px}
-.ls-item{display:flex;align-items:flex-start;gap:5px;font-size:11px;color:var(--ink);margin-bottom:4px;line-height:1.5}
+.aw{background:var(--paper-d);border:1px solid rgba(212,160,23,.25);border-radius:6px;padding:7px 9px;text-align:left}
+.aw-icon{font-size:16px}.aw-lbl{font-size:9px;color:#5A3A10;opacity:.65;text-transform:uppercase;letter-spacing:1px;margin:2px 0}
+.aw-win{font-weight:700;font-size:12px;color:var(--ink)}.aw-det{font-size:10px;color:#7A5A20}
 .end-btn{background:linear-gradient(135deg,var(--gold),#A87800);color:var(--dark);
-  border:none;border-radius:10px;padding:11px 36px;font-family:'Teko',sans-serif;
-  font-size:20px;font-weight:600;letter-spacing:3px;cursor:pointer;
-  box-shadow:0 4px 0 #6B4A00;transition:transform .1s;text-transform:uppercase}
-.end-btn:hover{transform:translateY(-2px)}
+  border:none;border-radius:10px;padding:11px 34px;font-family:'Teko',sans-serif;
+  font-size:19px;font-weight:600;letter-spacing:3px;cursor:pointer;
+  box-shadow:0 4px 0 #6B4A00;text-transform:uppercase}
 .particle{position:absolute;border-radius:2px;animation:pf linear infinite;pointer-events:none}
 @keyframes pf{0%{transform:translateY(-20px) rotate(0);opacity:1}100%{transform:translateY(700px) rotate(720deg);opacity:0}}
 
-@media(max-width:1060px){.game-layout{grid-template-columns:170px 1fr 170px;gap:6px}}
+@media(max-width:1000px){.game-layout{grid-template-columns:170px 1fr 170px;gap:6px}}
 @media(max-width:860px){.game-layout{grid-template-columns:1fr}#gameScreen{padding:4px}}
-.cell-lucky{background:linear-gradient(135deg,#FFF9C4,#FFF176);
-  border-color:#F9A825 !important;border-width:2px !important}
 </style>
 </head>
 <body>
 
-<!-- ══ LOBBY ══════════════════════════════════════════════ -->
+<!-- LOBBY -->
 <div class="screen active" id="lobbyScreen">
-  <div id="lobbyInner">
+  <div style="max-width:500px;margin:0 auto;width:100%;padding-top:16px">
     <div style="text-align:center;margin-bottom:16px">
       <div class="logo-title">⚔️ TAX WAR</div>
       <div class="logo-sub">สงครามภาษี(เงินได้) · Multiplayer</div>
@@ -351,78 +401,67 @@ hr.divider{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
         <button class="tab active" onclick="switchTab('stu')">🎓 นักเรียน</button>
         <button class="tab" onclick="switchTab('tea')">👩‍🏫 ครู</button>
       </div>
-
-      <!-- Student -->
       <div id="stuTab">
         <div id="stuMsg"></div>
-        <div class="form-group"><label>รหัสห้อง (Room Code)</label>
-          <input class="code-input" id="roomInput" maxlength="6" placeholder="XXXXXX"
-            oninput="this.value=this.value.toUpperCase()"></div>
+        <div class="form-group"><label>รหัสห้อง</label>
+          <input class="code-input" id="roomIn" maxlength="6" placeholder="XXXXXX" oninput="this.value=this.value.toUpperCase()"></div>
         <div class="form-group"><label>ชื่อผู้เล่น</label>
-          <input id="nameInput" placeholder="กรอกชื่อของคุณ" maxlength="20"></div>
-        <div class="form-group"><label>เลือก Avatar</label>
-          <div class="avatar-row" id="avatarRow"></div></div>
+          <input id="nameIn" placeholder="กรอกชื่อ" maxlength="20"></div>
+        <div class="form-group"><label>Avatar</label>
+          <div class="av-row" id="avRow"></div></div>
         <div class="form-group"><label>อาชีพ</label>
           <select id="careerSel"></select></div>
-        <button class="btn-primary" id="joinBtn" onclick="joinRoom()">⚔️ เข้าร่วมสงคราม</button>
+        <button class="btn-p" id="joinBtn" onclick="joinRoom()">⚔️ เข้าร่วมสงคราม</button>
       </div>
-
-      <!-- Teacher -->
       <div id="teaTab" style="display:none">
         <div id="teaMsg"></div>
-        <div class="form-group"><label>ชื่อครู / ผู้ดูแล</label>
-          <input id="teacherName" placeholder="ชื่อครู" maxlength="30" value="ครู"></div>
-        <button class="btn-primary" id="createBtn" onclick="createRoom()">🏛️ สร้างห้องเรียน</button>
-        <hr class="divider">
-        <div class="form-group"><label>หรือเข้าห้องที่มีอยู่</label>
-          <input class="code-input" id="teaRoomInput" maxlength="6" placeholder="XXXXXX"
-            oninput="this.value=this.value.toUpperCase()"></div>
-        <button class="btn-secondary" onclick="teacherJoin()">เข้าห้องเดิม →</button>
+        <div class="form-group"><label>ชื่อครู</label>
+          <input id="teaName" value="ครู" maxlength="30"></div>
+        <button class="btn-p" id="createBtn" onclick="createRoom()">🏛️ สร้างห้องเรียน</button>
+        <hr class="dv">
+        <div class="form-group"><label>เข้าห้องเดิม</label>
+          <input class="code-input" id="teaRoomIn" maxlength="6" placeholder="XXXXXX" oninput="this.value=this.value.toUpperCase()"></div>
+        <button class="btn-s" onclick="teacherJoin()">เข้าห้องเดิม →</button>
       </div>
     </div>
-
-    <div style="max-width:500px;margin:0 auto">
-      <div class="sound-row">
-        <span style="color:var(--paper);font-size:13px;opacity:.8">🔊 เสียงประกอบ</span>
-        <button class="sound-toggle on" id="soundToggle" onclick="toggleSound()">เปิด</button>
-      </div>
-      <button class="guide-btn-small" onclick="showGuide()">📖 คู่มือความรู้ภาษีก่อนเล่น</button>
+    <div class="snd-row">
+      <span style="color:var(--paper);font-size:13px;opacity:.8">🔊 เสียง</span>
+      <button class="snd-tog on" id="sndTog" onclick="toggleSnd()">เปิด</button>
     </div>
+    <button class="guide-btn" onclick="showGuide()">📖 คู่มือความรู้ภาษีก่อนเล่น</button>
   </div>
 </div>
 
-<!-- ══ WAIT ROOM ══════════════════════════════════════════ -->
+<!-- WAIT -->
 <div class="screen" id="waitScreen">
   <div style="max-width:540px;margin:0 auto;width:100%;padding-top:16px">
     <div class="wait-card">
-      <div class="room-code-box">
-        <div class="lbl">⚔️ รหัสห้อง TAX WAR — แชร์ให้นักเรียน</div>
-        <div class="room-code-big" id="waitCode">------</div>
+      <div class="rc-box">
+        <div class="rc-lbl">⚔️ รหัสห้อง — แชร์ให้นักเรียน</div>
+        <div class="rc-big" id="waitCode">------</div>
       </div>
       <div style="font-family:'Teko',sans-serif;font-size:15px;color:#5A3A10;
         letter-spacing:1px;margin-bottom:10px;text-align:center">
-        ผู้เล่น <span id="playerCount">0</span>/6 <span class="poll-dot"></span>
-      </div>
-      <div class="player-chips" id="playerChips"></div>
+        ผู้เล่น <span id="playerCount">0</span>/6 <span class="poll-dot"></span></div>
+      <div class="p-chips" id="playerChips"></div>
       <div id="waitMsg" style="margin-bottom:8px"></div>
       <div id="waitCtrl"></div>
     </div>
   </div>
 </div>
 
-<!-- ══ GAME SCREEN ════════════════════════════════════════ -->
+<!-- GAME -->
 <div class="screen" id="gameScreen">
-  <div class="game-header">
+  <div class="game-hd">
     <div class="game-title">⚔️ TAX WAR</div>
-    <div class="game-subtitle">สงครามภาษี(เงินได้)บุคคลธรรมดา</div>
   </div>
-  <div class="round-counter" id="roundCounter">รอบที่ 1 จาก 3 · ปีภาษี 2568</div>
+  <div class="round-ctr" id="roundCtr">⚔️ กำลังเล่น รอบที่ 1 จาก 3 รอบ · ปีภาษี 2568</div>
   <div class="game-layout">
     <div>
       <div class="turn-banner" id="turnBanner">รอเริ่ม...</div>
       <div class="panel">
-        <div class="panel-header">👤 ผู้เล่น</div>
-        <div class="panel-body" id="playerListEl"></div>
+        <div class="panel-hd">👤 ผู้เล่น</div>
+        <div class="panel-bd" id="playerListEl"></div>
       </div>
       <div class="tc-box" id="tcBox" style="display:none">
         <div class="tc-title">🎓 ครูควบคุม</div>
@@ -436,18 +475,17 @@ hr.divider{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
     <div>
       <div class="board" id="boardEl"><div class="board-grid" id="boardGrid"></div></div>
       <div class="dice-section">
-        <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
-          <div class="die" id="die1" style="width:52px;height:52px;font-size:32px">⚀</div>
-          <div style="font-family:'Teko',sans-serif;font-size:13px;color:var(--paper);
-            opacity:.7;letter-spacing:1px" id="diceSteps"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div class="die" id="die1">⚀</div>
+          <div class="steps-lbl" id="stepsLbl"></div>
         </div>
         <div id="rollArea"></div>
       </div>
     </div>
     <div>
       <div class="panel">
-        <div class="panel-header">📋 ตำนาน</div>
-        <div class="panel-body">
+        <div class="panel-hd">📋 ตำนาน</div>
+        <div class="panel-bd">
           <div class="legend-grid">
             <div class="li"><div class="ld" style="background:linear-gradient(135deg,#FFD700,#FFA500)"></div>เริ่ม/ภาษี</div>
             <div class="li"><div class="ld" style="background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border:1px solid #4CAF50"></div>รายได้</div>
@@ -456,66 +494,43 @@ hr.divider{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
             <div class="li"><div class="ld" style="background:linear-gradient(135deg,#F3E5F5,#E1BEE7);border:1px solid #CE93D8"></div>ลดหย่อน</div>
             <div class="li"><div class="ld" style="background:linear-gradient(135deg,#FFF8E1,#FFECB3);border:1px solid #FFD54F"></div>เหตุการณ์</div>
             <div class="li"><div class="ld" style="background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border:1px solid #FF9800"></div>อาชีพ🌟</div>
-            <div class="li"><div class="ld" style="background:linear-gradient(135deg,#E8EAF6,#C5CAE9);border:1px solid #7986CB"></div>รายได้เสริม</div>
+            <div class="li"><div class="ld" style="background:linear-gradient(135deg,#FFF9C4,#FFF176);border:2px solid #F9A825"></div>⭐การ์ดพิเศษ</div>
           </div>
           <br>
           <div class="rules-box"><h4>🎯 ชนะ</h4><p>เงินมากสุดหลัง 3 รอบ</p></div>
-          <div class="rules-box"><h4>⚔️ อาชีพ</h4><p>ช่อง 🟠 = เหตุการณ์เฉพาะอาชีพ</p></div>
-          <div class="rules-box"><h4>🏛️ ภาษี</h4><p>ผ่านช่องเริ่ม = ยื่นภาษีปีนั้น</p></div>
+          <div class="rules-box"><h4>⭐ การ์ดพิเศษ</h4><p>หยุดช่อง ⭐ → คลิกกองไพ่กลางกระดาน</p></div>
+          <div class="rules-box"><h4>🏛️ ภาษี</h4><p>ผ่านช่อง 0 = ยื่นภาษีปีนั้น</p></div>
         </div>
       </div>
       <br>
       <div class="panel">
-        <div class="panel-header">📝 บันทึก <span class="poll-dot"></span></div>
-        <div class="panel-body" id="logEl"></div>
+        <div class="panel-hd">📝 บันทึก <span class="poll-dot"></span></div>
+        <div class="panel-bd" id="logEl"></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ══ LUCKY CARD MODAL ══════════════════════════════════ -->
-<div class="lucky-overlay" id="luckyModal" style="display:none">
-  <div class="lucky-modal">
-    <div style="font-family:'Teko',sans-serif;font-size:26px;color:#E65100;
-      letter-spacing:3px;margin-bottom:4px">⭐ การ์ดพิเศษ</div>
-    <div style="font-size:12px;color:#5A3A10;opacity:.7;margin-bottom:14px">
-      ลาภลอยมาถึง! กดจั่วการ์ดเลย</div>
-    <div class="lucky-deck" id="luckyDeck" onclick="flipLuckyCard()">🃏</div>
-    <div class="lucky-deck-label">กดเพื่อจั่วการ์ด</div>
-    <div class="lucky-card-reveal" id="luckyReveal">
-      <span class="lucky-card-icon" id="luckyCardIcon">⭐</span>
-      <div class="lucky-card-name" id="luckyCardName"></div>
-      <div class="lucky-card-desc" id="luckyCardDesc"></div>
-      <div class="lucky-card-amt" id="luckyCardAmt"></div>
-      <div class="lucky-tax-note" id="luckyTaxNote"></div>
+<!-- LUCKY MODAL -->
+<div class="ov lucky-ov" id="luckyModal" style="display:none">
+  <div class="modal lucky-modal">
+    <div style="font-family:'Teko',sans-serif;font-size:24px;color:#E65100;
+      letter-spacing:3px;margin-bottom:3px">⭐ การ์ดพิเศษ!</div>
+    <div style="font-size:12px;color:#5A3A10;opacity:.7;margin-bottom:12px">กดกองไพ่เพื่อจั่วการ์ด</div>
+    <div class="lucky-deck" id="luckyDeck" onclick="flipCard()">🃏</div>
+    <div class="lucky-reveal" id="luckyReveal">
+      <span class="lc-icon" id="lcIcon">⭐</span>
+      <div class="lc-name" id="lcName"></div>
+      <div class="lc-desc" id="lcDesc"></div>
+      <div class="lc-amt" id="lcAmt"></div>
+      <div class="lc-tax" id="lcTax" style="display:none"></div>
     </div>
-    <button class="lucky-btn" id="luckyBtn" onclick="closeLucky()" style="display:none">
-      รับเงิน ✓
-    </button>
-    <div class="lucky-flip" id="luckyFlipHint">คลิกที่การ์ดเพื่อจั่ว</div>
+    <button class="lucky-btn" id="luckyBtn" onclick="closeLucky()">รับเงิน ✓</button>
   </div>
 </div>
 
-<!-- ══ QUIZ MODAL ════════════════════════════════════════ -->
-<div class="quiz-overlay" id="quizModal" style="display:none">
-  <div class="quiz-modal">
-    <div class="quiz-header">
-      <div class="quiz-step-bar" id="quizStepBar"></div>
-      <span class="quiz-icon" id="quizIcon">📊</span>
-      <div class="quiz-title" id="quizTitle">คำนวณภาษี</div>
-      <div class="quiz-subtitle" id="quizSubtitle"></div>
-    </div>
-    <div class="quiz-summary" id="quizSummary" style="display:none"></div>
-    <div class="quiz-q" id="quizQuestion"></div>
-    <div class="quiz-choices" id="quizChoices"></div>
-    <div class="quiz-feedback" id="quizFeedback"></div>
-    <div class="quiz-explain" id="quizExplain"></div>
-    <button class="quiz-next-btn" id="quizNextBtn" onclick="quizNext()">ถัดไป →</button>
-  </div>
-</div>
-
-<!-- ══ MODAL ══════════════════════════════════════════════ -->
-<div class="modal-overlay" id="modal" style="display:none">
+<!-- EVENT MODAL -->
+<div class="ov" id="eventModal" style="display:none">
   <div class="modal">
     <span class="m-icon" id="mIcon">💰</span>
     <div class="m-title" id="mTitle"></div>
@@ -525,12 +540,72 @@ hr.divider{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
       <div class="tip-lbl">📚 ความรู้ภาษี</div>
       <div class="tip-txt" id="tipTxt"></div>
     </div>
-    <button class="m-btn" onclick="closeModal()">รับทราบ</button>
+    <button class="m-btn" onclick="closeEventModal()">รับทราบ</button>
   </div>
 </div>
 
-<!-- ══ PAUSED ══════════════════════════════════════════════ -->
-<div class="paused-overlay" id="pausedOverlay" style="display:none">
+<!-- QUIZ MODAL -->
+<div class="ov quiz-ov" id="quizModal" style="display:none">
+  <div class="modal quiz-modal">
+    <div class="qstep-bar" id="qStepBar"></div>
+    <span class="m-icon" id="qIcon">📊</span>
+    <div class="m-title" id="qTitle">คำนวณภาษี</div>
+    <div class="m-desc" id="qSubtitle" style="margin-bottom:10px"></div>
+    <div class="q-sum" id="qSum" style="display:none"></div>
+    <div class="q-q" id="qQuestion"></div>
+    <div class="q-choices" id="qChoices"></div>
+    <div class="q-fb" id="qFeedback"></div>
+    <div class="q-exp" id="qExplain"></div>
+    <button class="q-next" id="qNext" onclick="quizNext()">ข้อถัดไป →</button>
+  </div>
+</div>
+
+<!-- GUIDE -->
+<div class="ov guide-ov" id="guideOv" style="display:none" onclick="if(event.target===this)hideGuide()">
+  <div class="guide-box">
+    <h2>📖 คู่มือความรู้ภาษี</h2>
+    <p style="font-size:12px;color:#5A3A10;text-align:center;margin-bottom:12px;opacity:.8">
+      เกมจำลอง 3 รอบ (= 3 ปีภาษี) เหตุการณ์แต่ละรอบ = เหตุการณ์รวมในรอบปีนั้น</p>
+    <div class="g-sec"><h4>🧮 สูตรคำนวณภาษี</h4>
+      <p><b>รายได้รวม</b> − <b>ค่าใช้จ่าย</b> − <b>ค่าลดหย่อน</b> − <b>ส่วนตัว 60,000 ฿</b> = <b>เงินได้สุทธิ</b><br>
+      นำเงินได้สุทธิคำนวณภาษีตามอัตราก้าวหน้า</p></div>
+    <div class="g-sec"><h4>💰 ค่าลดหย่อนพื้นฐาน</h4>
+      <table class="g-tbl">
+        <tr><th>รายการ</th><th>จำนวน</th></tr>
+        <tr><td>ค่าลดหย่อนส่วนตัว</td><td>60,000 ฿</td></tr>
+        <tr><td>ประกันสังคม</td><td>ไม่เกิน 9,000 ฿</td></tr>
+        <tr><td>ประกันชีวิต (≥10 ปี)</td><td>ไม่เกิน 100,000 ฿</td></tr>
+        <tr><td>ประกันสุขภาพ</td><td>ไม่เกิน 25,000 ฿</td></tr>
+        <tr><td>ดอกเบี้ยบ้าน</td><td>ไม่เกิน 100,000 ฿</td></tr>
+        <tr><td>ลดหย่อนบุตร (ต่อคน)</td><td>30,000 ฿</td></tr>
+      </table></div>
+    <div class="g-sec"><h4>📊 อัตราภาษีก้าวหน้า 2568</h4>
+      <table class="g-tbl">
+        <tr><th>เงินได้สุทธิ</th><th>อัตรา</th></tr>
+        <tr><td>0 – 150,000 ฿</td><td>ยกเว้น</td></tr>
+        <tr><td>150,001 – 300,000 ฿</td><td>5%</td></tr>
+        <tr><td>300,001 – 500,000 ฿</td><td>10%</td></tr>
+        <tr><td>500,001 – 750,000 ฿</td><td>15%</td></tr>
+        <tr><td>750,001 – 1,000,000 ฿</td><td>20%</td></tr>
+        <tr><td>1,000,001 – 2,000,000 ฿</td><td>25%</td></tr>
+        <tr><td>2,000,001 – 5,000,000 ฿</td><td>30%</td></tr>
+        <tr><td>5,000,001 ฿ ขึ้นไป</td><td>35%</td></tr>
+      </table></div>
+    <div class="g-sec"><h4>🃏 ค่าใช้จ่ายตามอาชีพ</h4>
+      <table class="g-tbl">
+        <tr><th>อาชีพ</th><th>มาตรา</th><th>หักได้</th></tr>
+        <tr><td>👔 พนักงาน / 🏛️ ข้าราชการ</td><td>40(1)</td><td>50% ≤100,000 ฿</td></tr>
+        <tr><td>💻 ฟรีแลนซ์</td><td>40(2)</td><td>50% ≤100,000 ฿</td></tr>
+        <tr><td>⚕️ แพทย์/ทนาย</td><td>40(6)</td><td>60% ≤600,000 ฿</td></tr>
+        <tr><td>🏪 ธุรกิจ / 🎬 ดารา / 🌾 เกษตรกร</td><td>40(8)</td><td>60% ≤600,000 ฿</td></tr>
+        <tr><td>📈 นักลงทุน (ค่าเช่า)</td><td>40(5)</td><td>30%</td></tr>
+      </table></div>
+    <button class="g-close" onclick="hideGuide()">✓ เข้าใจแล้ว!</button>
+  </div>
+</div>
+
+<!-- PAUSED -->
+<div class="paused-ov" id="pausedOv" style="display:none">
   <div class="paused-box">
     <div style="font-size:44px">⏸️</div>
     <div style="font-family:'Teko',sans-serif;font-size:32px;color:#E65100;letter-spacing:3px">หยุดชั่วคราว</div>
@@ -538,218 +613,317 @@ hr.divider{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
   </div>
 </div>
 
-<!-- ══ KNOWLEDGE GUIDE ════════════════════════════════════ -->
-<div id="guideOverlay" style="display:none" class="guide-overlay" onclick="if(event.target===this)hideGuide()">
-  <div class="guide-box">
-    <h2>📖 คู่มือความรู้ภาษี</h2>
-    <p style="font-size:12px;color:#5A3A10;text-align:center;margin-bottom:12px;opacity:.8">
-      เกมนี้จำลอง 1 ปีภาษี (5 รอบ) เหตุการณ์แต่ละรอบ = เหตุการณ์รวมในรอบปีภาษีนั้น
-    </p>
-    <div class="guide-section"><h4>🧮 สูตรคำนวณภาษี</h4>
-      <p><b>รายได้รวม</b> − <b>ค่าใช้จ่าย</b> − <b>ค่าลดหย่อน</b> = <b>เงินได้สุทธิ</b><br>
-      แล้วนำเงินได้สุทธิไปคำนวณภาษีตามอัตราก้าวหน้า</p></div>
-    <div class="guide-section"><h4>💰 ค่าลดหย่อนพื้นฐาน</h4>
-      <table class="guide-table">
-        <tr><th>รายการ</th><th>จำนวน</th></tr>
-        <tr><td>ค่าลดหย่อนส่วนตัว</td><td>60,000 ฿</td></tr>
-        <tr><td>ประกันสังคม (ตามจริง)</td><td>ไม่เกิน 9,000 ฿</td></tr>
-        <tr><td>ประกันชีวิต (≥10 ปี)</td><td>ไม่เกิน 100,000 ฿</td></tr>
-        <tr><td>ประกันสุขภาพ</td><td>ไม่เกิน 25,000 ฿</td></tr>
-        <tr><td>ดอกเบี้ยบ้าน</td><td>ไม่เกิน 100,000 ฿</td></tr>
-        <tr><td>ลดหย่อนบุตร (ต่อคน)</td><td>30,000 ฿</td></tr>
-        <tr><td>บริจาคการกุศล</td><td>2 เท่า ไม่เกิน 10%</td></tr>
-      </table></div>
-    <div class="guide-section"><h4>📊 อัตราภาษีก้าวหน้า 2568</h4>
-      <table class="guide-table">
-        <tr><th>เงินได้สุทธิ</th><th>อัตรา</th></tr>
-        <tr><td>0–150,000 ฿</td><td>ยกเว้น</td></tr>
-        <tr><td>150,001–300,000 ฿</td><td>5%</td></tr>
-        <tr><td>300,001–500,000 ฿</td><td>10%</td></tr>
-        <tr><td>500,001–750,000 ฿</td><td>15%</td></tr>
-        <tr><td>750,001–1,000,000 ฿</td><td>20%</td></tr>
-        <tr><td>1,000,001–2,000,000 ฿</td><td>25%</td></tr>
-        <tr><td>2,000,001–5,000,000 ฿</td><td>30%</td></tr>
-        <tr><td>5,000,001+ ฿</td><td>35%</td></tr>
-      </table></div>
-    <div class="guide-section"><h4>🃏 ค่าใช้จ่ายตามอาชีพ</h4>
-      <table class="guide-table">
-        <tr><th>อาชีพ</th><th>มาตรา</th><th>หักได้</th></tr>
-        <tr><td>👔 พนักงาน / 🏛️ ข้าราชการ</td><td>40(1)</td><td>50% ไม่เกิน 100,000 ฿</td></tr>
-        <tr><td>💻 ฟรีแลนซ์</td><td>40(2)</td><td>50% ไม่เกิน 100,000 ฿</td></tr>
-        <tr><td>⚕️ แพทย์/ทนาย</td><td>40(6)</td><td>60% ไม่เกิน 600,000 ฿</td></tr>
-        <tr><td>🏪 ธุรกิจ / 🎬 ดารา / 🌾 เกษตรกร</td><td>40(8)</td><td>60% ไม่เกิน 600,000 ฿</td></tr>
-        <tr><td>📈 นักลงทุน (ค่าเช่า)</td><td>40(5)</td><td>30%</td></tr>
-      </table></div>
-    <button class="guide-close" onclick="hideGuide()">✓ เข้าใจแล้ว!</button>
-  </div>
-</div>
-
 <script>
-// ══ CONFIG ═══════════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzyxVDdeewSLZm5QmtRIAPMf0sCLmPQnL-oR3ZLN01B9YSjA4pgy0Z96pNSCV4khrrX/exec';
-const POLL_MS = 2500;
-const DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
-const AVATARS = ['👨‍💼','👩‍💼','👨‍🔧','👩‍🎓','👨‍🏫','👩‍🍳','🧑‍💻','👩‍⚕️','🧑‍🎨','👨‍🚀'];
-
-const CAREERS = {
-  employee:  {name:'พนักงานบริษัท',icon:'👔',color:'#1976D2',tag:'ม.40(1)'},
-  freelance: {name:'ฟรีแลนซ์',icon:'💻',color:'#7B1FA2',tag:'ม.40(2)'},
-  business:  {name:'เจ้าของธุรกิจ',icon:'🏪',color:'#E65100',tag:'ม.40(8)'},
-  investor:  {name:'นักลงทุน',icon:'📈',color:'#388E3C',tag:'ม.40(4)'},
-  government:{name:'ข้าราชการ',icon:'🏛️',color:'#5D4037',tag:'ม.40(1)'},
-  celebrity: {name:'ดารา/ยูทูบเบอร์',icon:'🎬',color:'#C62828',tag:'ม.40(8)'},
-  doctor:    {name:'แพทย์/ทนายความ',icon:'⚕️',color:'#00695C',tag:'ม.40(6)'},
-  farmer:    {name:'เกษตรกร',icon:'🌾',color:'#827717',tag:'ม.40(8)'},
+// ═══════════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════════
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbzyxVDdeewSLZm5QmtRIAPMf0sCLmPQnL-oR3ZLN01B9YSjA4pgy0Z96pNSCV4khrrX/exec';
+const POLL_MS=2500, MAX_ROUNDS=3;
+const DF=['⚀','⚁','⚂','⚃','⚄','⚅'];
+const AVATARS=['👨‍💼','👩‍💼','👨‍🔧','👩‍🎓','👨‍🏫','👩‍🍳','🧑‍💻','👩‍⚕️','🧑‍🎨','👨‍🚀'];
+const CAREERS={
+  employee: {name:'พนักงานบริษัท',icon:'👔',color:'#1976D2',tag:'ม.40(1)',dr:.5,dm:100000},
+  freelance:{name:'ฟรีแลนซ์',icon:'💻',color:'#7B1FA2',tag:'ม.40(2)',dr:.5,dm:100000},
+  business: {name:'เจ้าของธุรกิจ',icon:'🏪',color:'#E65100',tag:'ม.40(8)',dr:.6,dm:600000},
+  investor: {name:'นักลงทุน',icon:'📈',color:'#388E3C',tag:'ม.40(4)',dr:.3,dm:100000},
+  government:{name:'ข้าราชการ',icon:'🏛️',color:'#5D4037',tag:'ม.40(1)',dr:.5,dm:100000},
+  celebrity:{name:'ดารา/ยูทูบเบอร์',icon:'🎬',color:'#C62828',tag:'ม.40(8)',dr:.6,dm:600000},
+  doctor:   {name:'แพทย์/ทนายความ',icon:'⚕️',color:'#00695C',tag:'ม.40(6)',dr:.6,dm:600000},
+  farmer:   {name:'เกษตรกร',icon:'🌾',color:'#827717',tag:'ม.40(8)',dr:.6,dm:600000},
 };
 
-const CELL_DEFS = [
-  {type:'start',  icon:'🏛️',text:'ยื่นภาษี\nเริ่ม'},
-  {type:'income', icon:'💼',text:'เงินเดือน'},
-  {type:'deduct', icon:'🏠',text:'ลดหย่อน\nบ้าน'},
-  {type:'expense',icon:'🏥',text:'ค่าแพทย์'},
-  {type:'career', icon:'🌟',text:'เหตุการณ์\nอาชีพ'},
-  {type:'lucky',  icon:'⭐',text:'การ์ด\nพิเศษ'},
-  {type:'deduct', icon:'📚',text:'ลดหย่อน\nการศึกษา'},
-  {type:'tax',    icon:'📋',text:'ภาษี\nหัก ณ ที่จ่าย'},
-  {type:'income', icon:'🏢',text:'ค่าเช่า'},
-  {type:'audit',  icon:'🔍',text:'ตรวจสอบ\nภาษี'},
-  {type:'deduct', icon:'❤️',text:'ลดหย่อน\nประกัน'},
-  {type:'expense',icon:'🚗',text:'ค่าซ่อมรถ'},
-  {type:'career', icon:'🌟',text:'เหตุการณ์\nอาชีพ'},
-  {type:'income', icon:'💸',text:'Freelance'},
-  {type:'penalty',icon:'⚠️',text:'ค่าปรับ'},
-  {type:'deduct', icon:'👶',text:'ลดหย่อน\nบุตร'},
-  {type:'event',  icon:'📰',text:'เหตุการณ์\nพิเศษ'},
-  {type:'income', icon:'📈',text:'กำไรหุ้น'},
-  {type:'tax',    icon:'🏦',text:'ภาษีหุ้น'},
-  {type:'career', icon:'🌟',text:'เหตุการณ์\nอาชีพ'},
-  {type:'expense',icon:'🍔',text:'ค่าอาหาร'},
-  {type:'lucky',  icon:'⭐',text:'การ์ด\nพิเศษ'},
-  {type:'deduct', icon:'🤲',text:'บริจาค'},
-  {type:'audit',  icon:'🕵️',text:'สรรพากร\nมาเยือน'},
-  {type:'income', icon:'🏭',text:'รายได้\nธุรกิจ'},
-  {type:'penalty',icon:'❌',text:'เสียสิทธิ์'},
-  {type:'income', icon:'💹',text:'รายได้\nเสริม'},
-  {type:'career', icon:'🌟',text:'เหตุการณ์\nอาชีพ'},
-  {type:'deduct', icon:'💊',text:'ลดหย่อน\nสุขภาพ'},
-  {type:'event',  icon:'📊',text:'วิเคราะห์\nการลงทุน'},
-  {type:'income', icon:'🤝',text:'ขายทรัพย์สิน'},
-  {type:'expense',icon:'💳',text:'ดอกเบี้ย\nบัตรเครดิต'},
+// ═══ กระดาน 32 ช่อง ═══════════════════════════════════
+// ไม่มีช่องคืนภาษี ไม่มีช่องยื่นแบบครึ่งปี
+const CELLS=[
+  {t:'start',  ic:'🏛️',tx:'ยื่นภาษี\nเริ่ม'},      // 0
+  {t:'income', ic:'💼',tx:'เงินเดือน'},              // 1
+  {t:'deduct', ic:'🏠',tx:'ลดหย่อน\nบ้าน'},         // 2
+  {t:'expense',ic:'🏥',tx:'ค่าแพทย์'},              // 3
+  {t:'career', ic:'🌟',tx:'เหตุการณ์\nอาชีพ'},      // 4
+  {t:'lucky',  ic:'⭐',tx:'การ์ด\nพิเศษ'},           // 5
+  {t:'deduct', ic:'📚',tx:'ลดหย่อน\nการศึกษา'},     // 6
+  {t:'tax',    ic:'📋',tx:'ภาษี\nหัก ณ ที่จ่าย'},   // 7
+  {t:'income', ic:'🏢',tx:'ค่าเช่า'},               // 8
+  {t:'audit',  ic:'🔍',tx:'ตรวจสอบ\nภาษี'},         // 9
+  {t:'deduct', ic:'❤️',tx:'ลดหย่อน\nประกัน'},      // 10
+  {t:'expense',ic:'🚗',tx:'ค่าซ่อมรถ'},             // 11
+  {t:'career', ic:'🌟',tx:'เหตุการณ์\nอาชีพ'},      // 12
+  {t:'income', ic:'💸',tx:'Freelance'},              // 13
+  {t:'penalty',ic:'⚠️',tx:'ค่าปรับ'},              // 14
+  {t:'deduct', ic:'👶',tx:'ลดหย่อน\nบุตร'},         // 15
+  {t:'event',  ic:'📰',tx:'เหตุการณ์\nพิเศษ'},      // 16
+  {t:'income', ic:'📈',tx:'กำไรหุ้น'},              // 17
+  {t:'tax',    ic:'🏦',tx:'ภาษีหุ้น'},              // 18
+  {t:'career', ic:'🌟',tx:'เหตุการณ์\nอาชีพ'},      // 19
+  {t:'expense',ic:'🍔',tx:'ค่าอาหาร'},              // 20
+  {t:'lucky',  ic:'⭐',tx:'การ์ด\nพิเศษ'},           // 21
+  {t:'deduct', ic:'🤲',tx:'บริจาค'},                // 22
+  {t:'audit',  ic:'🕵️',tx:'สรรพากร\nมาเยือน'},    // 23
+  {t:'income', ic:'🏭',tx:'รายได้\nธุรกิจ'},        // 24
+  {t:'penalty',ic:'❌',tx:'เสียสิทธิ์'},            // 25
+  {t:'income', ic:'💹',tx:'รายได้\nเสริม'},          // 26
+  {t:'career', ic:'🌟',tx:'เหตุการณ์\nอาชีพ'},      // 27
+  {t:'deduct', ic:'💊',tx:'ลดหย่อน\nสุขภาพ'},       // 28
+  {t:'event',  ic:'📊',tx:'วิเคราะห์\nการลงทุน'},   // 29
+  {t:'income', ic:'🤝',tx:'ขายทรัพย์สิน'},          // 30
+  {t:'expense',ic:'💳',tx:'ดอกเบี้ย\nบัตรเครดิต'}, // 31
 ];
 
-// ══ STATE ════════════════════════════════════════════════
-let myPlayerId=null, myRoomCode=null, isTeacher=false;
-let selectedAv=AVATARS[0], pollTimer=null, lastLogLen=0;
-let gameState=null, isRolling=false, soundOn=true;
+// ═══ LUCKY CARDS ════════════════════════════════════════
+const LUCKY_CARDS=[
+  {ic:'🎰',name:'ถูกลอตเตอรี่!',desc:'ถูกรางวัลที่ 1 หักภาษี ณ ที่จ่ายแล้ว',amt:4980000,
+   tip:'รางวัลสลากกินแบ่งเสียภาษีหัก ณ ที่จ่าย 0.5% ของมูลค่ารางวัล'},
+  {ic:'🏠',name:'ได้รับมรดก',desc:'ผู้ใหญ่ยกที่ดินและอสังหาริมทรัพย์ให้',amt:3000000,
+   tip:'มรดกจากบิดามารดาไม่เสียภาษีเงินได้ แต่อาจมีภาษีมรดกหากมูลค่าเกิน 100 ล้านบาท'},
+  {ic:'🚀',name:'Startup Exit',desc:'บริษัทที่ลงทุนไว้ถูก Acquire ได้กำไรก้อนใหญ่',amt:4000000,
+   tip:'กำไรจากหุ้น Startup นอกตลาด ต้องเสียภาษีหัก ณ ที่จ่าย 15%'},
+  {ic:'💎',name:'พบสมบัติโบราณ',desc:'ขุดดินพบโบราณวัตถุ รัฐจ่ายค่าตอบแทน',amt:500000,
+   tip:'ค่าตอบแทนจากรัฐกรณีพิเศษ อาจได้รับยกเว้นหรือลดหย่อนภาษีตามหลักเกณฑ์'},
+  {ic:'🎪',name:'ถูกรางวัลเกมโชว์',desc:'ออกรายการโทรทัศน์และชนะรางวัลใหญ่',amt:600000,
+   tip:'เงินรางวัลจากรายการโทรทัศน์ถือเป็น ม.40(8) ต้องนำรวมคำนวณภาษีปลายปี'},
+  {ic:'🌟',name:'Viral! ดังข้ามคืน',desc:'โพสต์ไวรัล แบรนด์เสนอสัญญา Sponsor ก้อนใหญ่',amt:1500000,
+   tip:'รายได้จาก Influencer เป็น ม.40(8) หักค่าใช้จ่ายได้ 60% สูงสุด 600,000 ฿'},
+  {ic:'🏆',name:'ชนะคดีความ',desc:'ฟ้องร้องชนะ ศาลสั่งให้จ่ายค่าเสียหาย',amt:800000,
+   tip:'ค่าเสียหายที่ได้รับบางประเภทได้รับยกเว้นภาษี ขึ้นอยู่กับลักษณะ'},
+  {ic:'🎁',name:'รางวัลประกวด',desc:'ผลงานชนะการประกวดระดับชาติ ได้รับเงินรางวัล',amt:1000000,
+   tip:'เงินรางวัลประกวด ม.40(8) ต้องนำมารวมคำนวณภาษีปลายปี'},
+  {ic:'🏡',name:'ขายบ้านได้กำไร',desc:'บ้านที่ซื้อไว้ 10 ปีก่อนราคาพุ่ง ขายได้กำไร',amt:1800000,
+   tip:'กำไรขายอสังหาฯ ถือครองนานกว่า 5 ปี เสียภาษีในอัตราพิเศษ'},
+  {ic:'💼',name:'ขายหุ้น IPO',desc:'หุ้น IPO ที่จองไว้ราคาพุ่ง 10 เท่า ขายทำกำไร',amt:2000000,
+   tip:'กำไรหุ้นในตลาดหลักทรัพย์ไทยได้รับยกเว้นภาษีเงินได้บุคคลธรรมดา'},
+  {ic:'🌈',name:'ทุนการศึกษาต่างประเทศ',desc:'ได้รับทุนเรียนต่อพร้อมค่าครองชีพก้อนใหญ่',amt:300000,
+   tip:'ทุนจากสถาบันที่ได้รับการรับรองได้รับยกเว้นภาษีเงินได้'},
+  {ic:'🎯',name:'ลงทุน Crypto',desc:'ซื้อ Cryptocurrency ก่อนราคาพุ่ง ขายทำกำไร',amt:2500000,
+   tip:'กำไรจาก Cryptocurrency ถือเป็น ม.40(4) หรือ ม.40(8) ต้องเสียภาษี'},
+];
+let luckyDeck=[...LUCKY_CARDS];
+let luckyCallback=null, currentCard=null;
 
-// ══ SOUND ════════════════════════════════════════════════
-const AudioCtx = window.AudioContext||window.webkitAudioContext;
-let actx=null;
-function getActx(){if(!actx)actx=new AudioCtx();return actx;}
-function playTone(f,t,d,v=.3){
-  if(!soundOn)return;
-  try{const c=getActx(),o=c.createOscillator(),g=c.createGain();
+function shuffleDeck(){for(let i=luckyDeck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[luckyDeck[i],luckyDeck[j]]=[luckyDeck[j],luckyDeck[i]];}}
+function drawCard(){if(luckyDeck.length===0){luckyDeck=[...LUCKY_CARDS];shuffleDeck();}return luckyDeck.pop();}
+
+// ═══ STATE ══════════════════════════════════════════════
+let myPid=null,myRoom=null,isTeacher=false,selAv=AVATARS[0];
+let pollTimer=null,lastLogLen=0,gameState=null,isRolling=false,soundOn=true;
+let pendingLucky=false; // รอให้ผู้เล่นคลิกกองไพ่
+
+// ═══ SOUND ══════════════════════════════════════════════
+const AC=window.AudioContext||window.webkitAudioContext;let ac=null;
+function gAC(){if(!ac)ac=new AC();return ac;}
+function tone(f,t,d,v=.3){if(!soundOn)return;
+  try{const c=gAC(),o=c.createOscillator(),g=c.createGain();
     o.connect(g);g.connect(c.destination);o.type=t;o.frequency.value=f;
-    g.gain.setValueAtTime(v,c.currentTime);
-    g.gain.exponentialRampToValueAtTime(.001,c.currentTime+d);
+    g.gain.setValueAtTime(v,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+d);
     o.start();o.stop(c.currentTime+d);}catch(e){}}
-function sfxDice(){playTone(300,'sawtooth',.08,.2);setTimeout(()=>playTone(500,'sawtooth',.1,.2),180);}
-function sfxIncome(){playTone(523,'sine',.12,.25);setTimeout(()=>playTone(784,'sine',.2,.25),260);}
-function sfxExpense(){playTone(300,'square',.08,.3);setTimeout(()=>playTone(220,'square',.15,.3),100);}
-function sfxTax(){playTone(440,'triangle',.1,.2);setTimeout(()=>playTone(350,'triangle',.2,.2),120);}
-function sfxBonus(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',.15,.3),i*100));}
-function sfxCareer(){playTone(660,'sine',.08,.3);setTimeout(()=>playTone(880,'sine',.15,.3),100);}
-function sfxPenalty(){playTone(200,'sawtooth',.05,.4);setTimeout(()=>playTone(180,'sawtooth',.3,.4),60);}
-function sfxWin(){[523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',.2,.35),i*120));}
-function playSfxForType(t){({income:sfxIncome,expense:sfxExpense,tax:sfxTax,bonus:sfxBonus,
-  career:sfxCareer,penalty:sfxPenalty,audit:sfxPenalty,deduct:sfxIncome,event:sfxCareer}[t]||sfxDice)();}
-function toggleSound(){soundOn=!soundOn;const b=document.getElementById('soundToggle');
-  if(b){b.textContent=soundOn?'เปิด':'ปิด';b.classList.toggle('on',soundOn);}}
+function sfxDice(){tone(300,'sawtooth',.08,.2);setTimeout(()=>tone(500,'sawtooth',.1,.2),180);}
+function sfxIncome(){tone(523,'sine',.12,.25);setTimeout(()=>tone(784,'sine',.2,.25),260);}
+function sfxExpense(){tone(300,'square',.08,.3);setTimeout(()=>tone(220,'square',.15,.3),100);}
+function sfxTax(){tone(440,'triangle',.1,.2);setTimeout(()=>tone(350,'triangle',.2,.2),120);}
+function sfxBonus(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,'sine',.15,.3),i*100));}
+function sfxPenalty(){tone(200,'sawtooth',.05,.4);setTimeout(()=>tone(180,'sawtooth',.3,.4),60);}
+function sfxWin(){[523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>tone(f,'sine',.2,.35),i*120));}
+function sfxForType(t){({income:sfxIncome,expense:sfxExpense,tax:sfxTax,lucky:sfxBonus,
+  career:sfxBonus,penalty:sfxPenalty,audit:sfxPenalty,deduct:sfxIncome,event:sfxIncome}[t]||sfxDice)();}
+function toggleSnd(){soundOn=!soundOn;const b=document.getElementById('sndTog');
+  b.textContent=soundOn?'เปิด':'ปิด';b.classList.toggle('on',soundOn);}
 
-// ══ GUIDE ════════════════════════════════════════════════
-function showGuide(){document.getElementById('guideOverlay').style.display='flex';}
-function hideGuide(){document.getElementById('guideOverlay').style.display='none';}
+// ═══ QUIZ SYSTEM ════════════════════════════════════════
+let qQueue=[],qCb=null,qIdx=0,qAnswered=false,qBonus=0;
 
-// ══ INIT UI ═══════════════════════════════════════════════
+function rndWrong(c,n=3){const s=new Set();
+  [.5,1.5,.75,1.25].forEach(v=>{const r=Math.round(c*v/1000)*1000;if(r!==c&&r>0)s.add(r);});
+  [20000,-15000,30000,-10000].forEach(v=>{const r=Math.round((c+v)/1000)*1000;if(r!==c&&r>0&&s.size<n)s.add(r);});
+  while(s.size<n){const r=Math.round((c+(Math.random()-.5)*c*.8)/1000)*1000;if(r!==c&&r>0)s.add(r);}
+  return[...s].slice(0,n);}
+function shuf(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+function taxCalc(n){const B=[[150000,.05],[200000,.10],[250000,.15],[250000,.20],[500000,.25],[3000000,.30],[Infinity,.35]];
+  let t=0,r=n;for(const[s,ra]of B){if(r<=0)break;t+=Math.min(r,s)*ra;r-=s;}return Math.round(t);}
+
+function buildQuiz(ev,type,p){
+  const c=CAREERS[p.careerId]||{dr:.5,dm:100000};const amt=Math.abs(ev.amount||0);const qs=[];
+  if(type==='income'&&amt>0){
+    const ded=Math.min(Math.round(amt*c.dr),c.dm);
+    qs.push({ic:'💼',title:'รายได้เข้า!',
+      sum:`รายได้: <b>${amt.toLocaleString()} ฿</b><br>อาชีพ: <b>${c.icon||''} ${c.name||''}</b> (${c.tag||''})<br>หักค่าใช้จ่าย ${Math.round(c.dr*100)}% สูงสุด ${(c.dm||100000).toLocaleString()} ฿`,
+      q:`ค่าใช้จ่ายที่หักได้จากรายได้นี้ = ? ฿`,correct:ded,
+      choices:shuf([ded,...rndWrong(ded)]),
+      exp:`${c.name||'อาชีพนี้'} หักได้ ${Math.round(c.dr*100)}% × ${amt.toLocaleString()} = ${Math.round(amt*c.dr).toLocaleString()} ฿ สูงสุด ${(c.dm||100000).toLocaleString()} ฿ → ได้ ${ded.toLocaleString()} ฿`,penalty:10000});
+  } else if(type==='deduct'&&ev.isDeduct){
+    const cor=Math.abs(ev.amount);
+    qs.push({ic:'📋',title:'ลดหย่อนภาษี!',
+      sum:`รายการ: <b>${ev.title||''}</b>`,
+      q:`ลดหย่อนรายการนี้ได้สูงสุด = ? ฿`,correct:cor,
+      choices:shuf([cor,...rndWrong(cor)]),
+      exp:ev.tip||`สิทธิ์ลดหย่อนนี้ = ${cor.toLocaleString()} ฿`,penalty:10000});
+  } else if(type==='tax'){
+    const cor=Math.abs(ev.amount);
+    qs.push({ic:'🏦',title:'ภาษีถูกหัก!',
+      sum:`ประเภท: <b>${ev.title||''}</b><br>รายได้สะสม: <b>${p.income.toLocaleString()} ฿</b>`,
+      q:`ภาษีที่ถูกหัก = ? ฿`,correct:cor,
+      choices:shuf([cor,...rndWrong(cor)]),
+      exp:ev.tip||`ภาษีหัก ณ ที่จ่าย = ${cor.toLocaleString()} ฿`,penalty:10000});
+  }
+  return qs;}
+
+function buildTaxQuiz(taxEv,state){
+  const p=state.players[state.currentPlayer];
+  const c=CAREERS[p.careerId]||{dr:.5,dm:100000};
+  const ded=Math.min(p.income*(c.dr||.5),c.dm||100000);
+  const net=Math.max(0,p.income-ded-p.deduct-60000);
+  const taxDue=taxCalc(net);const diff=taxDue-p.taxPaid;const amt=Math.abs(diff);
+  return[{
+    ic:'🏛️',title:'ยื่นภาษีประจำปี',
+    sub:diff<0?'จ่ายภาษีไว้มากกว่าจริง':'คำนวณภาษีตามเงินได้สุทธิ',
+    sum:`รายได้รวม: <b>${p.income.toLocaleString()} ฿</b><br>หักค่าใช้จ่าย: <b>${ded.toLocaleString()} ฿</b><br>หักลดหย่อน: <b>${p.deduct.toLocaleString()} ฿</b><br>หักส่วนตัว: <b>60,000 ฿</b><br>เงินได้สุทธิ: <b>${net.toLocaleString()} ฿</b>`,
+    q:diff<0?'ได้รับเงินคืนภาษี = ? ฿':'ภาษีที่ต้องจ่ายเพิ่ม = ? ฿',
+    correct:Math.max(amt,1000),choices:shuf([Math.max(amt,1000),...rndWrong(Math.max(amt,5000))]),
+    exp:diff<0?`จ่ายไปแล้ว ${p.taxPaid.toLocaleString()} ฿ ภาษีจริง ${taxDue.toLocaleString()} ฿ ได้คืน ${amt.toLocaleString()} ฿`
+      :`เงินได้สุทธิ ${net.toLocaleString()} ฿ ภาษี ${taxDue.toLocaleString()} ฿ จ่ายแล้ว ${p.taxPaid.toLocaleString()} ฿ ต้องจ่ายเพิ่ม ${amt.toLocaleString()} ฿`,
+    penalty:10000}];}
+
+function showQuiz(list,cb){qQueue=list;qCb=cb;qIdx=0;qBonus=0;renderQ();}
+
+function renderQ(){
+  const q=qQueue[qIdx];if(!q){closeQuiz();return;}qAnswered=false;
+  document.getElementById('qStepBar').innerHTML=qQueue.map((_,i)=>
+    `<div class="qstep ${i<qIdx?'done':i===qIdx?'active':''}"></div>`).join('');
+  document.getElementById('qIcon').textContent=q.ic;
+  document.getElementById('qTitle').textContent=q.title;
+  document.getElementById('qSubtitle').textContent=q.sub||'';
+  const su=document.getElementById('qSum');
+  if(q.sum){su.innerHTML=q.sum;su.style.display='block';}else su.style.display='none';
+  document.getElementById('qQuestion').textContent=q.q;
+  document.getElementById('qChoices').innerHTML=q.choices.map(v=>
+    `<button class="q-c" onclick="answerQ(this,${v},${q.correct})">${v.toLocaleString()} ฿</button>`).join('');
+  ['qFeedback','qExplain'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('qNext').style.display='none';
+  document.getElementById('quizModal').style.display='flex';}
+
+function answerQ(btn,chosen,correct){
+  if(qAnswered)return;qAnswered=true;
+  const q=qQueue[qIdx];
+  document.querySelectorAll('.q-c').forEach(b=>{b.disabled=true;
+    if(parseInt(b.textContent.replace(/[^0-9]/g,''))===correct)b.classList.add('reveal');});
+  const ok=chosen===correct;
+  if(ok){btn.classList.remove('reveal');btn.classList.add('correct');qBonus+=5000;
+    const fb=document.getElementById('qFeedback');fb.className='q-fb cor';
+    fb.innerHTML='✅ ถูกต้อง! ได้รับโบนัส <b>+5,000 ฿</b>';fb.style.display='block';sfxBonus();
+  }else{btn.classList.add('wrong');qBonus-=(q.penalty||10000);
+    const fb=document.getElementById('qFeedback');fb.className='q-fb wro';
+    fb.innerHTML=`❌ ตอบผิด เสียเพิ่ม <b>${(q.penalty||10000).toLocaleString()} ฿</b>`;
+    fb.style.display='block';sfxPenalty();}
+  if(q.exp){const ex=document.getElementById('qExplain');ex.textContent=`💡 ${q.exp}`;ex.style.display='block';}
+  const nb=document.getElementById('qNext');nb.style.display='block';
+  nb.textContent=qIdx===qQueue.length-1?'✓ รับทราบ':'ข้อถัดไป →';}
+
+function quizNext(){qIdx++;if(qIdx<qQueue.length)renderQ();else closeQuiz();}
+function closeQuiz(){document.getElementById('quizModal').style.display='none';
+  if(qCb){qCb(qBonus);qCb=null;}}
+
+// ═══ LUCKY CARD ══════════════════════════════════════════
+function showLuckyModal(cb){
+  luckyCallback=cb;currentCard=null;
+  document.getElementById('luckyReveal').style.display='none';
+  document.getElementById('luckyBtn').style.display='none';
+  document.getElementById('luckyDeck').style.opacity='1';
+  document.getElementById('luckyDeck').style.cursor='pointer';
+  document.getElementById('luckyDeck').textContent='🃏';
+  document.getElementById('luckyModal').style.display='flex';}
+
+function flipCard(){
+  const deck=document.getElementById('luckyDeck');
+  if(deck.style.opacity==='0.5')return;
+  deck.style.opacity='0.5';deck.style.cursor='default';
+  deck.classList.add('flipped');sfxBonus();
+  const card=drawCard();currentCard=card;
+  setTimeout(()=>{
+    deck.textContent='✨';
+    document.getElementById('lcIcon').textContent=card.ic;
+    document.getElementById('lcName').textContent=card.name;
+    document.getElementById('lcDesc').textContent=card.desc;
+    document.getElementById('lcAmt').textContent=`+${card.amt.toLocaleString()} ฿`;
+    const tx=document.getElementById('lcTax');
+    if(card.tip){tx.innerHTML=`📚 <b>ความรู้:</b> ${card.tip}`;tx.style.display='block';}
+    else tx.style.display='none';
+    document.getElementById('luckyReveal').style.display='block';
+    document.getElementById('luckyBtn').style.display='inline-block';
+  },450);}
+
+function closeLucky(){
+  document.getElementById('luckyModal').style.display='none';
+  pendingLucky=false;
+  if(luckyCallback&&currentCard){luckyCallback(currentCard.amt);luckyCallback=null;currentCard=null;}}
+
+// ═══ GUIDE ══════════════════════════════════════════════
+function showGuide(){document.getElementById('guideOv').style.display='flex';}
+function hideGuide(){document.getElementById('guideOv').style.display='none';}
+
+// ═══ INIT UI ═════════════════════════════════════════════
 function initUI(){
-  const ar=document.getElementById('avatarRow');
+  const ar=document.getElementById('avRow');
   ar.innerHTML=AVATARS.map((av,i)=>
-    `<button class="av-btn ${i===0?'sel':''}" onclick="pickAv(${i},'${av}')">${av}</button>`
-  ).join('');
-  const cs=document.getElementById('careerSel');
-  cs.innerHTML=Object.entries(CAREERS).map(([id,c])=>
-    `<option value="${id}">${c.icon} ${c.name} (${c.tag})</option>`
-  ).join('');
-}
-function pickAv(i,av){selectedAv=av;document.querySelectorAll('.av-btn').forEach((b,j)=>b.classList.toggle('sel',j===i));}
-function switchTab(tab){
-  const isTea=tab==='tea';
+    `<button class="av-btn ${i===0?'sel':''}" onclick="pickAv(${i},'${av}')">${av}</button>`).join('');
+  document.getElementById('careerSel').innerHTML=Object.entries(CAREERS).map(([id,c])=>
+    `<option value="${id}">${c.icon} ${c.name} (${c.tag})</option>`).join('');}
+function pickAv(i,av){selAv=av;document.querySelectorAll('.av-btn').forEach((b,j)=>b.classList.toggle('sel',j===i));}
+function switchTab(t){const isTea=t==='tea';
   document.getElementById('stuTab').style.display=isTea?'none':'';
   document.getElementById('teaTab').style.display=isTea?'':'none';
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===(isTea?1:0)));
-}
-function showMsg(id,text,type='info'){const el=document.getElementById(id);if(el)el.innerHTML=text?`<div class="msg ${type}">${text}</div>`:'';}
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',i===(isTea?1:0)));}
+function showMsg(id,txt,tp='inf'){const el=document.getElementById(id);
+  if(el)el.innerHTML=txt?`<div class="msg ${tp}">${txt}</div>`:'';}
 
-// ══ API ═══════════════════════════════════════════════════
-async function api(params){
-  const url=SCRIPT_URL+'?'+new URLSearchParams(params).toString();
-  const res=await fetch(url);return res.json();
-}
+// ═══ API ═════════════════════════════════════════════════
+async function api(p){const url=SCRIPT_URL+'?'+new URLSearchParams(p).toString();const r=await fetch(url);return r.json();}
 
-// ══ LOBBY ACTIONS ═════════════════════════════════════════
+// ═══ LOBBY ═══════════════════════════════════════════════
 async function createRoom(){
   const btn=document.getElementById('createBtn');btn.disabled=true;btn.textContent='กำลังสร้าง...';
-  showMsg('teaMsg','กำลังสร้างห้อง...','info');
-  try{const data=await api({action:'createRoom',teacherName:document.getElementById('teacherName').value.trim()||'ครู'});
-    if(!data.ok){showMsg('teaMsg',data.error,'error');return;}
-    isTeacher=true;myRoomCode=data.roomCode;enterWait(data.roomCode);
-  }catch(e){showMsg('teaMsg','เชื่อมต่อไม่ได้ กรุณาตรวจสอบ Script URL','error');}
-  finally{btn.disabled=false;btn.textContent='🏛️ สร้างห้องเรียน';}
-}
+  try{const d=await api({action:'createRoom',teacherName:document.getElementById('teaName').value.trim()||'ครู'});
+    if(!d.ok){showMsg('teaMsg',d.error,'err');return;}
+    isTeacher=true;myRoom=d.roomCode;enterWait(d.roomCode);
+  }catch(e){showMsg('teaMsg','เชื่อมต่อไม่ได้','err');}
+  finally{btn.disabled=false;btn.textContent='🏛️ สร้างห้องเรียน';}}
+
 async function joinRoom(){
-  const room=document.getElementById('roomInput').value.trim().toUpperCase();
-  const name=document.getElementById('nameInput').value.trim();
-  const careerId=document.getElementById('careerSel').value;
-  if(!room||room.length<4){showMsg('stuMsg','กรุณากรอกรหัสห้อง','error');return;}
-  if(!name){showMsg('stuMsg','กรุณากรอกชื่อ','error');return;}
+  const room=document.getElementById('roomIn').value.trim().toUpperCase();
+  const name=document.getElementById('nameIn').value.trim();
+  const cid=document.getElementById('careerSel').value;
+  if(!room||room.length<4){showMsg('stuMsg','กรุณากรอกรหัสห้อง','err');return;}
+  if(!name){showMsg('stuMsg','กรุณากรอกชื่อ','err');return;}
   const btn=document.getElementById('joinBtn');btn.disabled=true;btn.textContent='กำลังเข้าร่วม...';
-  try{const data=await api({action:'joinRoom',room,name,avatar:selectedAv,careerId,color:CAREERS[careerId].color});
-    if(!data.ok){showMsg('stuMsg',data.error,'error');return;}
-    myPlayerId=data.playerId;myRoomCode=room;isTeacher=false;gameState=data.state;enterWait(room);
-  }catch(e){showMsg('stuMsg','เชื่อมต่อไม่ได้','error');}
-  finally{btn.disabled=false;btn.textContent='⚔️ เข้าร่วมสงคราม';}
-}
+  try{const d=await api({action:'joinRoom',room,name,avatar:selAv,careerId:cid,color:CAREERS[cid].color});
+    if(!d.ok){showMsg('stuMsg',d.error,'err');return;}
+    myPid=d.playerId;myRoom=room;isTeacher=false;gameState=d.state;enterWait(room);
+  }catch(e){showMsg('stuMsg','เชื่อมต่อไม่ได้','err');}
+  finally{btn.disabled=false;btn.textContent='⚔️ เข้าร่วมสงคราม';}}
+
 async function teacherJoin(){
-  const room=document.getElementById('teaRoomInput').value.trim().toUpperCase();
-  if(!room){showMsg('teaMsg','กรุณากรอกรหัสห้อง','error');return;}
-  const data=await api({action:'getState',room});
-  if(!data.ok){showMsg('teaMsg',data.error,'error');return;}
-  isTeacher=true;myRoomCode=room;gameState=data.state;enterWait(room);
-}
+  const room=document.getElementById('teaRoomIn').value.trim().toUpperCase();
+  if(!room){showMsg('teaMsg','กรุณากรอกรหัสห้อง','err');return;}
+  const d=await api({action:'getState',room});
+  if(!d.ok){showMsg('teaMsg',d.error,'err');return;}
+  isTeacher=true;myRoom=room;gameState=d.state;enterWait(room);}
 
-// ══ WAIT ROOM ═════════════════════════════════════════════
-function enterWait(code){showScreen('waitScreen');document.getElementById('waitCode').textContent=code;startPolling();}
-function renderWait(state){
-  document.getElementById('playerCount').textContent=state.players.length;
-  const chips=document.getElementById('playerChips');
-  chips.innerHTML=state.players.map(p=>{const c=CAREERS[p.careerId]||{};
-    return `<div class="p-chip"><span class="av">${p.avatar}</span>
-      <span class="nm">${p.name}</span>
-      <span class="ctag" style="background:${c.color||'#888'}">${c.icon||''}</span></div>`;
-  }).join('')+Array(Math.max(0,2-state.players.length)).fill('<div class="empty-slot">รอผู้เล่น...</div>').join('');
+// ═══ WAIT ════════════════════════════════════════════════
+function enterWait(code){showScreen('waitScreen');document.getElementById('waitCode').textContent=code;startPoll();}
+function renderWait(s){
+  document.getElementById('playerCount').textContent=s.players.length;
+  document.getElementById('playerChips').innerHTML=s.players.map(p=>{const c=CAREERS[p.careerId]||{};
+    return `<div class="p-chip"><span style="font-size:20px">${p.avatar}</span>
+      <span style="font-weight:700;font-size:13px;color:var(--ink)">${p.name}</span>
+      <span class="ctag" style="background:${c.color||'#888'};margin-left:auto">${c.icon||''}</span></div>`;
+  }).join('')+Array(Math.max(0,2-s.players.length)).fill('<div class="empty-slot">รอผู้เล่น...</div>').join('');
   const ctrl=document.getElementById('waitCtrl');
-  if(isTeacher){const ok=state.players.length>=2;
-    ctrl.innerHTML=`${ok?'':'<div class="msg info">รอผู้เล่นอย่างน้อย 2 คน...</div>'}
-      <button class="btn-primary" ${ok?'':'disabled'} onclick="startGame()">⚔️ เริ่มสงครามภาษี (${state.players.length} คน)</button>`;
-  }else{ctrl.innerHTML='<div class="msg info">⏳ รอครูกดเริ่มเกม...</div>';}
-}
-async function startGame(){
-  const data=await api({action:'startGame',room:myRoomCode});
-  if(!data.ok){alert(data.error);return;}
-  gameState=data.state;enterGame();
-}
+  if(isTeacher){const ok=s.players.length>=2;
+    ctrl.innerHTML=`${ok?'':'<div class="msg inf">รอผู้เล่นอย่างน้อย 2 คน...</div>'}
+      <button class="btn-p" ${ok?'':'disabled'} onclick="startGame()">⚔️ เริ่มสงครามภาษี (${s.players.length} คน)</button>`;
+  }else ctrl.innerHTML='<div class="msg inf">⏳ รอครูกดเริ่มเกม...</div>';}
 
-// ══ GAME ══════════════════════════════════════════════════
+async function startGame(){const d=await api({action:'startGame',room:myRoom});
+  if(!d.ok){alert(d.error);return;}gameState=d.state;enterGame();}
+
+// ═══ GAME ════════════════════════════════════════════════
 function enterGame(){showScreen('gameScreen');buildBoard();
   if(isTeacher)document.getElementById('tcBox').style.display='';
   renderGame(gameState);}
@@ -769,11 +943,11 @@ function buildBoard(){
         const div=document.createElement('div');
         div.className='cell cell-center';
         div.style.gridColumn='2/9';div.style.gridRow='2/9';div.style.zIndex='5';
-        div.innerHTML=`<div class="center-logo">
-          <span class="big-icon">⚔️</span>
-          <div class="ct">TAX WAR</div>
-          <div class="cs">⚔️ สงครามภาษี 2568 ⚔️</div>
-          <div class="deck-pile">🃏 การ์ดพิเศษ · จั่วเมื่อหยุด ⭐</div>
+        div.innerHTML=`<div class="center-logo" id="centerLogo" onclick="onCenterClick()">
+          <div class="deck-pill" id="deckPill">🃏 การ์ดพิเศษ · กดจั่ว!</div>
+          <span class="cl-icon">⚔️</span>
+          <div class="cl-title">TAX WAR</div>
+          <div class="cl-sub">⚔️ สงครามภาษี 2568 ⚔️</div>
           <div class="tax-rates">
             <div class="rr"><span>0 – 150,000</span><span class="rp">ยกเว้น</span></div>
             <div class="rr"><span>150,001 – 300,000</span><span class="rp">5%</span></div>
@@ -786,49 +960,65 @@ function buildBoard(){
           </div></div>`;
         grid.appendChild(div);centerAdded=true;
       }
-      continue;
-    }
+      continue;}
     const div=document.createElement('div');div.dataset.gi=idx;
-    const cell=CELL_DEFS[cid];div.className=`cell cell-${cell.type}`;div.dataset.cid=String(cid);div.style.zIndex='6';
+    const cell=CELLS[cid];div.className=`cell cell-${cell.t}`;div.dataset.cid=String(cid);
+    div.style.zIndex='6';
     div.innerHTML=`<span class="cell-num">${cid}</span>
-      <span class="cell-icon">${cell.icon}</span>
-      <span class="cell-text">${cell.text.replace(/\n/g,'<br>')}</span>`;
-    grid.appendChild(div);
-  }
-  renderTokens([]);
-}
+      <span class="cell-icon">${cell.ic}</span>
+      <span class="cell-text">${cell.tx.replace(/\n/g,'<br>')}</span>`;
+    grid.appendChild(div);}
+  renderTokens([]);}
 
-function getGridPos(cid){
+// คลิกกองไพ่กลางกระดาน
+function onCenterClick(){
+  if(!pendingLucky)return;
+  const p=gameState&&gameState.players[gameState.currentPlayer];
+  if(!p)return;
+  pendingLucky=false;
+  // อัปเดต pill
+  const pill=document.getElementById('deckPill');
+  if(pill)pill.textContent='🃏 การ์ดพิเศษ · กดจั่ว!';
+  showLuckyModal((amt)=>{
+    if(amt>0&&gameState){p.money+=amt;p.income+=amt;
+      addLog(`⭐ ${p.name}: การ์ดพิเศษ! ได้รับ ${amt.toLocaleString()} ฿`,'lucky');
+      renderGame(gameState);}
+    showEventModal({icon:'⭐',title:'การ์ดพิเศษ!',desc:`ได้รับ ${currentCard?.name||'ลาภลอย'}`,
+      amount:amt,cellType:'lucky'});});}
+
+function gpPos(cid){
   if(cid<=8)return{r:0,c:cid};if(cid<=16)return{r:cid-8,c:8};
-  if(cid<=24)return{r:8,c:8-(cid-16)};return{r:8-(cid-24),c:0};
-}
+  if(cid<=24)return{r:8,c:8-(cid-16)};return{r:8-(cid-24),c:0};}
+
 function renderTokens(players){
   document.querySelectorAll('.token').forEach(t=>t.remove());
   document.querySelectorAll('.cell-current').forEach(c=>c.classList.remove('cell-current'));
   (players||[]).forEach((p,i)=>{
-    const pos=getGridPos(p.pos);
+    const pos=gpPos(p.pos);
     const ce=document.querySelector(`[data-gi="${pos.r*9+pos.c}"]`);
     if(ce)ce.classList.add('cell-current');
-    const isMe2=!isTeacher&&p.id===myPlayerId;
-    const tok=document.createElement('div');tok.className=`token${isMe2?' token-me':''}`;tok.style.background=p.color;
-    tok.style.left=`calc(${(100/9)*pos.c+100/18}%)`;tok.style.top=`calc(${(100/9)*pos.r+100/18}%)`;
-    tok.style.animationDelay=`${i*.3}s`;tok.textContent=p.avatar;tok.style.fontSize='10px';
-    document.getElementById('boardEl').appendChild(tok);
-  });
-}
+    const tok=document.createElement('div');
+    tok.className=`token${(!isTeacher&&p.id===myPid)?' token-me':''}`;
+    tok.style.background=p.color;
+    tok.style.left=`calc(${(100/9)*pos.c+100/18}%)`;
+    tok.style.top=`calc(${(100/9)*pos.r+100/18}%)`;
+    tok.style.animationDelay=`${i*.3}s`;
+    tok.textContent=p.avatar;tok.style.fontSize='10px';
+    document.getElementById('boardEl').appendChild(tok);});}
 
-function renderGame(state){
-  if(!state)return;gameState=state;
-  document.getElementById('roundCounter').textContent=`⚔️ กำลังเล่น รอบที่ ${Math.min(state.round,3)} จาก 3 รอบ · ปีภาษี 2568`;
-  const cp=state.players[state.currentPlayer];const cCareer=cp?CAREERS[cp.careerId]:null;
+function renderGame(s){
+  if(!s)return;gameState=s;
+  const r=Math.min(s.round,MAX_ROUNDS);
+  document.getElementById('roundCtr').textContent=`⚔️ กำลังเล่น รอบที่ ${r} จาก 3 รอบ · ปีภาษี ${2565+r}`;
+  const cp=s.players[s.currentPlayer];const cc=cp?CAREERS[cp.careerId]:null;
   document.getElementById('turnBanner').textContent=
-    state.status==='playing'?`⚔️ ตาของ ${cp?.name||'?'} ${cCareer?.icon||''} · รอบ ${Math.min(state.round,3)}/3`:  
-    state.status==='paused'?'⏸ หยุดชั่วคราว':'รอเริ่มเกม';
-  document.getElementById('pausedOverlay').style.display=state.status==='paused'?'flex':'none';
-  const list=document.getElementById('playerListEl');
-  list.innerHTML=(state.players||[]).map((p,i)=>{
-    const c=CAREERS[p.careerId]||{};const isMe=!isTeacher&&p.id===myPlayerId;
-    const isCur=i===state.currentPlayer;const pct=Math.min(100,(p.income/1000000)*100);
+    s.status==='playing'?`⚔️ ตาของ ${cp?.name||'?'} ${cc?.icon||''} · รอบ ${r}/3`:
+    s.status==='paused'?'⏸ หยุดชั่วคราว':'รอเริ่มเกม';
+  document.getElementById('pausedOv').style.display=s.status==='paused'?'flex':'none';
+  // players list
+  document.getElementById('playerListEl').innerHTML=(s.players||[]).map((p,i)=>{
+    const c=CAREERS[p.careerId]||{};const isMe=!isTeacher&&p.id===myPid;
+    const isCur=i===s.currentPlayer;const pct=Math.min(100,(p.income/1000000)*100);
     return `<div class="p-card ${isCur?'active':''} ${isMe?'me':''}">
       <div class="pn"><span style="font-size:18px">${p.avatar}</span>${p.name}${isMe?' (คุณ)':''}
         <span class="ctag" style="background:${c.color||'#888'}">${c.icon||''} ${c.tag||''}</span></div>
@@ -836,142 +1026,105 @@ function renderGame(state){
       <div class="ps"><span>รายได้</span><span class="sv">${p.income.toLocaleString()} ฿</span>
         <span>ลดหย่อน</span><span class="sv">${p.deduct.toLocaleString()} ฿</span>
         <span>ภาษีจ่าย</span><span class="sv">${p.taxPaid.toLocaleString()} ฿</span></div>
-      <div class="bbar"><div class="bfill" style="width:${pct}%"></div></div>
-    </div>`;
-  }).join('');
-  renderTokens(state.players);
+      <div class="bbar"><div class="bfill" style="width:${pct}%"></div></div></div>`;}).join('');
+  renderTokens(s.players);
+  // roll area
   const ra=document.getElementById('rollArea');
-  const isMyTurn=!isTeacher&&state.currentPlayer===myPlayerId&&state.status==='playing';
+  const isMyTurn=!isTeacher&&s.currentPlayer===myPid&&s.status==='playing';
   if(isMyTurn)ra.innerHTML=`<button class="roll-btn" onclick="doRoll()">🎲 ทอย (1 ลูก)</button>`;
   else if(isTeacher)ra.innerHTML=`<div class="not-my-turn">🎓 ครูดูแลห้อง</div>`;
-  else{const cur=state.players[state.currentPlayer];
-    ra.innerHTML=`<div class="not-my-turn">⏳ ตาของ ${cur?.name||'?'}...</div>`;}
-  if(isTeacher){const pb=document.getElementById('pauseBtn');
-    if(pb)pb.textContent=state.status==='paused'?'▶ เล่นต่อ':'⏸ หยุด';}
-  renderLog(state.log||[]);
-  if(state.status==='ended'&&!document.getElementById('endScreen'))setTimeout(()=>showEndScreen(state),1000);
-}
+  else{const cur=s.players[s.currentPlayer];ra.innerHTML=`<div class="not-my-turn">⏳ ตาของ ${cur?.name||'?'} รอบ ${r}/3...</div>`;}
+  if(isTeacher){const pb=document.getElementById('pauseBtn');if(pb)pb.textContent=s.status==='paused'?'▶ เล่นต่อ':'⏸ หยุด';}
+  renderLog(s.log||[]);
+  if(s.status==='ended'&&!document.getElementById('endScreen'))setTimeout(()=>showEnd(s),1000);}
 
 function renderLog(log){
   if(log.length===lastLogLen)return;lastLogLen=log.length;
   document.getElementById('logEl').innerHTML=log.map(e=>
     `<div class="log-entry ${e.type||'event'}">
-      <div class="log-rnd">รอบ ${e.round||'?'} · ${e.player||''}</div>${e.text}</div>`
-  ).join('');
-}
+      <div class="log-rnd">รอบ ${e.round||'?'} · ${e.player||''}</div>${e.text}</div>`).join('');}
 
-// ══ ROLL ══════════════════════════════════════════════════
+let logBuf=[];
+function addLog(txt,type='event'){
+  const s=gameState;const cp=s?s.players[s.currentPlayer]:null;
+  const entry={text:txt,type,round:s?.round||1,player:cp?.name||''};
+  logBuf.push(entry);
+  const el=document.getElementById('logEl');
+  if(el){const d=document.createElement('div');d.className=`log-entry ${type}`;
+    d.innerHTML=`<div class="log-rnd">รอบ ${entry.round} · ${entry.player}</div>${txt}`;
+    el.insertBefore(d,el.firstChild);while(el.children.length>25)el.removeChild(el.lastChild);}}
+
+// ═══ ROLL ════════════════════════════════════════════════
 async function doRoll(){
   if(isRolling)return;isRolling=true;sfxDice();
-  const d1=document.getElementById('die1');
-  const stepsEl=document.getElementById('diceSteps');
+  const d1=document.getElementById('die1');const sl=document.getElementById('stepsLbl');
   d1.classList.add('rolling');
-  // แอนิเมชัน 1 ลูก
-  let ticks=0;
-  const iv=setInterval(()=>{
-    d1.textContent=DICE_FACES[Math.floor(Math.random()*6)];
-    if(++ticks>10)clearInterval(iv);
-  },65);
+  let ticks=0;const iv=setInterval(()=>{d1.textContent=DF[Math.floor(Math.random()*6)];if(++ticks>10)clearInterval(iv);},65);
   try{
-    const data=await api({action:'rollDice',room:myRoomCode,playerId:myPlayerId});
+    const data=await api({action:'rollDice',room:myRoom,playerId:myPid});
     d1.classList.remove('rolling');
     if(!data.ok){alert(data.error);return;}
-    // แสดงผลลูกเต๋า 1 ลูก (ใช้ dice[0] หรือ dice[0]+dice[1] จาก server แต่แสดงแค่ 1)
-    const diceArr=data.dice||[1,1];
-    const steps=diceArr[0]; // ใช้ลูกแรกลูกเดียว
-    d1.textContent=DICE_FACES[steps-1];
-    if(stepsEl) stepsEl.textContent=`เดิน ${steps} ช่อง`;
+    // ใช้ลูกเต๋าลูกแรกเพียงลูกเดียว
+    const steps=(data.dice||[1])[0];
+    d1.textContent=DF[steps-1];
+    if(sl)sl.textContent=`เดิน ${steps} ช่อง`;
     gameState=data.state;
-    // animate token เดินทีละช่อง
-    await animateMove(myPlayerId, steps, data.state);
+    // animate token
+    await animateToken(myPid,steps,data.state);
     renderGame(data.state);
-    if(data.taxEvent) showTaxYearQuizFlow(data.taxEvent, data.state);
-    else if(data.cellEvent) showEventModal(data.cellEvent, data.state);
-  }catch(e){alert('เชื่อมต่อไม่ได้');}
-  finally{isRolling=false;}
-}
+    // handle lucky cell
+    const p=data.state.players.find(pl=>pl.id===myPid);
+    if(p&&CELLS[p.pos]?.t==='lucky'){
+      pendingLucky=true;
+      const pill=document.getElementById('deckPill');
+      if(pill){pill.textContent='⭐ คลิกที่นี่เพื่อจั่วการ์ด!';pill.style.animation='pulse 1s ease-in-out infinite';}
+      addLog(`⭐ ${p.name}: หยุดช่องพิเศษ → กดกองไพ่กลางกระดานเพื่อจั่ว!`,'lucky');
+      renderGame(data.state);
+    } else if(data.taxEvent){showTaxQuizFlow(data.taxEvent,data.state);}
+    else if(data.cellEvent){handleEvent(data.cellEvent,data.state);}
+  }catch(e){console.error(e);alert('เชื่อมต่อไม่ได้ กรุณาลองใหม่');}
+  finally{isRolling=false;}}
 
-// animate token เดินทีละช่อง
-async function animateMove(pid, steps, finalState){
+async function animateToken(pid,steps,finalState){
   if(!finalState||pid===null||pid===undefined)return;
-  const p=finalState.players.find(pl=>pl.id===pid);
-  if(!p)return;
-  // คำนวณตำแหน่งเริ่มต้น (ก่อน roll)
+  const p=finalState.players.find(pl=>pl.id===pid);if(!p)return;
   const endPos=p.pos;
-  const startPos=((endPos - steps) % 32 + 32) % 32;
-  // เดินทีละช่อง
-  for(let step=1;step<=steps;step++){
-    const pos=(startPos+step)%32;
-    // highlight ชั่วคราว
+  const startPos=((endPos-steps)%32+32)%32;
+  for(let s=1;s<=steps;s++){
+    const pos=(startPos+s)%32;
     document.querySelectorAll('.cell-current').forEach(c=>c.classList.remove('cell-current'));
-    const gp=getGridPos(pos);
+    const gp=gpPos(pos);
     const ce=document.querySelector(`[data-gi="${gp.r*9+gp.c}"]`);
     if(ce)ce.classList.add('cell-current');
-    // เลื่อน token
-    const board=document.getElementById('boardEl');
-    let tok=board.querySelector('.token-me');
-    if(!tok){
-      // สร้าง token ชั่วคราวถ้าไม่มี
-      renderTokens(finalState.players);
-      break;
-    }
-    tok.style.left=`calc(${(100/9)*gp.c+100/18}%)`;
-    tok.style.top=`calc(${(100/9)*gp.r+100/18}%)`;
-    await new Promise(r=>setTimeout(r,180));
-    sfxDice();
+    const tok=document.querySelector('.token-me');
+    if(tok){tok.style.left=`calc(${(100/9)*gp.c+100/18}%)`;tok.style.top=`calc(${(100/9)*gp.r+100/18}%)`;}
+    await new Promise(r=>setTimeout(r,200));}}
+
+// ═══ EVENT HANDLER ═══════════════════════════════════════
+function handleEvent(ev,state){
+  if(!ev)return;
+  const calcTypes=['income','deduct','tax'];
+  const isMyTurn=!isTeacher&&state&&state.currentPlayer===myPid;
+  if(isMyTurn&&calcTypes.includes(ev.cellType)){
+    const p=state.players[state.currentPlayer];
+    if(p){const qs=buildQuiz(ev,ev.cellType,p);
+      if(qs.length>0){showQuiz(qs,(bonus)=>{
+        if(bonus!==0&&state){const pl=state.players[state.currentPlayer];
+          if(pl){pl.money+=bonus;renderGame(state);}}
+        showEventModal(ev);});return;}}
   }
-}
+  showEventModal(ev);}
 
-function showEventModal(ev, state){
-  // ช่อง lucky → เปิด lucky card modal
-  if(ev.cellType === 'lucky'){
-    const isMyTurn = !isTeacher && state && state.currentPlayer === myPlayerId;
-    if(isMyTurn){
-      sfxBonus();
-      showLuckyModal((amount)=>{
-        if(amount > 0 && state){
-          const p = state.players[state.currentPlayer];
-          if(p){ p.money += amount; p.income += amount; renderGame(state); }
-        }
-        // แสดง info modal ต่อ
-        _showInfoModal({icon:'⭐',title:'การ์ดพิเศษ!',
-          desc:`ได้รับ ${amount?.toLocaleString()||0} ฿ จากลาภลอย`,
-          amount:amount||0, cellType:'lucky'});
-      });
-      return;
-    }
-    _showInfoModal({icon:'⭐',title:'การ์ดพิเศษ!',desc:'ผู้เล่นจั่วการ์ดพิเศษ',amount:ev.amount||0});
-    return;
-  }
+function showTaxQuizFlow(taxEv,state){
+  const isMyTurn=!isTeacher&&state&&state.currentPlayer===myPid;
+  if(!isMyTurn||!taxEv||Math.abs(taxEv.amount||0)===0){showEventModal(taxEv||{icon:'🏛️',title:'ยื่นภาษี',desc:'คำนวณเสร็จแล้ว',amount:0});return;}
+  const qs=buildTaxQuiz(taxEv,state);
+  showQuiz(qs,(bonus)=>{
+    if(bonus!==0&&state){const p=state.players[state.currentPlayer];if(p){p.money+=bonus;renderGame(state);}}
+    showEventModal(taxEv);});}
 
-  // ประเภทที่ต้องคิดเอง: income, deduct, tax
-  const calcTypes = ['income','deduct','tax'];
-  const isMyTurn = !isTeacher && state && state.currentPlayer === myPlayerId;
-
-  if(isMyTurn && calcTypes.includes(ev.cellType)){
-    // สร้าง quiz ก่อน
-    const p = state ? state.players[state.currentPlayer] : null;
-    if(p){
-      const quizList = buildQuizForEvent(ev, ev.cellType, p);
-      if(quizList.length > 0){
-        showQuiz(quizList, (bonus)=>{
-          // หลัง quiz เสร็จ ปรับเงินตาม bonus แล้วแสดง modal ปกติ
-          if(bonus !== 0 && state){
-            const player = state.players[state.currentPlayer];
-            if(player){ player.money += bonus; renderGame(state); }
-          }
-          // แสดง modal ปกติ
-          _showInfoModal(ev);
-        });
-        return;
-      }
-    }
-  }
-  _showInfoModal(ev);
-}
-
-function _showInfoModal(ev){
-  if(ev.cellType)playSfxForType(ev.cellType);
+function showEventModal(ev){
+  if(!ev)return;if(ev.cellType)sfxForType(ev.cellType);
   document.getElementById('mIcon').textContent=ev.icon||'💰';
   document.getElementById('mTitle').textContent=ev.title||'เหตุการณ์';
   document.getElementById('mDesc').textContent=ev.desc||'';
@@ -980,346 +1133,90 @@ function _showInfoModal(ev){
   const tb=document.getElementById('tipBox');
   if(ev.tip){document.getElementById('tipTxt').textContent=ev.tip;tb.style.display='block';}
   else tb.style.display='none';
-  document.getElementById('modal').style.display='flex';
-}
-function closeModal(){document.getElementById('modal').style.display='none';}
+  document.getElementById('eventModal').style.display='flex';}
+function closeEventModal(){document.getElementById('eventModal').style.display='none';}
 
-// ══ TEACHER ═══════════════════════════════════════════════
-async function teacherAct(action){
-  const data=await api({action,room:myRoomCode});if(!data.ok){alert(data.error);return;}renderGame(data.state);}
+// ═══ TEACHER ═════════════════════════════════════════════
+async function teacherAct(action){const d=await api({action,room:myRoom});if(!d.ok){alert(d.error);return;}renderGame(d.state);}
 function confirmReset(){if(confirm('รีเซ็ตห้องนี้? ข้อมูลทั้งหมดจะถูกลบ'))teacherAct('resetRoom');}
 
-// ══ END SCREEN ════════════════════════════════════════════
-function showEndScreen(state){
+// ═══ END SCREEN ══════════════════════════════════════════
+function showEnd(s){
   sfxWin();
-  const sorted=[...state.players].sort((a,b)=>b.money-a.money);
+  const sorted=[...s.players].sort((a,b)=>b.money-a.money);
   const re=['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣'];
-  const pdCls=['rank-1','rank-2','rank-3','rank-4','rank-5','rank-6'];
-  const pdLbl=['🥇','🥈','🥉','4','5','6'];
-  const ls=state.lifeStats||[];
-  const podHTML=sorted.slice(0,Math.min(sorted.length,4)).map((p,i)=>{
-    const c=CAREERS[p.careerId]||{};
-    return `<div class="pd-slot ${pdCls[i]}">
-      <div class="pd-av">${p.avatar}</div><div class="pd-nm">${p.name}</div>
-      <div class="pd-career">${c.icon||''} ${c.name||''}</div>
+  const pdO=[sorted[1],sorted[0],sorted[2],sorted[3]].filter(Boolean);
+  const pdC=['rank-2','rank-1','rank-3','rank-4'],pdL=['🥈','🥇','🥉','4'];
+  const ls=s.lifeStats||[];
+  const podHTML=pdO.map((p,i)=>{const c=CAREERS[p.careerId]||{};
+    return `<div class="pd-slot ${pdC[i]}"><div class="pd-av">${p.avatar}</div>
+      <div class="pd-nm">${p.name}</div><div class="pd-career">${c.icon||''} ${c.name||''}</div>
       <div class="pd-mo">${p.money.toLocaleString()} ฿</div>
-      <div class="pd-block">${pdLbl[i]}</div></div>`;
-  }).join('');
-  const scHTML=sorted.map((p,i)=>{
-    const s=ls[p.id]||{};const eff=s.totalIncome>0?((s.totalTax/s.totalIncome)*100).toFixed(1):'0.0';
+      <div class="pd-block">${pdL[i]}</div></div>`;}).join('');
+  const scHTML=sorted.map((p,i)=>{const st=ls[p.id]||{};
+    const eff=st.totalIncome>0?((st.totalTax/st.totalIncome)*100).toFixed(1):'0.0';
     const c=CAREERS[p.careerId]||{};
-    return `<div class="sc-row ${i===0?'winner':''}">
+    return `<div class="sc-row ${i===0?'win':''}">
       <div class="sc-rank" style="color:${['#FFD700','#C0C0C0','#CD7F32','#78909C','#90A4AE','#B0BEC5'][i]}">${re[i]}</div>
       <div class="sc-nm"><span>${p.avatar}</span>${p.name}
         <span style="font-size:9px;background:${c.color||'#888'};color:white;padding:1px 4px;border-radius:5px">${c.icon||''}</span></div>
       <div class="sc-n" style="color:${p.money>=500000?'#1A6B3A':'#C0392B'}">${p.money.toLocaleString()} ฿</div>
-      <div class="sc-n" style="color:#5A3A10">${(s.totalIncome||0).toLocaleString()} ฿</div>
-      <div class="sc-n" style="color:#1B4F8A">${(s.totalTax||0).toLocaleString()} ฿</div>
-      <div class="sc-n" style="color:#6B2D8A">${eff}%</div></div>`;
-  }).join('');
-  const maxBy=(arr,fn)=>arr.reduce((a,b)=>fn(a)>=fn(b)?a:b);
-  const minBy=(arr,fn)=>arr.reduce((a,b)=>fn(a)<=fn(b)?a:b);
-  const ps=state.players;
+      <div class="sc-n" style="color:#5A3A10">${(st.totalIncome||0).toLocaleString()} ฿</div>
+      <div class="sc-n" style="color:#1B4F8A">${(st.totalTax||0).toLocaleString()} ฿</div></div>`;}).join('');
+  const maxBy=(arr,fn)=>arr.length?arr.reduce((a,b)=>fn(a)>=fn(b)?a:b):arr[0];
+  const minBy=(arr,fn)=>arr.length?arr.reduce((a,b)=>fn(a)<=fn(b)?a:b):arr[0];
+  const ps=s.players;
   const mI=maxBy(ps,p=>(ls[p.id]||{}).totalIncome||0);
   const mT=maxBy(ps,p=>(ls[p.id]||{}).totalTax||0);
   const mD=maxBy(ps,p=>(ls[p.id]||{}).totalDeduct||0);
-  const mP=minBy(ps,p=>(ls[p.id]||{}).totalPenalty||0);
-  const colors=['#FFD700','#E53935','#1976D2','#4CAF50','#9C27B0','#FF9800'];
-  const particles=Array.from({length:16},(_,i)=>{
-    const c=colors[i%6],l=Math.random()*100,d=Math.random()*3,du=2.5+Math.random()*2,s=6+Math.random()*8;
-    return `<div class="particle" style="left:${l}%;background:${c};width:${s}px;height:${s}px;animation-duration:${du}s;animation-delay:${d}s"></div>`;
-  }).join('');
+  const mP=minBy(ps,p=>(ls[p.id]||{}).totalPenalty||Infinity);
+  const cols=['#FFD700','#E53935','#1976D2','#4CAF50','#9C27B0','#FF9800'];
+  const parts=Array.from({length:16},(_,i)=>{const c=cols[i%6],l=Math.random()*100,d=Math.random()*3,du=2.5+Math.random()*2,sz=6+Math.random()*8;
+    return `<div class="particle" style="left:${l}%;background:${c};width:${sz}px;height:${sz}px;animation-duration:${du}s;animation-delay:${d}s"></div>`;}).join('');
   document.body.insertAdjacentHTML('beforeend',`
-  <div class="end-overlay" id="endScreen">
-    <div class="endscreen"><div class="confetti-bar"></div>${particles}
+  <div class="end-ov" id="endScreen">
+    <div class="endscreen"><div class="confetti-bar"></div>${parts}
       <span class="end-trophy">🏆</span>
       <div class="end-title">จบสงคราม!</div>
       <div class="end-sub">⚔️ ครบ 3 ปีภาษี · จอมภาษีแห่งสงคราม ⚔️</div>
       <div class="podium">${podHTML}</div>
-      <div class="scoreboard"><div class="sc-hd">📊 ตารางสถิติ</div>
+      <div class="sc-tbl"><div class="sc-hd">📊 ตารางสถิติ</div>
         <div class="sc-cols"><div></div><div></div>
-          <div class="sc-ch">เงินคงเหลือ</div><div class="sc-ch">รายได้รวม</div>
-          <div class="sc-ch">ภาษีรวม</div><div class="sc-ch">อัตราจริง</div>
+          <div class="sc-ch">เงินคงเหลือ</div><div class="sc-ch">รายได้รวม</div><div class="sc-ch">ภาษีรวม</div>
         </div>${scHTML}</div>
       <div class="awards">
-        <div class="aw"><div class="aw-icon">💸</div><div class="aw-lbl">รายได้สูงสุด</div><div class="aw-winner">${mI.avatar} ${mI.name}</div><div class="aw-detail">${(ls[mI.id]?.totalIncome||0).toLocaleString()} ฿</div></div>
-        <div class="aw"><div class="aw-icon">🏦</div><div class="aw-lbl">จ่ายภาษีมากสุด</div><div class="aw-winner">${mT.avatar} ${mT.name}</div><div class="aw-detail">${(ls[mT.id]?.totalTax||0).toLocaleString()} ฿</div></div>
-        <div class="aw"><div class="aw-icon">📋</div><div class="aw-lbl">ลดหย่อนเก่งสุด</div><div class="aw-winner">${mD.avatar} ${mD.name}</div><div class="aw-detail">${(ls[mD.id]?.totalDeduct||0).toLocaleString()} ฿</div></div>
-        <div class="aw"><div class="aw-icon">✅</div><div class="aw-lbl">ปรับน้อยสุด</div><div class="aw-winner">${mP.avatar} ${mP.name}</div><div class="aw-detail">${(ls[mP.id]?.totalPenalty||0).toLocaleString()} ฿</div></div>
+        <div class="aw"><div class="aw-icon">💸</div><div class="aw-lbl">รายได้สูงสุด</div>
+          <div class="aw-win">${mI?.avatar||''} ${mI?.name||'-'}</div>
+          <div class="aw-det">${(ls[mI?.id]?.totalIncome||0).toLocaleString()} ฿</div></div>
+        <div class="aw"><div class="aw-icon">🏦</div><div class="aw-lbl">จ่ายภาษีมากสุด</div>
+          <div class="aw-win">${mT?.avatar||''} ${mT?.name||'-'}</div>
+          <div class="aw-det">${(ls[mT?.id]?.totalTax||0).toLocaleString()} ฿</div></div>
+        <div class="aw"><div class="aw-icon">📋</div><div class="aw-lbl">ลดหย่อนเก่งสุด</div>
+          <div class="aw-win">${mD?.avatar||''} ${mD?.name||'-'}</div>
+          <div class="aw-det">${(ls[mD?.id]?.totalDeduct||0).toLocaleString()} ฿</div></div>
+        <div class="aw"><div class="aw-icon">✅</div><div class="aw-lbl">ปรับน้อยสุด</div>
+          <div class="aw-win">${mP?.avatar||''} ${mP?.name||'-'}</div>
+          <div class="aw-det">${(ls[mP?.id]?.totalPenalty||0).toLocaleString()} ฿</div></div>
       </div>
-      <button class="end-btn" onclick="document.getElementById('endScreen').remove();showScreen('lobbyScreen');lastLogLen=0;">🔄 กลับหน้าแรก</button>
-    </div></div>`);
-}
+      <button class="end-btn" onclick="document.getElementById('endScreen').remove();lastLogLen=0;showScreen('lobbyScreen')">🔄 กลับหน้าแรก</button>
+    </div></div>`);}
 
-// ══ POLLING ═══════════════════════════════════════════════
-function startPolling(){stopPolling();
-  pollTimer=setInterval(async()=>{if(!myRoomCode)return;
-    try{const data=await api({action:'getState',room:myRoomCode});if(!data.ok)return;
-      const s=data.state;
+// ═══ POLLING ═════════════════════════════════════════════
+function startPoll(){stopPoll();
+  pollTimer=setInterval(async()=>{if(!myRoom)return;
+    try{const d=await api({action:'getState',room:myRoom});if(!d.ok)return;
+      const s=d.state;
       if(s.status==='playing'||s.status==='paused'||s.status==='ended'){
         if(!document.getElementById('gameScreen').classList.contains('active'))enterGame();
         else renderGame(s);
       }else renderWait(s);
-    }catch(e){}
-  },POLL_MS);}
-function stopPolling(){if(pollTimer){clearInterval(pollTimer);pollTimer=null;}}
+    }catch(e){}},POLL_MS);}
+function stopPoll(){if(pollTimer){clearInterval(pollTimer);pollTimer=null;}}
 
-// ══ UTILS ═════════════════════════════════════════════════
-function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');}
+// ═══ UTILS ═══════════════════════════════════════════════
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
 
-
-// ══════════════════════════════════════════════════════════
-//  QUIZ SYSTEM — ระบบคำนวณภาษีแบบ Multiple Choice
-// ══════════════════════════════════════════════════════════
-let quizQueue=[],quizCallback=null,quizCurrent=0,quizAnswered=false,quizTotalBonus=0;
-
-function randWrong(correct,count=3){
-  const w=new Set();
-  [.5,1.5,1,20000,-15000,.75,1.25].forEach(v=>{
-    const r=typeof v==='number'&&v<5?Math.round(correct*v/1000)*1000:Math.round((correct+v)/1000)*1000;
-    if(r!==correct&&r>0&&w.size<count)w.add(r);
-  });
-  while(w.size<count){const r=Math.round((correct+(Math.random()-.5)*correct*.8)/1000)*1000;if(r!==correct&&r>0)w.add(r);}
-  return[...w].slice(0,count);
-}
-function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
-
-function calcTaxBracket(taxable){
-  const B=[[150000,.05],[200000,.10],[250000,.15],[250000,.20],[500000,.25],[3000000,.30],[Infinity,.35]];
-  let tax=0,rem=taxable;
-  for(const[sz,rate]of B){if(rem<=0)break;tax+=Math.min(rem,sz)*rate;rem-=sz;}
-  return Math.round(tax);
-}
-
-function buildQuizForEvent(ev,cellType,player){
-  const c=CAREERS[player.careerId]||{};
-  const amt=Math.abs(ev.amount||0);
-  const quizzes=[];
-  if(cellType==='income'&&amt>0){
-    const deductAmt=Math.min(Math.round(amt*(c.deductRate||.5)),c.deductMax||100000);
-    quizzes.push({
-      icon:'💼',title:'รายได้เข้า!',
-      subtitle:`${ev.title} — ${amt.toLocaleString()} ฿\nอาชีพ: ${c.name} หักค่าใช้จ่าย ${Math.round((c.deductRate||.5)*100)}%`,
-      summary:`รายได้: <b>${amt.toLocaleString()} ฿</b><br>อาชีพ: <b>${c.icon||''} ${c.name||''}</b> (${c.tag||''})<br>หักค่าใช้จ่ายได้: ${Math.round((c.deductRate||.5)*100)}% สูงสุด ${(c.deductMax||100000).toLocaleString()} ฿`,
-      question:`ค่าใช้จ่ายที่หักได้จากรายได้นี้ = ? ฿`,
-      correct:deductAmt,choices:shuffle([deductAmt,...randWrong(deductAmt)]),
-      explain:`${c.name||'อาชีพนี้'} หักค่าใช้จ่ายได้ ${Math.round((c.deductRate||.5)*100)}% × ${amt.toLocaleString()} = ${Math.round(amt*(c.deductRate||.5)).toLocaleString()} ฿ สูงสุด ${(c.deductMax||100000).toLocaleString()} ฿ → ได้ ${deductAmt.toLocaleString()} ฿`,
-      penalty:10000,type:'income'
-    });
-  } else if(cellType==='deduct'&&ev.isDeduct){
-    const correct=Math.abs(ev.amount);
-    quizzes.push({
-      icon:'📋',title:'ลดหย่อนภาษี!',
-      subtitle:`${ev.title}\nลดหย่อนได้สูงสุดเท่าไร?`,
-      summary:`รายการ: <b>${ev.title}</b>`,
-      question:`ลดหย่อน "${(ev.title||'').replace('ลดหย่อน','').trim()}" ได้สูงสุด = ? ฿`,
-      correct,choices:shuffle([correct,...randWrong(correct)]),
-      explain:ev.tip||`สิทธิ์ลดหย่อนนี้ = ${correct.toLocaleString()} ฿`,
-      penalty:10000,type:'deduct'
-    });
-  } else if(cellType==='tax'){
-    const correct=Math.abs(ev.amount);
-    quizzes.push({
-      icon:'🏦',title:'ภาษีถูกหัก!',
-      subtitle:`${ev.title}`,
-      summary:`ประเภท: <b>${ev.title}</b><br>รายได้สะสม: <b>${player.income.toLocaleString()} ฿</b>`,
-      question:`ภาษีที่ถูกหัก = ? ฿`,
-      correct,choices:shuffle([correct,...randWrong(correct)]),
-      explain:ev.tip||`ภาษีที่ถูกหัก ณ ที่จ่าย = ${correct.toLocaleString()} ฿`,
-      penalty:10000,type:'tax'
-    });
-  }
-  return quizzes;
-}
-
-function showQuiz(list,cb){quizQueue=list;quizCallback=cb;quizCurrent=0;quizTotalBonus=0;renderQuiz();}
-
-function renderQuiz(){
-  const q=quizQueue[quizCurrent];
-  if(!q){closeQuiz();return;}
-  quizAnswered=false;
-  document.getElementById('quizStepBar').innerHTML=quizQueue.map((_,i)=>
-    `<div class="quiz-step ${i<quizCurrent?'done':i===quizCurrent?'active':''}"></div>`).join('');
-  document.getElementById('quizIcon').textContent=q.icon;
-  document.getElementById('quizTitle').textContent=q.title;
-  document.getElementById('quizSubtitle').textContent=q.subtitle||'';
-  const su=document.getElementById('quizSummary');
-  if(q.summary){su.innerHTML=q.summary;su.style.display='block';}else su.style.display='none';
-  document.getElementById('quizQuestion').textContent=q.question;
-  document.getElementById('quizChoices').innerHTML=q.choices.map(v=>
-    `<button class="quiz-choice" onclick="answerQuiz(this,${v},${q.correct})">${v.toLocaleString()} ฿</button>`
-  ).join('');
-  ['quizFeedback','quizExplain'].forEach(id=>document.getElementById(id).style.display='none');
-  document.getElementById('quizNextBtn').style.display='none';
-  document.getElementById('quizModal').style.display='flex';
-}
-
-function answerQuiz(btn,chosen,correct){
-  if(quizAnswered)return;quizAnswered=true;
-  const q=quizQueue[quizCurrent];
-  document.querySelectorAll('.quiz-choice').forEach(b=>{
-    b.disabled=true;
-    const v=parseInt(b.textContent.replace(/[^0-9]/g,''));
-    if(v===correct)b.classList.add('reveal');
-  });
-  const isCorrect=chosen===correct;
-  const fb=document.getElementById('quizFeedback');
-  const exp=document.getElementById('quizExplain');
-  if(isCorrect){btn.classList.remove('reveal');btn.classList.add('correct');quizTotalBonus+=5000;
-    fb.className='quiz-feedback correct';fb.innerHTML=`✅ ถูกต้อง! ได้รับโบนัส <b>+5,000 ฿</b>`;sfxBonus();
-  }else{btn.classList.add('wrong');quizTotalBonus-=(q.penalty||10000);
-    fb.className='quiz-feedback wrong';fb.innerHTML=`❌ ตอบผิด เสียเพิ่ม <b>${(q.penalty||10000).toLocaleString()} ฿</b>`;sfxPenalty();
-  }
-  fb.style.display='block';
-  if(q.explain){exp.textContent=`💡 ${q.explain}`;exp.style.display='block';}
-  const nb=document.getElementById('quizNextBtn');nb.style.display='block';
-  nb.textContent=quizCurrent===quizQueue.length-1?'✓ รับทราบ':'ข้อถัดไป →';
-}
-
-function quizNext(){quizCurrent++;if(quizCurrent<quizQueue.length)renderQuiz();else closeQuiz();}
-function closeQuiz(){document.getElementById('quizModal').style.display='none';if(quizCallback){quizCallback(quizTotalBonus);quizCallback=null;}}
-
-function showTaxYearQuizFlow(taxEv,state){
-  const isMyTurn=!isTeacher&&state&&state.currentPlayer===myPlayerId;
-  if(!isMyTurn||!taxEv||Math.abs(taxEv.amount||0)===0){_showInfoModal(taxEv||{icon:'🏛️',title:'ยื่นภาษี',desc:'คำนวณเสร็จแล้ว',amount:0});return;}
-  const p=state.players[state.currentPlayer];
-  const amt=Math.abs(taxEv.amount||0);
-  const isRefund=(taxEv.amount||0)>0;
-  const quiz=[{
-    icon:'🏛️',title:'ยื่นภาษีประจำปี',
-    subtitle:isRefund?'จ่ายภาษีไว้มากกว่าที่ต้องจ่าย → ได้รับเงินคืน':'คำนวณภาษีตามเงินได้สุทธิ',
-    summary:`รายได้รวม: <b>${(p?.income||0).toLocaleString()} ฿</b> · ลดหย่อน: <b>${(p?.deduct||0).toLocaleString()} ฿</b><br>ภาษีที่จ่ายแล้ว: <b>${(p?.taxPaid||0).toLocaleString()} ฿</b>`,
-    question:isRefund?'ได้รับเงินคืนภาษี = ? ฿':'ภาษีที่ต้องจ่ายเพิ่ม = ? ฿',
-    correct:amt,choices:shuffle([amt,...randWrong(Math.max(amt,5000))]),
-    explain:taxEv.desc||(isRefund?`ได้รับคืน ${amt.toLocaleString()} ฿`:`ต้องจ่ายเพิ่ม ${amt.toLocaleString()} ฿`),
-    penalty:10000,type:'tax'
-  }];
-  showQuiz(quiz,(bonus)=>{
-    if(bonus!==0&&state){const pl=state.players[state.currentPlayer];if(pl){pl.money+=bonus;renderGame(state);}}
-    _showInfoModal(taxEv);
-  });
-}
-
-
-// ══════════════════════════════════════════════════════════
-//  LUCKY CARD SYSTEM — การ์ดพิเศษลาภลอย
-// ══════════════════════════════════════════════════════════
-const LUCKY_CARDS = [
-  {icon:'🎰',name:'ถูกลอตเตอรี่!',
-   desc:'สลากกินแบ่งรัฐบาลงวดนี้ถูกรางวัลที่ 1 หักภาษี ณ ที่จ่าย 0.5% แล้ว',
-   amount:4980000,
-   tip:'รางวัลสลากกินแบ่ง 5,000,000 ฿ หักภาษี 0.5% = 25,000 ฿ เหลือสุทธิ 4,975,000 ฿ (ในเกมประมาณใกล้เคียง)'},
-  {icon:'🏠',name:'ได้รับมรดก',
-   desc:'ผู้ใหญ่ในครอบครัวยกทรัพย์สินให้ มูลค่าที่ดิน 3 ล้านบาท',
-   amount:3000000,
-   tip:'มรดกจากบิดามารดาได้รับยกเว้นภาษีเงินได้ แต่อาจมีภาษีมรดกหากมูลค่าเกิน 100 ล้านบาท'},
-  {icon:'💼',name:'ขายหุ้น IPO ได้กำไร',
-   desc:'หุ้น IPO ที่ซื้อไว้ราคาพุ่งขึ้น 10 เท่า ขายทำกำไรได้',
-   amount:2000000,
-   tip:'กำไรจากหุ้นในตลาดหลักทรัพย์ได้รับยกเว้นภาษีเงินได้บุคคลธรรมดา'},
-  {icon:'🎁',name:'รับรางวัลประกวด',
-   desc:'ผลงานชนะการประกวดระดับชาติ ได้รับเงินรางวัล',
-   amount:1000000,
-   tip:'เงินรางวัลจากการประกวด ถือเป็นรายได้ ม.40(8) ต้องนำมารวมคำนวณภาษีปลายปี'},
-  {icon:'🌟',name:'Viral! ดังข้ามคืน',
-   desc:'โพสต์โซเชียลไวรัล มีแบรนด์ดังเสนอสัญญา Sponsor ก้อนใหญ่',
-   amount:1500000,
-   tip:'รายได้จาก Influencer และ Sponsor เป็น ม.40(8) หักค่าใช้จ่ายได้ 60% สูงสุด 600,000 ฿'},
-  {icon:'🏆',name:'ชนะคดีความ',
-   desc:'ฟ้องร้องและชนะคดี ศาลสั่งให้คู่กรณีจ่ายค่าเสียหาย',
-   amount:800000,
-   tip:'ค่าเสียหายที่ได้รับจากคดีความ บางประเภทได้รับการยกเว้นภาษี ขึ้นอยู่กับลักษณะค่าเสียหาย'},
-  {icon:'💎',name:'พบสมบัติโบราณ',
-   desc:'ขุดดินปลูกบ้านพบโบราณวัตถุ รัฐจ่ายค่าตอบแทนการค้นพบ',
-   amount:500000,
-   tip:'ค่าตอบแทนจากรัฐในกรณีพิเศษ อาจได้รับยกเว้นหรือลดหย่อนภาษีตามหลักเกณฑ์'},
-  {icon:'🎪',name:'ถูกรางวัลเกมโชว์',
-   desc:'ไปออกรายการโทรทัศน์และชนะรางวัลใหญ่',
-   amount:600000,
-   tip:'เงินรางวัลจากรายการโทรทัศน์ถือเป็น ม.40(8) ต้องเสียภาษีเงินได้บุคคลธรรมดา'},
-  {icon:'🚀',name:'Startup Exit',
-   desc:'บริษัท Startup ที่ลงทุนไว้ถูก Acquire ได้กำไรจากหุ้น',
-   amount:4000000,
-   tip:'กำไรจากการขายหุ้น Startup นอกตลาดหลักทรัพย์ ต้องเสียภาษีหัก ณ ที่จ่าย 15%'},
-  {icon:'🌈',name:'ได้รับทุนการศึกษา',
-   desc:'ได้รับทุนการศึกษาต่อต่างประเทศพร้อมค่าครองชีพก้อนใหญ่',
-   amount:300000,
-   tip:'ทุนการศึกษาจากสถาบันการศึกษาที่ได้รับการรับรองได้รับยกเว้นภาษีเงินได้'},
-  {icon:'🎯',name:'ลงทุน Crypto ถูกจังหวะ',
-   desc:'ซื้อ Cryptocurrency ไว้ก่อนราคาพุ่ง ขายทำกำไรได้',
-   amount:2500000,
-   tip:'กำไรจาก Cryptocurrency ในไทยถือเป็นรายได้ ม.40(4) หรือ ม.40(8) ต้องเสียภาษี'},
-  {icon:'🏡',name:'ขายบ้านได้กำไร',
-   desc:'บ้านที่ซื้อไว้ 10 ปีก่อนราคาสูงขึ้นมาก ขายได้กำไร',
-   amount:1800000,
-   tip:'กำไรจากการขายอสังหาริมทรัพย์ที่ถือครองนานกว่า 5 ปี เสียภาษีในอัตราพิเศษ'},
-];
-
-let luckyCardCallback = null;
-let currentLuckyCard = null;
-let luckyDeckShuffled = [...LUCKY_CARDS];
-
-function shuffleDeck(){
-  for(let i=luckyDeckShuffled.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [luckyDeckShuffled[i],luckyDeckShuffled[j]]=[luckyDeckShuffled[j],luckyDeckShuffled[i]];
-  }
-}
-
-function drawLuckyCard(){
-  if(luckyDeckShuffled.length===0) luckyDeckShuffled=[...LUCKY_CARDS];
-  if(luckyDeckShuffled.length===LUCKY_CARDS.length) shuffleDeck();
-  return luckyDeckShuffled.pop();
-}
-
-function showLuckyModal(callback){
-  luckyCardCallback = callback;
-  currentLuckyCard = null;
-  // รีเซ็ต modal
-  document.getElementById('luckyReveal').style.display='none';
-  document.getElementById('luckyBtn').style.display='none';
-  document.getElementById('luckyDeck').style.opacity='1';
-  document.getElementById('luckyDeck').style.cursor='pointer';
-  document.getElementById('luckyDeck').textContent='🃏';
-  document.getElementById('luckyFlipHint').textContent='คลิกที่การ์ดเพื่อจั่ว';
-  document.getElementById('luckyModal').style.display='flex';
-}
-
-function flipLuckyCard(){
-  const deck=document.getElementById('luckyDeck');
-  if(deck.style.opacity==='0.5') return;
-  deck.style.opacity='0.5'; deck.style.cursor='default';
-  deck.textContent='✨';
-  sfxBonus();
-  const card=drawLuckyCard(); currentLuckyCard=card;
-  setTimeout(()=>{
-    document.getElementById('luckyCardIcon').textContent=card.icon;
-    document.getElementById('luckyCardName').textContent=card.name;
-    document.getElementById('luckyCardDesc').textContent=card.desc;
-    document.getElementById('luckyCardAmt').textContent=`+${card.amount.toLocaleString()} ฿`;
-    if(card.tip){
-      document.getElementById('luckyTaxNote').innerHTML=`📚 <b>ความรู้ภาษี:</b> ${card.tip}`;
-      document.getElementById('luckyTaxNote').style.display='block';
-    }else{
-      document.getElementById('luckyTaxNote').style.display='none';
-    }
-    document.getElementById('luckyReveal').style.display='block';
-    document.getElementById('luckyBtn').style.display='inline-block';
-    document.getElementById('luckyFlipHint').textContent='';
-  },400);
-}
-
-function closeLucky(){
-  document.getElementById('luckyModal').style.display='none';
-  if(luckyCardCallback && currentLuckyCard){
-    luckyCardCallback(currentLuckyCard.amount);
-    luckyCardCallback=null; currentLuckyCard=null;
-  }
-}
-
-// ══ INIT ══════════════════════════════════════════════════
+// ═══ INIT ════════════════════════════════════════════════
 initUI();
 </script>
 </body>
