@@ -641,7 +641,7 @@ const CELLS=[
   {t:'expense',ic:'🏥',tx:'ค่าแพทย์'},              // 3
   {t:'career', ic:'🌟',tx:'เหตุการณ์\nอาชีพ'},      // 4
   {t:'lucky',  ic:'⭐',tx:'การ์ด\nพิเศษ'},           // 5
-  {t:'deduct', ic:'📚',tx:'ลดหย่อน\nการศึกษา'},     // 6
+  {t:'deduct', ic:'🛍️',tx:'ช็อปดีมีคืน\n(ลดหย่อน)'},     // 6
   {t:'tax',    ic:'📋',tx:'ภาษี\nหัก ณ ที่จ่าย'},   // 7
   {t:'income', ic:'🏢',tx:'ค่าเช่า'},               // 8
   {t:'audit',  ic:'🔍',tx:'ตรวจสอบ\nภาษี'},         // 9
@@ -657,13 +657,13 @@ const CELLS=[
   {t:'career', ic:'🌟',tx:'เหตุการณ์\nอาชีพ'},      // 19
   {t:'expense',ic:'🍔',tx:'ค่าอาหาร'},              // 20
   {t:'lucky',  ic:'⭐',tx:'การ์ด\nพิเศษ'},           // 21
-  {t:'deduct', ic:'🤲',tx:'บริจาค'},                // 22
+  {t:'deduct', ic:'🏥',tx:'บริจาค\nโรงพยาบาล'},                // 22
   {t:'audit',  ic:'🕵️',tx:'สรรพากร\nมาเยือน'},    // 23
   {t:'income', ic:'🏭',tx:'รายได้\nธุรกิจ'},        // 24
   {t:'penalty',ic:'❌',tx:'เสียสิทธิ์'},            // 25
   {t:'income', ic:'💹',tx:'รายได้\nเสริม'},          // 26
   {t:'career', ic:'🌟',tx:'เหตุการณ์\nอาชีพ'},      // 27
-  {t:'deduct', ic:'💊',tx:'ลดหย่อน\nสุขภาพ'},       // 28
+  {t:'deduct', ic:'🏞️',tx:'เที่ยวเมือง\nรอง'},       // 28
   {t:'event',  ic:'📊',tx:'วิเคราะห์\nการลงทุน'},   // 29
   {t:'income', ic:'🤝',tx:'ขายทรัพย์สิน'},          // 30
   {t:'expense',ic:'💳',tx:'ดอกเบี้ย\nบัตรเครดิต'}, // 31
@@ -749,8 +749,13 @@ function buildQuiz(ev,type,p){
       exp:`${c.name||'อาชีพนี้'} หักได้ ${Math.round(c.dr*100)}% × ${amt.toLocaleString()} = ${Math.round(amt*c.dr).toLocaleString()} ฿ สูงสุด ${(c.dm||100000).toLocaleString()} ฿ → ได้ ${ded.toLocaleString()} ฿`,penalty:10000});
   } else if(type==='deduct'&&ev.isDeduct){
     const cor=Math.abs(ev.amount);
-    qs.push({ic:'📋',title:'ลดหย่อนภาษี!',
-      sum:`รายการ: <b>${ev.title||''}</b>`,
+    // ตรวจสถานการณ์พิเศษ
+    let icon='📋',title='ลดหย่อนภาษี!';
+    if(ev.title&&ev.title.includes('ช็อป')){icon='🛍️';title='ช็อปดีมีคืน!';}
+    else if(ev.title&&ev.title.includes('โรงพยาบาล')){icon='🏥';title='บริจาคลดหย่อน 2 เท่า!';}
+    else if(ev.title&&ev.title.includes('เที่ยว')){icon='🏞️';title='เที่ยวเมืองรอง!';}
+    qs.push({ic:icon,title,
+      sum:`รายการ: <b>${ev.title||''}</b><br>📚 ${ev.tip||'สิทธิ์ลดหย่อนพิเศษ'}`,
       q:`ลดหย่อนรายการนี้ได้สูงสุด = ? ฿`,correct:cor,
       choices:shuf([cor,...rndWrong(cor)]),
       exp:ev.tip||`สิทธิ์ลดหย่อนนี้ = ${cor.toLocaleString()} ฿`,penalty:10000});
@@ -767,18 +772,49 @@ function buildQuiz(ev,type,p){
 function buildTaxQuiz(taxEv,state){
   const p=state.players[state.currentPlayer];
   const c=CAREERS[p.careerId]||{dr:.5,dm:100000};
-  const ded=Math.min(p.income*(c.dr||.5),c.dm||100000);
-  const net=Math.max(0,p.income-ded-p.deduct-60000);
-  const taxDue=taxCalc(net);const diff=taxDue-p.taxPaid;const amt=Math.abs(diff);
-  return[{
-    ic:'🏛️',title:'ยื่นภาษีประจำปี',
-    sub:diff<0?'จ่ายภาษีไว้มากกว่าจริง':'คำนวณภาษีตามเงินได้สุทธิ',
-    sum:`รายได้รวม: <b>${p.income.toLocaleString()} ฿</b><br>หักค่าใช้จ่าย: <b>${ded.toLocaleString()} ฿</b><br>หักลดหย่อน: <b>${p.deduct.toLocaleString()} ฿</b><br>หักส่วนตัว: <b>60,000 ฿</b><br>เงินได้สุทธิ: <b>${net.toLocaleString()} ฿</b>`,
-    q:diff<0?'ได้รับเงินคืนภาษี = ? ฿':'ภาษีที่ต้องจ่ายเพิ่ม = ? ฿',
-    correct:Math.max(amt,1000),choices:shuf([Math.max(amt,1000),...rndWrong(Math.max(amt,5000))]),
-    exp:diff<0?`จ่ายไปแล้ว ${p.taxPaid.toLocaleString()} ฿ ภาษีจริง ${taxDue.toLocaleString()} ฿ ได้คืน ${amt.toLocaleString()} ฿`
-      :`เงินได้สุทธิ ${net.toLocaleString()} ฿ ภาษี ${taxDue.toLocaleString()} ฿ จ่ายแล้ว ${p.taxPaid.toLocaleString()} ฿ ต้องจ่ายเพิ่ม ${amt.toLocaleString()} ฿`,
-    penalty:10000}];}
+  const grossIncome=p.income;
+  const expenseDeduct=Math.min(Math.round(grossIncome*(c.dr||.5)),c.dm||100000);
+  const personalDeduct=60000;
+  const otherDeduct=p.deduct||0;
+  const totalDeduct=expenseDeduct+personalDeduct+otherDeduct;
+  const netIncome=Math.max(0,grossIncome-totalDeduct);
+  const taxDue=taxCalc(netIncome);
+  const diff=taxDue-(p.taxPaid||0);
+  const finalTax=Math.abs(diff);
+  const isRefund=diff<0;
+
+  return [
+    // ── ขั้น 1: คำนวณรายได้สุทธิ (เงินได้พึงประเมิน - ลดหย่อน) ──
+    {
+      ic:'📊',title:'ขั้นที่ 1 — คำนวณรายได้สุทธิ',
+      sub:'เงินได้พึงประเมิน − ค่าลดหย่อนทั้งหมด = รายได้สุทธิ',
+      sum:`<b>เงินได้พึงประเมิน:</b> ${grossIncome.toLocaleString()} ฿<br>`+
+          `<b>หักค่าใช้จ่าย</b> (${Math.round((c.dr||.5)*100)}% สูงสุด ${(c.dm||100000).toLocaleString()} ฿): ${expenseDeduct.toLocaleString()} ฿<br>`+
+          `<b>หักลดหย่อนส่วนตัว:</b> ${personalDeduct.toLocaleString()} ฿<br>`+
+          `<b>หักลดหย่อนอื่นๆ ในเกม:</b> ${otherDeduct.toLocaleString()} ฿<br>`+
+          `<b>รวมลดหย่อนทั้งหมด:</b> ${totalDeduct.toLocaleString()} ฿`,
+      q:`รายได้สุทธิ = เงินได้พึงประเมิน − ลดหย่อนทั้งหมด = ? ฿`,
+      correct:netIncome,
+      choices:shuf([netIncome,...rndWrong(Math.max(netIncome,50000))]),
+      exp:`${grossIncome.toLocaleString()} − ${totalDeduct.toLocaleString()} = ${netIncome.toLocaleString()} ฿`,
+      penalty:10000
+    },
+    // ── ขั้น 2: คำนวณภาษีจากรายได้สุทธิ ──
+    {
+      ic:'🏛️',title:'ขั้นที่ 2 — คำนวณภาษีที่ต้องจ่าย',
+      sub:'นำรายได้สุทธิคำนวณภาษีตามอัตราก้าวหน้า',
+      sum:`<b>รายได้สุทธิ:</b> ${netIncome.toLocaleString()} ฿<br>`+
+          `<b>ภาษีตามอัตราก้าวหน้า:</b> ${taxDue.toLocaleString()} ฿<br>`+
+          `<b>ภาษีที่จ่ายไปแล้ว (หัก ณ ที่จ่าย):</b> ${(p.taxPaid||0).toLocaleString()} ฿`,
+      q:isRefund?`ได้รับเงินคืนภาษี = ? ฿`:`ภาษีที่ต้องจ่ายเพิ่ม = ? ฿`,
+      correct:Math.max(finalTax,0),
+      choices:shuf([Math.max(finalTax,0),...rndWrong(Math.max(finalTax,5000))]),
+      exp:isRefund
+        ?`ภาษีที่แท้จริง ${taxDue.toLocaleString()} ฿ จ่ายไปแล้ว ${(p.taxPaid||0).toLocaleString()} ฿ → ได้รับคืน ${finalTax.toLocaleString()} ฿`
+        :`ภาษีที่ต้องจ่าย ${taxDue.toLocaleString()} ฿ จ่ายไปแล้ว ${(p.taxPaid||0).toLocaleString()} ฿ → จ่ายเพิ่ม ${finalTax.toLocaleString()} ฿`,
+      penalty:10000
+    }
+  ];}
 
 function showQuiz(list,cb){qQueue=list;qCb=cb;qIdx=0;qBonus=0;renderQ();}
 
@@ -972,20 +1008,24 @@ function buildBoard(){
 // คลิกกองไพ่กลางกระดาน → เรียก API drawCard
 function onCenterClick(){
   if(!gameState||!gameState.luckyPending)return;
-  if(isTeacher)return; // ครูกดไม่ได้
-  if(gameState.luckyPlayerId!==myPid)return; // ต้องเป็นตาของเรา
-  showLuckyModal(async(amt)=>{
-    // เรียก server เพื่อบันทึกการจั่วการ์ด
+  if(isTeacher)return;
+  if(gameState.luckyPlayerId!==myPid)return;
+  // แสดง lucky modal ให้พลิกการ์ดก่อน
+  showLuckyModal(async()=>{
+    if(!currentCard)return;
     try{
       const d=await api({action:'drawCard',room:myRoom});
-      if(d.ok){
-        gameState=d.state;
-        renderGame(d.state);
-        showEventModal({icon:'⭐',title:'การ์ดพิเศษ!',
-          desc:`${currentCard?.name||'ลาภลอย'} — ได้รับ ${(d.luckyAmount||amt).toLocaleString()} ฿`,
-          amount:d.luckyAmount||amt,cellType:'lucky'});
-      }
-    }catch(e){console.error(e);}
+      if(!d.ok){alert(d.error);return;}
+      // server บันทึกเงิน+รายได้แล้ว อัปเดต state
+      gameState=d.state;
+      renderGame(d.state);
+      // แสดง event modal สรุป
+      showEventModal({icon:currentCard.ic,title:currentCard.name,
+        desc:currentCard.desc+`
+ได้รับ ${(d.luckyAmount||currentCard.amt).toLocaleString()} ฿ (รวมในรายได้แล้ว)`,
+        amount:d.luckyAmount||currentCard.amt,
+        tip:currentCard.tip,cellType:'lucky'});
+    }catch(e){console.error(e);alert('เชื่อมต่อไม่ได้');}
   });}
 
 function gpPos(cid){
@@ -995,15 +1035,25 @@ function gpPos(cid){
 function renderTokens(players){
   document.querySelectorAll('.token').forEach(t=>t.remove());
   document.querySelectorAll('.cell-current').forEach(c=>c.classList.remove('cell-current'));
+  // จัดกลุ่ม token ที่อยู่ช่องเดียวกัน
+  const posMap={};
+  (players||[]).forEach(p=>{const k=String(p.pos);posMap[k]=(posMap[k]||[]);posMap[k].push(p);});
   (players||[]).forEach((p,i)=>{
     const pos=gpPos(p.pos);
     const ce=document.querySelector(`[data-gi="${pos.r*9+pos.c}"]`);
-    if(ce)ce.classList.add('cell-current');
+    if(ce&&(!isTeacher&&p.id===myPid))ce.classList.add('cell-current');
     const tok=document.createElement('div');
     tok.className=`token${(!isTeacher&&p.id===myPid)?' token-me':''}`;
     tok.style.background=p.color;
-    tok.style.left=`calc(${(100/9)*pos.c+100/18}%)`;
-    tok.style.top=`calc(${(100/9)*pos.r+100/18}%)`;
+    // กระจาย token ที่อยู่ช่องเดียวกัน ไม่ทับกัน
+    const sameCell=posMap[String(p.pos)]||[];
+    const idx=sameCell.findIndex(x=>x.id===p.id);
+    const total=sameCell.length;
+    const offsets=[0,-6,6,-4,4,-8,8];
+    const ox=total>1?(offsets[idx%offsets.length]||0):0;
+    const oy=total>1?(idx%2===0?-5:5):0;
+    tok.style.left=`calc(${(100/9)*pos.c+100/18}% + ${ox}px)`;
+    tok.style.top=`calc(${(100/9)*pos.r+100/18}% + ${oy}px)`;
     tok.style.animationDelay=`${i*.3}s`;
     tok.textContent=p.avatar;tok.style.fontSize='10px';
     document.getElementById('boardEl').appendChild(tok);});}
@@ -1060,45 +1110,37 @@ function addLog(txt,type='event'){
 // ═══ ROLL ════════════════════════════════════════════════
 async function doRoll(){
   if(isRolling)return;isRolling=true;sfxDice();
-  const d1=document.getElementById('die1');const sl=document.getElementById('stepsLbl');
-  d1.classList.add('rolling');
-  let ticks=0;const iv=setInterval(()=>{d1.textContent=DF[Math.floor(Math.random()*6)];if(++ticks>10)clearInterval(iv);},65);
+  const d1el=document.getElementById('die1');
+  const sl=document.getElementById('stepsLbl');
+  // แสดง animation ลูกเต๋าชั่วคราว
+  let animRunning=true;
+  d1el.classList.add('rolling');
+  const rollAnim=setInterval(()=>{
+    if(animRunning)d1el.textContent=DF[Math.floor(Math.random()*6)];
+  },65);
   try{
     const data=await api({action:'rollDice',room:myRoom,playerId:myPid});
-    d1.classList.remove('rolling');
+    // หยุด animation ทันที
+    animRunning=false;
+    clearInterval(rollAnim);
+    d1el.classList.remove('rolling');
     if(!data.ok){alert(data.error);return;}
-    // ใช้ steps จาก server โดยตรง (ป้องกันบั้ก)
-    const steps = data.steps || (data.dice||[1])[0];
-    d1.textContent=DF[steps-1];
-    if(sl)sl.textContent=`เดิน ${steps} ช่อง`;
+    // ใช้ steps จาก server เพียงอย่างเดียว — แสดงหน้าลูกเต๋าที่ถูกต้องและล็อค
+    const steps=data.steps;
+    if(!steps||steps<1||steps>6){alert('ข้อผิดพลาด: ไม่ได้รับค่าลูกเต๋าที่ถูกต้อง ('+steps+')');return;}
+    d1el.textContent=DF[steps-1];  // แสดงหน้าที่ถูกต้อง ไม่เปลี่ยนอีก
+    if(sl)sl.textContent='เดิน '+steps+' ช่อง';
+    // อัปเดต state และ render
     gameState=data.state;
-    // animate token
-    await animateToken(myPid,steps,data.state);
     renderGame(data.state);
-    // handle events
-    if(data.taxEvent){showTaxQuizFlow(data.taxEvent,data.state);}
-    else if(data.cellEvent&&data.cellEvent.cellType!=='lucky'){
-      handleEvent(data.cellEvent,data.state);
-    }
-    // lucky: แสดง pill สำหรับผู้เล่นที่ต้องจั่ว
+    // จัดการ events
+    if(data.taxEvent)showTaxQuizFlow(data.taxEvent,data.state);
+    else if(data.cellEvent&&data.cellEvent.cellType!=='lucky')handleEvent(data.cellEvent,data.state);
     updateLuckyPill(data.state);
   }catch(e){console.error(e);alert('เชื่อมต่อไม่ได้ กรุณาลองใหม่');}
   finally{isRolling=false;}}
 
-async function animateToken(pid,steps,finalState){
-  if(!finalState||pid===null||pid===undefined)return;
-  const p=finalState.players.find(pl=>pl.id===pid);if(!p)return;
-  const endPos=p.pos;
-  const startPos=((endPos-steps)%32+32)%32;
-  for(let s=1;s<=steps;s++){
-    const pos=(startPos+s)%32;
-    document.querySelectorAll('.cell-current').forEach(c=>c.classList.remove('cell-current'));
-    const gp=gpPos(pos);
-    const ce=document.querySelector(`[data-gi="${gp.r*9+gp.c}"]`);
-    if(ce)ce.classList.add('cell-current');
-    const tok=document.querySelector('.token-me');
-    if(tok){tok.style.left=`calc(${(100/9)*gp.c+100/18}%)`;tok.style.top=`calc(${(100/9)*gp.r+100/18}%)`;}
-    await new Promise(r=>setTimeout(r,200));}}
+
 
 // ═══ EVENT HANDLER ═══════════════════════════════════════
 function handleEvent(ev,state){
