@@ -1263,6 +1263,78 @@ async function startGame(){const d=await api({action:'startGame',room:myRoom});
   if(!d.ok){alert(d.error);return;}gameState=d.state;enterGame();}
 
 // ═══ GAME ════════════════════════════════════════════════
+
+function gpPos(cid){
+  if(cid<=8)return{r:0,c:cid};if(cid<=16)return{r:cid-8,c:8};
+  if(cid<=24)return{r:8,c:8-(cid-16)};return{r:8-(cid-24),c:0};}
+
+function renderTokens(players){
+  document.querySelectorAll('.token').forEach(t=>t.remove());
+  document.querySelectorAll('.cell-current').forEach(c=>c.classList.remove('cell-current'));
+  const posMap={};
+  (players||[]).forEach(p=>{const k=String(p.pos);posMap[k]=(posMap[k]||[]);posMap[k].push(p);});
+  (players||[]).forEach((p,i)=>{
+    const pos=gpPos(p.pos);
+    const ce=document.querySelector(`[data-gi="${pos.r*9+pos.c}"]`);
+    if(ce&&(!isTeacher&&p.id===myPid))ce.classList.add('cell-current');
+    const tok=document.createElement('div');
+    tok.className=`token${(!isTeacher&&p.id===myPid)?' token-me':''}`;
+    tok.style.background=p.color;
+    const sameCell=posMap[String(p.pos)]||[];
+    const idx=sameCell.findIndex(x=>x.id===p.id);
+    const total=sameCell.length;
+    const offsets=[0,-6,6,-4,4,-8,8];
+    const ox=total>1?(offsets[idx%offsets.length]||0):0;
+    const oy=total>1?(idx%2===0?-5:5):0;
+    tok.style.left=`calc(${(100/9)*pos.c+100/18}% + ${ox}px)`;
+    tok.style.top=`calc(${(100/9)*pos.r+100/18}% + ${oy}px)`;
+    tok.style.animationDelay=`${i*.3}s`;
+    tok.textContent=p.avatar;tok.style.fontSize='10px';
+    document.getElementById('boardEl').appendChild(tok);});}
+
+
+function buildBoard(){
+  const grid=document.getElementById('boardGrid');grid.innerHTML='';
+  const cm=new Array(81).fill(null);
+  for(let i=0;i<9;i++)cm[i]=i;
+  for(let r=1;r<=8;r++)cm[r*9+8]=8+r;
+  for(let c=7;c>=0;c--)cm[8*9+c]=17+(7-c);
+  for(let r=7;r>=1;r--)cm[r*9]=25+(7-r);
+  let centerAdded=false;
+  for(let idx=0;idx<81;idx++){
+    const row=Math.floor(idx/9),col=idx%9,cid=cm[idx];
+    if(cid===null){
+      if(!centerAdded&&row===1&&col===1){
+        const div=document.createElement('div');
+        div.className='cell cell-center';
+        div.style.gridColumn='2/9';div.style.gridRow='2/9';div.style.zIndex='5';
+        div.innerHTML=`<div class="center-logo" id="centerLogo" onclick="onCenterClick()">
+          <div class="deck-pill" id="deckPill">🃏 การ์ดพิเศษ · กดจั่ว!</div>
+          <span class="cl-icon">⚔️</span>
+          <div class="cl-title">TAX WAR</div>
+          <div class="cl-sub">⚔️ สงครามภาษี ⚔️</div>
+          <div class="tax-rates">
+            <div class="rr"><span>0 – 150,000</span><span class="rp">ยกเว้น</span></div>
+            <div class="rr"><span>150,001 – 300,000</span><span class="rp">5%</span></div>
+            <div class="rr"><span>300,001 – 500,000</span><span class="rp">10%</span></div>
+            <div class="rr"><span>500,001 – 750,000</span><span class="rp">15%</span></div>
+            <div class="rr"><span>750,001 – 1,000,000</span><span class="rp">20%</span></div>
+            <div class="rr"><span>1,000,001 – 2,000,000</span><span class="rp">25%</span></div>
+            <div class="rr"><span>2,000,001 – 5,000,000</span><span class="rp">30%</span></div>
+            <div class="rr"><span>5,000,001 ขึ้นไป</span><span class="rp">35%</span></div>
+          </div></div>`;
+        grid.appendChild(div);centerAdded=true;
+      }
+      continue;}
+    const div=document.createElement('div');div.dataset.gi=idx;
+    const cell=CELLS[cid];div.className=`cell cell-${cell.t}`;div.dataset.cid=String(cid);
+    div.style.zIndex='6';
+    div.innerHTML=`<span class="cell-num">${cid}</span>
+      <span class="cell-icon">${cell.ic}</span>
+      <span class="cell-text">${cell.tx.replace(/\n/g,'<br>')}</span>`;
+    grid.appendChild(div);}
+  renderTokens([]);}
+
 function enterGame(){showScreen('gameScreen');buildBoard();
   if(isTeacher)document.getElementById('tcBox').style.display='';
   renderGame(gameState);}
@@ -1299,6 +1371,43 @@ function switchTab(t){
     if(pin)pin.value='';
     showMsg('teaMsg','');
   }}
+
+
+function renderGame(s){
+  if(!s)return;gameState=s;
+  const r=Math.min(s.round,MAX_ROUNDS);
+  const myLaps=!isTeacher&&myPid!==null
+    ?(s.players.find(p=>p.id===myPid)?.laps||0)
+    :Math.max(0,(s.round||1)-1);
+  const displayRound=Math.min(myLaps+1,MAX_ROUNDS);
+  document.getElementById('roundCtr').textContent=`⚔️ รอบที่ ${displayRound}/3 — เดินครบ 32 ช่อง = 1 รอบ`;
+  const cp=s.players[s.currentPlayer];const cc=cp?CAREERS[cp.careerId]:null;
+  document.getElementById('turnBanner').textContent=
+    s.status==='playing'?`⚔️ ตาของ ${cp?.name||'?'} ${cc?.icon||''} (รอบ ${displayRound}/3)`:
+    s.status==='paused'?'⏸ หยุดชั่วคราว':'รอเริ่มเกม';
+  document.getElementById('pausedOv').style.display=s.status==='paused'?'flex':'none';
+  document.getElementById('playerListEl').innerHTML=(s.players||[]).map((p,i)=>{
+    const c=CAREERS[p.careerId]||{};const isMe=!isTeacher&&p.id===myPid;
+    const isCur=i===s.currentPlayer;const pct=Math.min(100,(p.income/1000000)*100);
+    return `<div class="p-card ${isCur?'active':''} ${isMe?'me':''}">
+      <div class="pn"><span style="font-size:18px">${p.avatar}</span>${p.name}${isMe?' (คุณ)':''}
+        <span class="ctag" style="background:${c.color||'#888'}">${c.icon||''} ${c.tag||''}</span></div>
+      <div class="pm">${p.money.toLocaleString('th-TH')} ฿</div>
+      <div class="ps"><span>รายได้</span><span class="sv">${p.income.toLocaleString()} ฿</span>
+        <span>ลดหย่อน</span><span class="sv">${p.deduct.toLocaleString()} ฿</span>
+        <span>ภาษีจ่าย</span><span class="sv">${p.taxPaid.toLocaleString()} ฿</span></div>
+      <div class="bbar"><div class="bfill" style="width:${pct}%"></div></div></div>`;}).join('');
+  renderTokens(s.players);
+  updateLuckyPill(s);
+  const ra=document.getElementById('rollArea');
+  const isMyTurn=!isTeacher&&s.currentPlayer===myPid&&s.status==='playing';
+  if(isMyTurn)ra.innerHTML=`<button class="roll-btn" onclick="doRoll()">🎲 ทอย (1 ลูก)</button>`;
+  else if(isTeacher)ra.innerHTML=`<div class="not-my-turn">🎓 ครูดูแลห้อง</div>`;
+  else{const cur=s.players[s.currentPlayer];ra.innerHTML=`<div class="not-my-turn">⏳ ตาของ ${cur?.name||'?'}...</div>`;}
+  if(isTeacher){const pb=document.getElementById('pauseBtn');if(pb)pb.textContent=s.status==='paused'?'▶ เล่นต่อ':'⏸ หยุด';}
+  renderLog(s.log||[]);
+  // end screen ถูกจัดการโดย showEndTaxFlow เท่านั้น
+}
 
 function renderLog(log){
   if(log.length===lastLogLen)return;lastLogLen=log.length;
