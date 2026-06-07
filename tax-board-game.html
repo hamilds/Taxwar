@@ -705,7 +705,6 @@ function drawCard(){if(luckyDeck.length===0){luckyDeck=[...LUCKY_CARDS];shuffleD
 // ═══ STATE ══════════════════════════════════════════════
 let myPid=null,myRoom=null,isTeacher=false,selAv=AVATARS[0];
 let pollTimer=null,lastLogLen=0,gameState=null,isRolling=false,soundOn=true;
-let pendingLucky=false; // รอให้ผู้เล่นคลิกกองไพ่
 
 // ═══ SOUND ══════════════════════════════════════════════
 const AC=window.AudioContext||window.webkitAudioContext;let ac=null;
@@ -970,21 +969,24 @@ function buildBoard(){
     grid.appendChild(div);}
   renderTokens([]);}
 
-// คลิกกองไพ่กลางกระดาน
+// คลิกกองไพ่กลางกระดาน → เรียก API drawCard
 function onCenterClick(){
-  if(!pendingLucky)return;
-  const p=gameState&&gameState.players[gameState.currentPlayer];
-  if(!p)return;
-  pendingLucky=false;
-  // อัปเดต pill
-  const pill=document.getElementById('deckPill');
-  if(pill)pill.textContent='🃏 การ์ดพิเศษ · กดจั่ว!';
-  showLuckyModal((amt)=>{
-    if(amt>0&&gameState){p.money+=amt;p.income+=amt;
-      addLog(`⭐ ${p.name}: การ์ดพิเศษ! ได้รับ ${amt.toLocaleString()} ฿`,'lucky');
-      renderGame(gameState);}
-    showEventModal({icon:'⭐',title:'การ์ดพิเศษ!',desc:`ได้รับ ${currentCard?.name||'ลาภลอย'}`,
-      amount:amt,cellType:'lucky'});});}
+  if(!gameState||!gameState.luckyPending)return;
+  if(isTeacher)return; // ครูกดไม่ได้
+  if(gameState.luckyPlayerId!==myPid)return; // ต้องเป็นตาของเรา
+  showLuckyModal(async(amt)=>{
+    // เรียก server เพื่อบันทึกการจั่วการ์ด
+    try{
+      const d=await api({action:'drawCard',room:myRoom});
+      if(d.ok){
+        gameState=d.state;
+        renderGame(d.state);
+        showEventModal({icon:'⭐',title:'การ์ดพิเศษ!',
+          desc:`${currentCard?.name||'ลาภลอย'} — ได้รับ ${(d.luckyAmount||amt).toLocaleString()} ฿`,
+          amount:d.luckyAmount||amt,cellType:'lucky'});
+      }
+    }catch(e){console.error(e);}
+  });}
 
 function gpPos(cid){
   if(cid<=8)return{r:0,c:cid};if(cid<=16)return{r:cid-8,c:8};
@@ -1028,6 +1030,7 @@ function renderGame(s){
         <span>ภาษีจ่าย</span><span class="sv">${p.taxPaid.toLocaleString()} ฿</span></div>
       <div class="bbar"><div class="bfill" style="width:${pct}%"></div></div></div>`;}).join('');
   renderTokens(s.players);
+  updateLuckyPill(s);
   // roll area
   const ra=document.getElementById('rollArea');
   const isMyTurn=!isTeacher&&s.currentPlayer===myPid&&s.status==='playing';
@@ -1064,24 +1067,21 @@ async function doRoll(){
     const data=await api({action:'rollDice',room:myRoom,playerId:myPid});
     d1.classList.remove('rolling');
     if(!data.ok){alert(data.error);return;}
-    // ใช้ลูกเต๋าลูกแรกเพียงลูกเดียว
-    const steps=(data.dice||[1])[0];
+    // ใช้ steps จาก server โดยตรง (ป้องกันบั้ก)
+    const steps = data.steps || (data.dice||[1])[0];
     d1.textContent=DF[steps-1];
     if(sl)sl.textContent=`เดิน ${steps} ช่อง`;
     gameState=data.state;
     // animate token
     await animateToken(myPid,steps,data.state);
     renderGame(data.state);
-    // handle lucky cell
-    const p=data.state.players.find(pl=>pl.id===myPid);
-    if(p&&CELLS[p.pos]?.t==='lucky'){
-      pendingLucky=true;
-      const pill=document.getElementById('deckPill');
-      if(pill){pill.textContent='⭐ คลิกที่นี่เพื่อจั่วการ์ด!';pill.style.animation='pulse 1s ease-in-out infinite';}
-      addLog(`⭐ ${p.name}: หยุดช่องพิเศษ → กดกองไพ่กลางกระดานเพื่อจั่ว!`,'lucky');
-      renderGame(data.state);
-    } else if(data.taxEvent){showTaxQuizFlow(data.taxEvent,data.state);}
-    else if(data.cellEvent){handleEvent(data.cellEvent,data.state);}
+    // handle events
+    if(data.taxEvent){showTaxQuizFlow(data.taxEvent,data.state);}
+    else if(data.cellEvent&&data.cellEvent.cellType!=='lucky'){
+      handleEvent(data.cellEvent,data.state);
+    }
+    // lucky: แสดง pill สำหรับผู้เล่นที่ต้องจั่ว
+    updateLuckyPill(data.state);
   }catch(e){console.error(e);alert('เชื่อมต่อไม่ได้ กรุณาลองใหม่');}
   finally{isRolling=false;}}
 
@@ -1135,6 +1135,24 @@ function showEventModal(ev){
   else tb.style.display='none';
   document.getElementById('eventModal').style.display='flex';}
 function closeEventModal(){document.getElementById('eventModal').style.display='none';}
+
+function updateLuckyPill(s){
+  const pill=document.getElementById('deckPill');if(!pill)return;
+  if(s&&s.luckyPending){
+    const isMyDraw=!isTeacher&&s.luckyPlayerId===myPid;
+    if(isMyDraw){
+      pill.textContent='⭐ ตาคุณ! กดเพื่อจั่วการ์ดพิเศษ';
+      pill.style.background='linear-gradient(135deg,#F9A825,#E65100)';
+      pill.style.animation='';
+    } else {
+      const p=s.players[s.luckyPlayerId||s.currentPlayer];
+      pill.textContent=`⭐ ${p?.name||'?'} กำลังจั่วการ์ด...`;
+      pill.style.background='linear-gradient(135deg,#E65100,#BF360C)';
+    }
+  } else {
+    pill.textContent='🃏 การ์ดพิเศษ · หยุดช่อง ⭐ เพื่อจั่ว';
+    pill.style.background='linear-gradient(135deg,#E65100,#BF360C)';
+  }}
 
 // ═══ TEACHER ═════════════════════════════════════════════
 async function teacherAct(action){const d=await api({action,room:myRoom});if(!d.ok){alert(d.error);return;}renderGame(d.state);}
