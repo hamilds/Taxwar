@@ -1473,7 +1473,10 @@ function showWaitingResult(state, done, total){
           </div>`).join('');
       }
       // ถ้าทุกคนเสร็จแล้ว หรือรอนาน 3 นาที
-      if(done2>=total2 || pollCount>72){
+      // นับเฉพาะผู้เล่นจริง (ไม่นับครู)
+      const realDone=s2.players.filter(p=>p.taxDone===true).length;
+      const realTotal=s2.players.length;
+      if(realDone>=realTotal || pollCount>40){
         clearInterval(rPoll);
         const ov=document.getElementById('waitResultOv');
         if(ov)ov.remove();
@@ -1482,6 +1485,35 @@ function showWaitingResult(state, done, total){
     }catch(e){console.error(e);}
   },3000);
 }
+
+
+function onCenterClick(){
+  if(!gameState||!gameState.luckyPending)return;
+  if(isTeacher)return;
+  // luckyPlayerId เก็บ index ของ player ใน array
+  if(gameState.luckyPlayerId !== myPid)return;
+  showLuckyModal(async()=>{
+    if(!currentCard)return;
+    const cardAmt=currentCard.amt;
+    try{
+      const d=await api({action:'drawCard',room:myRoom,amount:String(cardAmt)});
+      if(d.ok){gameState=d.state;renderGame(d.state);}
+      else{
+        const lp=gameState.players[gameState.currentPlayer];
+        if(lp){lp.money+=cardAmt;lp.income+=cardAmt;}
+        gameState.luckyPending=false;
+        gameState.currentPlayer=(gameState.currentPlayer+1)%gameState.players.length;
+        renderGame(gameState);}
+    }catch(e){
+      const lp=gameState.players[gameState.currentPlayer];
+      if(lp){lp.money+=cardAmt;lp.income+=cardAmt;}
+      gameState.luckyPending=false;
+      gameState.currentPlayer=(gameState.currentPlayer+1)%gameState.players.length;
+      renderGame(gameState);}
+    showEventModal({icon:currentCard.ic,title:currentCard.name,
+      desc:currentCard.desc,amount:cardAmt,
+      tip:(currentCard.tip||'')+'\n💰 '+cardAmt.toLocaleString()+' ฿ บันทึกลงรายได้แล้ว',
+      cellType:'lucky'});});}
 
 // ═══ INIT UI ═════════════════════════════════════════════
 function initUI(){
@@ -1556,7 +1588,17 @@ function renderLog(log){
   // render เสมอเมื่อมีการเปลี่ยนแปลง (ไม่ใช้แค่ length เพราะ log อาจ truncate)
   const logEl=document.getElementById('logEl');if(!logEl)return;
   const newLen=log.length;
-  // ถ้า log ใหม่มีมากกว่า lastLogLen → append รายการใหม่
+  // render ทุกครั้งที่มีการเปลี่ยนแปลง
+  if(newLen===lastLogLen && newLen>0){
+    // ตรวจ content ของรายการล่าสุด
+    const logEl2=document.getElementById('logEl');
+    if(logEl2&&logEl2.children.length>0){
+      const first=logEl2.firstChild;
+      if(first&&first.textContent&&log[0]&&first.textContent.includes(log[0].text)){
+        return; // ไม่มีการเปลี่ยนแปลงจริง
+      }
+    }
+  }
   if(newLen>lastLogLen){
     // เพิ่มรายการใหม่ที่ยังไม่แสดง
     const newEntries=log.slice(lastLogLen);
