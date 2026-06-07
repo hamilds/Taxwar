@@ -1003,9 +1003,7 @@ function showTaxQuizFlow(taxEv, state){
       `<b>หักค่าใช้จ่าย</b> (${Math.round((c.dr||.5)*100)}% สูงสุด ${(c.dm||100000).toLocaleString()} ฿): `+
         `<b style="color:var(--red)">− ${expDed.toLocaleString()} ฿</b><br>`+
       `<b>หักลดหย่อนส่วนตัว:</b> <b style="color:var(--red)">− ${perDed.toLocaleString()} ฿</b><br>`+
-      `<b>หักลดหย่อนอื่นๆ:</b> <b style="color:var(--red)">− ${otherDed.toLocaleString()} ฿</b><br>`+
-      `<span style="border-top:1px solid rgba(212,160,23,.4);display:block;margin-top:4px;padding-top:4px">`+
-      `<b>รวมลดหย่อน:</b> <b style="color:var(--red)">− ${totalDed.toLocaleString()} ฿</b></span>`,
+      `<b>หักลดหย่อนอื่นๆ:</b> <b style="color:var(--red)">− ${otherDed.toLocaleString()} ฿</b><br>`+,
     desc:'กรอกผลลัพธ์: เงินได้พึงประเมิน − ลดหย่อนทั้งหมด = ?',
     correct:netIncome,
   }, (isCorrect, correctVal)=>{
@@ -1076,7 +1074,6 @@ function showEndTaxFlow(state){
   endTaxDone=true;
   stopPoll();
 
-  // ครูไม่ต้องทำ tax flow
   if(isTeacher){setTimeout(()=>showEnd(state),500);return;}
   const myPlayer=state.players.find(p=>p.id===myPid);
   if(!myPlayer){setTimeout(()=>showEnd(state),500);return;}
@@ -1093,10 +1090,12 @@ function showEndTaxFlow(state){
   const diff=taxDue-taxPaid;
   const finalTax=Math.abs(diff);
   const isRefund=diff<0;
-  let bonusTotal=0;
+
+  // เก็บผลการตอบ
+  let step1Correct=false;
+  let step2Correct=false;
 
   function doStep2(){
-    // ขั้น 2: Multiple Choice ภาษี
     const choices=shuf([finalTax,...rndWrong(Math.max(finalTax,5000))]);
     showQuiz([{
       ic:'🏛️',
@@ -1113,14 +1112,19 @@ function showEndTaxFlow(state){
         :'ภาษีที่ต้องจ่าย '+taxDue.toLocaleString()+' ฿ จ่ายไปแล้ว '+taxPaid.toLocaleString()+' ฿ → จ่ายเพิ่ม '+finalTax.toLocaleString()+' ฿',
       penalty:10000,
     }],(quizBonus)=>{
-      bonusTotal+=quizBonus;
-      if(bonusTotal!==0) myPlayer.money+=bonusTotal;
-      setTimeout(()=>showEnd(state),500);
+      // บันทึกผลขั้น 2
+      step2Correct = (quizBonus > 0);
+      const bothCorrect = step1Correct && step2Correct;
+      // บันทึก taxScore ของผู้เล่น (ส่งให้ server ไม่ได้ เก็บใน state local)
+      myPlayer.taxScore = (step1Correct?1:0) + (step2Correct?1:0); // 0,1,2
+      myPlayer.taxWin = bothCorrect;
+      // bonus/penalty
+      if(quizBonus!==0) myPlayer.money+=quizBonus;
+      setTimeout(()=>showEnd(state, bothCorrect), 500);
     });
   }
 
   function doStep1(){
-    // ขั้น 1: Fill-in รายได้สุทธิ
     showFillModal({
       icon:'📊',
       title:'ขั้นที่ 1/2 — คำนวณรายได้สุทธิ',
@@ -1129,18 +1133,17 @@ function showEndTaxFlow(state){
         '<b>หักค่าใช้จ่าย ('+Math.round((c.dr||.5)*100)+'% สูงสุด '+(c.dm||100000).toLocaleString()+' ฿):</b> '+
         '<span style="color:var(--red)">− '+expDed.toLocaleString()+' ฿</span><br>'+
         '<b>หักลดหย่อนส่วนตัว 60,000 ฿:</b> <span style="color:var(--red)">− '+perDed.toLocaleString()+' ฿</span><br>'+
-        '<b>หักลดหย่อนอื่นๆ:</b> <span style="color:var(--red)">− '+otherDed.toLocaleString()+' ฿</span><br>'+
-        '<span style="display:block;border-top:1px solid rgba(212,160,23,.4);margin-top:5px;padding-top:5px">'+
-        '<b>รวมลดหย่อน = '+totalDed.toLocaleString()+' ฿</b></span>',
+        '<b>หักลดหย่อนอื่นๆ:</b> <span style="color:var(--red)">− '+otherDed.toLocaleString()+' ฿</span>',
       desc:'กรอก: เงินได้พึงประเมิน − ลดหย่อนทั้งหมด = ?',
       correct:netIncome,
     },(isCorrect)=>{
-      if(isCorrect) bonusTotal+=5000; else bonusTotal-=10000;
+      step1Correct=isCorrect;
+      if(isCorrect) myPlayer.money+=5000; else myPlayer.money-=10000;
       doStep2();
     });
   }
 
-  // แสดง intro modal ก่อน
+  // Intro modal
   document.getElementById('mIcon').textContent='🏛️';
   document.getElementById('mTitle').textContent='ครบ 3 รอบ! ถึงเวลายื่นภาษี';
   document.getElementById('mDesc').textContent=
@@ -1149,14 +1152,13 @@ function showEndTaxFlow(state){
   const tipBox=document.getElementById('tipBox');
   tipBox.style.display='block';
   document.getElementById('tipTxt').textContent=
-    'การยื่นภาษีเกิดขึ้น 1 ครั้งหลังเล่นครบ 3 รอบ ตามระบบภาษีเงินได้บุคคลธรรมดา';
-  // เปลี่ยนปุ่มชั่วคราว
+    '⭐ ผู้ที่ตอบถูกทั้ง 2 ขั้นตอนจะเป็นผู้ชนะ!\nขั้น 1: กรอกรายได้สุทธิ  |  ขั้น 2: เลือกภาษีที่ถูกต้อง';
   const oldBtn=document.querySelector('#eventModal .m-btn');
-  const oldTxt=oldBtn.textContent;
+  const oldTxt=oldBtn.textContent; const oldFn=oldBtn.onclick;
   oldBtn.textContent='เริ่มคำนวณภาษี →';
-  const oldFn=oldBtn.onclick;
   oldBtn.onclick=function(){
-    oldBtn.textContent=oldTxt; oldBtn.onclick=oldFn; tipBox.style.display='none';
+    oldBtn.textContent=oldTxt; oldBtn.onclick=oldFn;
+    tipBox.style.display='none';
     document.getElementById('eventModal').style.display='none';
     doStep1();
   };
@@ -1484,9 +1486,20 @@ async function teacherAct(action){const d=await api({action,room:myRoom});if(!d.
 function confirmReset(){if(confirm('รีเซ็ตห้องนี้? ข้อมูลทั้งหมดจะถูกลบ'))teacherAct('resetRoom');}
 
 // ═══ END SCREEN ══════════════════════════════════════════
-function showEnd(s){
+function showEnd(s, myBothCorrect){
   sfxWin();
-  const sorted=[...s.players].sort((a,b)=>b.money-a.money);
+  // เงื่อนไขชนะ:
+  // ✅ ตอบถูกทั้ง 2 ขั้น = ชนะ
+  // 🤝 หลายคนตอบถูก = ชนะร่วม
+  // ❌ ไม่มีใครตอบถูกทั้ง 2 ขั้น = ไม่มีผู้ชนะ
+  const taxWinners = s.players.filter(p=>p.taxWin===true);
+  const noWinner = taxWinners.length === 0;
+  // เรียงตาม taxScore ก่อน แล้วเงิน (เพื่อแสดงลำดับ)
+  const sorted=[...s.players].sort((a,b)=>{
+    const sa=(b.taxScore||0)-(a.taxScore||0);
+    if(sa!==0)return sa;
+    return b.money-a.money;
+  });
   const re=['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣'];
   const pdO=[sorted[1],sorted[0],sorted[2],sorted[3]].filter(Boolean);
   const pdC=['rank-2','rank-1','rank-3','rank-4'],pdL=['🥈','🥇','🥉','4'];
@@ -1521,7 +1534,7 @@ function showEnd(s){
     <div class="endscreen"><div class="confetti-bar"></div>${parts}
       <span class="end-trophy">🏆</span>
       <div class="end-title">จบสงคราม!</div>
-      <div class="end-sub">⚔️ ครบ 3 รอบ · จอมภาษีแห่งสงคราม ⚔️</div>
+      <div class="end-sub" id="endSubText">⚔️ ครบ 3 รอบ · จอมภาษีแห่งสงคราม ⚔️</div>
       <div class="podium">${podHTML}</div>
       <div class="sc-tbl"><div class="sc-hd">📊 ตารางสถิติ</div>
         <div class="sc-cols"><div></div><div></div>
@@ -1541,8 +1554,45 @@ function showEnd(s){
           <div class="aw-win">${mP?.avatar||''} ${mP?.name||'-'}</div>
           <div class="aw-det">${(ls[mP?.id]?.totalPenalty||0).toLocaleString()} ฿</div></div>
       </div>
+      <div id="winCondBox" style="background:rgba(212,160,23,.12);border:1px solid rgba(212,160,23,.4);
+        border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;text-align:center;color:var(--ink)"></div>
       <button class="end-btn" onclick="document.getElementById('endScreen').remove();lastLogLen=0;endTaxDone=false;showScreen('lobbyScreen')">🔄 กลับหน้าแรก</button>
-    </div></div>`);}
+    </div></div>`);
+  // อัปเดต win condition box
+  setTimeout(()=>{
+    const wcBox=document.getElementById('winCondBox');
+    const subEl=document.getElementById('endSubText');
+    const trophyEl=document.querySelector('#endScreen .end-trophy');
+    if(noWinner){
+      // ไม่มีผู้ชนะ
+      if(trophyEl)trophyEl.textContent='❌';
+      if(subEl)subEl.innerHTML='<span style="color:var(--red);font-size:18px">ไม่มีผู้ชนะ!</span><br>ไม่มีผู้เล่นคนใดคำนวณภาษีถูกต้องทั้ง 2 ขั้นตอน';
+      if(wcBox)wcBox.innerHTML=
+        '<b>🎯 เงื่อนไขชนะ:</b> ตอบถูกต้องทั้ง 2 ขั้นตอน<br>'+
+        '<span style="color:var(--red)">❌ ไม่มีผู้เล่นคนใดทำได้ครบ 2 ขั้น</span><br>'+
+        '<span style="font-size:11px;opacity:.7">ลองใหม่อีกครั้งและคำนวณภาษีให้ถูกต้อง!</span>';
+      // ซ่อนโพเดียม
+      const podEl=document.querySelector('#endScreen .podium');
+      if(podEl)podEl.style.display='none';
+    } else if(taxWinners.length===1){
+      // ชนะคนเดียว
+      const w=taxWinners[0];
+      if(trophyEl)trophyEl.textContent='🏆';
+      if(subEl)subEl.innerHTML='🏆 <b>'+w.name+'</b> ชนะ! คำนวณภาษีถูกต้องทั้ง 2 ขั้นตอน';
+      if(wcBox)wcBox.innerHTML=
+        '<b>🎯 เงื่อนไขชนะ:</b> คำนวณภาษีถูกต้องทั้ง 2 ขั้นตอน<br>'+
+        '<span style="color:var(--green)">✅ ขั้น 1: รายได้สุทธิ  +  ขั้น 2: ภาษีที่ต้องจ่าย</span>';
+    } else {
+      // ชนะร่วม
+      const names=taxWinners.map(w=>w.name).join(', ');
+      if(trophyEl)trophyEl.textContent='🏆';
+      if(subEl)subEl.innerHTML='🤝 ชนะร่วม: <b>'+names+'</b>';
+      if(wcBox)wcBox.innerHTML=
+        '<b>🎯 เงื่อนไขชนะ:</b> คำนวณภาษีถูกต้องทั้ง 2 ขั้นตอน<br>'+
+        '<span style="color:var(--green)">✅ ผู้ชนะร่วม '+taxWinners.length+' คน ล้วนตอบถูกทั้ง 2 ขั้น</span>';
+    }
+  }, 300);
+}
 
 // ═══ POLLING ═════════════════════════════════════════════
 function startPoll(){stopPoll();
