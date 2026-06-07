@@ -156,6 +156,31 @@ hr.dv{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
 .cell-event  {background:linear-gradient(135deg,#FFF8E1,#FFECB3);border-color:#FFD54F}
 .cell-career {background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border-color:#FF9800}
 .cell-audit  {background:linear-gradient(135deg,#FBE9E7,#FFCCBC);border-color:#FF8A65}
+
+/* ── FILL IN MODAL ── */
+.fill-ov{z-index:115}
+.fill-modal{max-width:420px}
+.fill-formula{background:rgba(212,160,23,.12);border:1px solid rgba(212,160,23,.4);
+  border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px;
+  color:var(--ink);line-height:1.9;text-align:left}
+.fill-formula b{color:var(--blue)}
+.fill-formula .eq{color:var(--green);font-weight:700;font-size:15px}
+.fill-input-wrap{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.fill-input{flex:1;padding:12px 14px;border-radius:8px;border:2px solid rgba(212,160,23,.5);
+  background:white;font-family:'Teko',sans-serif;font-size:24px;color:var(--ink);
+  text-align:right;outline:none;letter-spacing:1px}
+.fill-input:focus{border-color:var(--gold)}
+.fill-input.correct{border-color:#4CAF50;background:#F1F8E9;color:var(--green)}
+.fill-input.wrong{border-color:#E53935;background:#FFEBEE;color:var(--red)}
+.fill-unit{font-family:'Teko',sans-serif;font-size:20px;color:var(--ink);font-weight:600}
+.fill-submit{width:100%;padding:10px;border-radius:8px;border:none;
+  background:linear-gradient(135deg,var(--gold),#A87800);font-family:'Teko',sans-serif;
+  font-size:18px;font-weight:600;letter-spacing:2px;color:var(--dark);cursor:pointer;
+  box-shadow:0 3px 0 #6B4A00;margin-bottom:10px}
+.fill-submit:disabled{opacity:.4;cursor:not-allowed}
+.fill-hint{font-size:11px;color:#5A3A10;opacity:.7;text-align:center;margin-bottom:8px}
+.fill-tolerance{font-size:11px;color:var(--green);text-align:center;margin-bottom:4px;display:none}
+
 .cell-lucky  {background:linear-gradient(135deg,#FFF9C4,#FFF176);border-color:#F9A825;border-width:2px}
 .cell-center {background:transparent;border:none;overflow:hidden}
 .cell-current{box-shadow:0 0 0 3px var(--gold),0 0 10px rgba(212,160,23,.6)!important;
@@ -529,6 +554,27 @@ hr.dv{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
   </div>
 </div>
 
+<!-- ══ FILL IN MODAL (กรอกรายได้สุทธิ) ════════════════ -->
+<div class="ov fill-ov" id="fillModal" style="display:none">
+  <div class="modal fill-modal">
+    <span class="m-icon" id="fillIcon">📊</span>
+    <div class="m-title" id="fillTitle">คำนวณรายได้สุทธิ</div>
+    <div class="fill-formula" id="fillFormula"></div>
+    <div class="m-desc" id="fillDesc" style="margin-bottom:10px;font-size:12px"></div>
+    <div class="fill-input-wrap">
+      <input class="fill-input" id="fillInput" type="number" placeholder="0"
+        oninput="onFillInput()" onkeydown="if(event.key==='Enter')submitFill()">
+      <span class="fill-unit">฿</span>
+    </div>
+    <div class="fill-hint">💡 กรอกตัวเลขแล้วกด "ตรวจคำตอบ"</div>
+    <div class="fill-tolerance" id="fillTolerance">✅ ยอมรับความคลาดเคลื่อนได้ ±1,000 ฿</div>
+    <button class="fill-submit" id="fillSubmitBtn" onclick="submitFill()">ตรวจคำตอบ ✓</button>
+    <div class="q-fb" id="fillFeedback"></div>
+    <div class="q-exp" id="fillExplain"></div>
+    <button class="q-next" id="fillNextBtn" onclick="closeFill()" style="display:none">ถัดไป →</button>
+  </div>
+</div>
+
 <!-- EVENT MODAL -->
 <div class="ov" id="eventModal" style="display:none">
   <div class="modal">
@@ -769,52 +815,10 @@ function buildQuiz(ev,type,p){
   }
   return qs;}
 
-function buildTaxQuiz(taxEv,state){
-  const p=state.players[state.currentPlayer];
-  const c=CAREERS[p.careerId]||{dr:.5,dm:100000};
-  const grossIncome=p.income;
-  const expenseDeduct=Math.min(Math.round(grossIncome*(c.dr||.5)),c.dm||100000);
-  const personalDeduct=60000;
-  const otherDeduct=p.deduct||0;
-  const totalDeduct=expenseDeduct+personalDeduct+otherDeduct;
-  const netIncome=Math.max(0,grossIncome-totalDeduct);
-  const taxDue=taxCalc(netIncome);
-  const diff=taxDue-(p.taxPaid||0);
-  const finalTax=Math.abs(diff);
-  const isRefund=diff<0;
-
-  return [
-    // ── ขั้น 1: คำนวณรายได้สุทธิ (เงินได้พึงประเมิน - ลดหย่อน) ──
-    {
-      ic:'📊',title:'ขั้นที่ 1 — คำนวณรายได้สุทธิ',
-      sub:'เงินได้พึงประเมิน − ค่าลดหย่อนทั้งหมด = รายได้สุทธิ',
-      sum:`<b>เงินได้พึงประเมิน:</b> ${grossIncome.toLocaleString()} ฿<br>`+
-          `<b>หักค่าใช้จ่าย</b> (${Math.round((c.dr||.5)*100)}% สูงสุด ${(c.dm||100000).toLocaleString()} ฿): ${expenseDeduct.toLocaleString()} ฿<br>`+
-          `<b>หักลดหย่อนส่วนตัว:</b> ${personalDeduct.toLocaleString()} ฿<br>`+
-          `<b>หักลดหย่อนอื่นๆ ในเกม:</b> ${otherDeduct.toLocaleString()} ฿<br>`+
-          `<b>รวมลดหย่อนทั้งหมด:</b> ${totalDeduct.toLocaleString()} ฿`,
-      q:`รายได้สุทธิ = เงินได้พึงประเมิน − ลดหย่อนทั้งหมด = ? ฿`,
-      correct:netIncome,
-      choices:shuf([netIncome,...rndWrong(Math.max(netIncome,50000))]),
-      exp:`${grossIncome.toLocaleString()} − ${totalDeduct.toLocaleString()} = ${netIncome.toLocaleString()} ฿`,
-      penalty:10000
-    },
-    // ── ขั้น 2: คำนวณภาษีจากรายได้สุทธิ ──
-    {
-      ic:'🏛️',title:'ขั้นที่ 2 — คำนวณภาษีที่ต้องจ่าย',
-      sub:'นำรายได้สุทธิคำนวณภาษีตามอัตราก้าวหน้า',
-      sum:`<b>รายได้สุทธิ:</b> ${netIncome.toLocaleString()} ฿<br>`+
-          `<b>ภาษีตามอัตราก้าวหน้า:</b> ${taxDue.toLocaleString()} ฿<br>`+
-          `<b>ภาษีที่จ่ายไปแล้ว (หัก ณ ที่จ่าย):</b> ${(p.taxPaid||0).toLocaleString()} ฿`,
-      q:isRefund?`ได้รับเงินคืนภาษี = ? ฿`:`ภาษีที่ต้องจ่ายเพิ่ม = ? ฿`,
-      correct:Math.max(finalTax,0),
-      choices:shuf([Math.max(finalTax,0),...rndWrong(Math.max(finalTax,5000))]),
-      exp:isRefund
-        ?`ภาษีที่แท้จริง ${taxDue.toLocaleString()} ฿ จ่ายไปแล้ว ${(p.taxPaid||0).toLocaleString()} ฿ → ได้รับคืน ${finalTax.toLocaleString()} ฿`
-        :`ภาษีที่ต้องจ่าย ${taxDue.toLocaleString()} ฿ จ่ายไปแล้ว ${(p.taxPaid||0).toLocaleString()} ฿ → จ่ายเพิ่ม ${finalTax.toLocaleString()} ฿`,
-      penalty:10000
-    }
-  ];}
+function buildTaxQuiz(taxEv, state){
+  // ไม่ใช้แล้ว — ใช้ showTaxFlow แทน
+  return [];
+}
 
 function showQuiz(list,cb){qQueue=list;qCb=cb;qIdx=0;qBonus=0;renderQ();}
 
@@ -892,6 +896,155 @@ function closeLucky(){
 // ═══ GUIDE ══════════════════════════════════════════════
 function showGuide(){document.getElementById('guideOv').style.display='flex';}
 function hideGuide(){document.getElementById('guideOv').style.display='none';}
+
+
+// ═══════════════════════════════════════════════════════
+//  FILL-IN SYSTEM — ขั้น 1 กรอกรายได้สุทธิ
+// ═══════════════════════════════════════════════════════
+let fillCallback=null, fillCorrectVal=0, fillAnswered=false;
+
+function showFillModal(opts, cb){
+  fillCallback=cb; fillCorrectVal=opts.correct; fillAnswered=false;
+  document.getElementById('fillIcon').textContent=opts.icon||'📊';
+  document.getElementById('fillTitle').textContent=opts.title||'คำนวณ';
+  document.getElementById('fillFormula').innerHTML=opts.formula||'';
+  document.getElementById('fillDesc').textContent=opts.desc||'';
+  const inp=document.getElementById('fillInput');
+  inp.value=''; inp.className='fill-input'; inp.disabled=false;
+  document.getElementById('fillFeedback').style.display='none';
+  document.getElementById('fillExplain').style.display='none';
+  document.getElementById('fillNextBtn').style.display='none';
+  document.getElementById('fillSubmitBtn').style.display='block';
+  document.getElementById('fillSubmitBtn').disabled=true;
+  document.getElementById('fillTolerance').style.display='block';
+  document.getElementById('fillModal').style.display='flex';
+  setTimeout(()=>inp.focus(),200);
+}
+
+function onFillInput(){
+  const v=parseInt(document.getElementById('fillInput').value.replace(/,/g,''))||0;
+  document.getElementById('fillSubmitBtn').disabled=(v<=0);
+}
+
+function submitFill(){
+  if(fillAnswered)return;
+  fillAnswered=true;
+  const inp=document.getElementById('fillInput');
+  const val=parseInt(inp.value.replace(/,/g,''))||0;
+  const correct=fillCorrectVal;
+  const tolerance=Math.max(1000, Math.round(correct*0.01)); // ±1% หรือ ±1,000
+  const isClose=Math.abs(val-correct)<=tolerance;
+  const fb=document.getElementById('fillFeedback');
+  const exp=document.getElementById('fillExplain');
+  const nb=document.getElementById('fillNextBtn');
+  inp.disabled=true;
+  document.getElementById('fillSubmitBtn').style.display='none';
+  if(isClose){
+    inp.classList.add('correct');
+    fb.className='q-fb cor';
+    fb.innerHTML=`✅ ถูกต้อง! รายได้สุทธิ = <b>${correct.toLocaleString()} ฿</b>`;
+    fb.style.display='block';
+    sfxBonus();
+    if(fillCallback){fillCallback(true, correct);}
+  } else {
+    inp.classList.add('wrong');
+    fb.className='q-fb wro';
+    fb.innerHTML=`❌ ไม่ถูกต้อง คำตอบที่ถูกคือ <b>${correct.toLocaleString()} ฿</b>`;
+    fb.style.display='block';
+    sfxPenalty();
+    if(fillCallback){fillCallback(false, correct);}
+  }
+  nb.style.display='block';
+  nb.textContent='ขั้นถัดไป →';
+}
+
+function closeFill(){
+  document.getElementById('fillModal').style.display='none';
+  fillCallback=null;
+}
+
+// ═══════════════════════════════════════════════════════
+//  TAX FLOW — 2 ขั้นตอนตาม Flowchart
+//  ขั้น 1: Fill-in รายได้สุทธิ
+//  ขั้น 2: Multiple Choice ภาษีที่ต้องจ่าย
+// ═══════════════════════════════════════════════════════
+function showTaxQuizFlow(taxEv, state){
+  const isMyTurn=!isTeacher&&state&&state.currentPlayer===myPid;
+  if(!isMyTurn){
+    // ครูหรือผู้เล่นอื่น: แค่แสดง info
+    showEventModal(taxEv||{icon:'🏛️',title:'ยื่นภาษี',desc:'คำนวณภาษีประจำปีแล้ว',amount:0});
+    return;
+  }
+
+  const p=state.players[state.currentPlayer];
+  const c=CAREERS[p.careerId]||{dr:.5,dm:100000,name:'?',tag:'?'};
+  const gross=p.income||0;
+  const expDed=Math.min(Math.round(gross*(c.dr||.5)), c.dm||100000);
+  const perDed=60000;
+  const otherDed=p.deduct||0;
+  const totalDed=expDed+perDed+otherDed;
+  const netIncome=Math.max(0, gross-totalDed);
+  const taxDue=taxCalc(netIncome);
+  const diff=taxDue-(p.taxPaid||0);
+  const finalTax=Math.abs(diff);
+  const isRefund=diff<0;
+
+  let step1Correct=false;
+  let bonusTotal=0;
+
+  // ── ขั้นที่ 1: Fill-in รายได้สุทธิ ──────────────────
+  showFillModal({
+    icon:'📊',
+    title:'ขั้นที่ 1/2 — คำนวณรายได้สุทธิ',
+    formula:
+      `<b>เงินได้พึงประเมิน:</b> ${gross.toLocaleString()} ฿<br>`+
+      `<b>หักค่าใช้จ่าย</b> (${Math.round((c.dr||.5)*100)}% สูงสุด ${(c.dm||100000).toLocaleString()} ฿): `+
+        `<b style="color:var(--red)">− ${expDed.toLocaleString()} ฿</b><br>`+
+      `<b>หักลดหย่อนส่วนตัว:</b> <b style="color:var(--red)">− ${perDed.toLocaleString()} ฿</b><br>`+
+      `<b>หักลดหย่อนอื่นๆ:</b> <b style="color:var(--red)">− ${otherDed.toLocaleString()} ฿</b><br>`+
+      `<span style="border-top:1px solid rgba(212,160,23,.4);display:block;margin-top:4px;padding-top:4px">`+
+      `<b>รวมลดหย่อน:</b> <b style="color:var(--red)">− ${totalDed.toLocaleString()} ฿</b></span>`,
+    desc:'กรอกผลลัพธ์: เงินได้พึงประเมิน − ลดหย่อนทั้งหมด = ?',
+    correct:netIncome,
+  }, (isCorrect, correctVal)=>{
+    step1Correct=isCorrect;
+    if(isCorrect) bonusTotal+=5000; else bonusTotal-=10000;
+    // ── ขั้นที่ 2: Multiple Choice ภาษี ────────────────
+    const choices=shuf([finalTax,...rndWrong(Math.max(finalTax,5000))]);
+    showQuiz([{
+      ic:'🏛️',
+      title:'ขั้นที่ 2/2 — คำนวณภาษีที่ต้องจ่าย',
+      sub:'นำรายได้สุทธิคำนวณภาษีตามอัตราก้าวหน้า',
+      sum:`<b>รายได้สุทธิ:</b> ${netIncome.toLocaleString()} ฿<br>`+
+          `<b>ภาษีตามอัตราก้าวหน้า:</b> ${taxDue.toLocaleString()} ฿<br>`+
+          `<b>ภาษีที่จ่ายไปแล้ว (หัก ณ ที่จ่าย):</b> ${(p.taxPaid||0).toLocaleString()} ฿`,
+      q:isRefund?`ได้รับเงินคืนภาษี = ? ฿`:`ภาษีที่ต้องจ่ายเพิ่ม = ? ฿`,
+      correct:finalTax,
+      choices,
+      exp:isRefund
+        ?`ภาษีที่แท้จริง ${taxDue.toLocaleString()} ฿ จ่ายไปแล้ว ${(p.taxPaid||0).toLocaleString()} ฿ → ได้รับคืน ${finalTax.toLocaleString()} ฿`
+        :`ภาษีที่ต้องจ่าย ${taxDue.toLocaleString()} ฿ จ่ายไปแล้ว ${(p.taxPaid||0).toLocaleString()} ฿ → จ่ายเพิ่ม ${finalTax.toLocaleString()} ฿`,
+      penalty:10000,
+    }], (quizBonus)=>{
+      bonusTotal+=quizBonus;
+      // apply bonus/penalty
+      if(bonusTotal!==0&&state){
+        const pl=state.players[state.currentPlayer];
+        if(pl){pl.money+=bonusTotal;renderGame(state);}
+      }
+      // แสดงสรุปผล
+      showEventModal({
+        icon:'🏛️',
+        title:'สรุปภาษีประจำปี',
+        desc:isRefund
+          ?`ได้รับเงินคืนภาษี ${finalTax.toLocaleString()} ฿`
+          :`ต้องจ่ายภาษีเพิ่ม ${finalTax.toLocaleString()} ฿`,
+        amount:taxEv?.amount||0,
+        tip:`รายได้สุทธิ ${netIncome.toLocaleString()} ฿ × อัตราก้าวหน้า = ภาษี ${taxDue.toLocaleString()} ฿`
+      });
+    });
+  });
+}
 
 // ═══ INIT UI ═════════════════════════════════════════════
 function initUI(){
