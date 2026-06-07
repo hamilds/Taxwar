@@ -1408,6 +1408,81 @@ async function reportTaxDone(score, win){
   }catch(e){console.error('reportTaxDone error:',e);}
 }
 
+
+// ═══════════════════════════════════════════════════════
+//  WAITING RESULT — รอทุกคนคำนวณภาษีเสร็จ
+// ═══════════════════════════════════════════════════════
+function showWaitingResult(state, done, total){
+  // ลบ overlay เก่าถ้ามี
+  ['waitTaxOv','waitResultOv'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.remove();
+  });
+
+  document.body.insertAdjacentHTML('beforeend',`
+    <div id="waitResultOv" style="position:fixed;inset:0;background:rgba(0,0,0,.85);
+      display:flex;align-items:center;justify-content:center;z-index:199;backdrop-filter:blur(6px)">
+      <div style="background:var(--paper);border:3px solid var(--gold);border-radius:16px;
+        padding:32px 28px;text-align:center;max-width:380px;width:92%;
+        box-shadow:8px 8px 0 rgba(0,0,0,.5);animation:mp .3s cubic-bezier(.34,1.56,.64,1)">
+        <div style="font-size:52px;margin-bottom:10px">⚔️</div>
+        <div style="font-family:'Teko',sans-serif;font-size:30px;color:var(--gold);
+          letter-spacing:3px;margin-bottom:8px">กำลังรอผลสงคราม</div>
+        <div style="font-size:14px;color:#5A3A10;margin-bottom:16px;line-height:1.6">
+          คำนวณภาษีเสร็จแล้ว <b id="doneCount">${done}</b>/<b>${total}</b> คน<br>
+          รอผู้เล่นที่เหลือให้เสร็จก่อน...</div>
+        <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap" id="playerStatusWrap">
+          ${state.players.map(p=>`
+            <div style="background:${p.taxDone?'#E8F5E9':'rgba(212,160,23,.1)'};
+              border:1px solid ${p.taxDone?'#4CAF50':'rgba(212,160,23,.3)'};
+              border-radius:8px;padding:6px 10px;font-size:12px;min-width:80px">
+              <div style="font-size:18px">${p.avatar}</div>
+              <div style="font-weight:700;color:var(--ink)">${p.name}</div>
+              <div style="font-size:11px;color:${p.taxDone?'#1A6B3A':'#8A6A30'}">
+                ${p.taxDone?'✅ เสร็จแล้ว':'⏳ กำลังคำนวณ'}</div>
+            </div>`).join('')}
+        </div>
+        <div style="font-size:11px;color:#8A6A30;opacity:.6;margin-top:14px">
+          อัปเดตอัตโนมัติทุก 3 วินาที <span class="poll-dot"></span></div>
+      </div></div>`);
+
+  // Poll รอจนทุกคนเสร็จ
+  let pollCount=0;
+  const rPoll=setInterval(async()=>{
+    pollCount++;
+    try{
+      const d=await api({action:'getState',room:myRoom});
+      if(!d.ok)return;
+      const s2=d.state;
+      const done2=s2.players.filter(p=>p.taxDone===true).length;
+      const total2=s2.players.length;
+      // อัปเดตจำนวน
+      const dc=document.getElementById('doneCount');
+      if(dc)dc.textContent=done2;
+      // อัปเดตสถานะแต่ละคน
+      const wrap=document.getElementById('playerStatusWrap');
+      if(wrap){
+        wrap.innerHTML=s2.players.map(p=>`
+          <div style="background:${p.taxDone?'#E8F5E9':'rgba(212,160,23,.1)'};
+            border:1px solid ${p.taxDone?'#4CAF50':'rgba(212,160,23,.3)'};
+            border-radius:8px;padding:6px 10px;font-size:12px;min-width:80px">
+            <div style="font-size:18px">${p.avatar}</div>
+            <div style="font-weight:700;color:var(--ink)">${p.name}</div>
+            <div style="font-size:11px;color:${p.taxDone?'#1A6B3A':'#8A6A30'}">
+              ${p.taxDone?'✅ เสร็จแล้ว':'⏳ กำลังคำนวณ'}</div>
+          </div>`).join('');
+      }
+      // ถ้าทุกคนเสร็จแล้ว หรือรอนาน 3 นาที
+      if(done2>=total2 || pollCount>72){
+        clearInterval(rPoll);
+        const ov=document.getElementById('waitResultOv');
+        if(ov)ov.remove();
+        showEnd(s2, false);
+      }
+    }catch(e){console.error(e);}
+  },3000);
+}
+
 // ═══ INIT UI ═════════════════════════════════════════════
 function initUI(){
   const ar=document.getElementById('avRow');
@@ -1478,10 +1553,30 @@ function renderGame(s){
 }
 
 function renderLog(log){
-  if(log.length===lastLogLen)return;lastLogLen=log.length;
-  document.getElementById('logEl').innerHTML=log.map(e=>
-    `<div class="log-entry ${e.type||'event'}">
-      <div class="log-rnd">รอบ ${e.round||'?'} · ${e.player||''}</div>${e.text}</div>`).join('');}
+  // render เสมอเมื่อมีการเปลี่ยนแปลง (ไม่ใช้แค่ length เพราะ log อาจ truncate)
+  const logEl=document.getElementById('logEl');if(!logEl)return;
+  const newLen=log.length;
+  // ถ้า log ใหม่มีมากกว่า lastLogLen → append รายการใหม่
+  if(newLen>lastLogLen){
+    // เพิ่มรายการใหม่ที่ยังไม่แสดง
+    const newEntries=log.slice(lastLogLen);
+    newEntries.reverse().forEach(e=>{
+      const div=document.createElement('div');
+      div.className=`log-entry ${e.type||'event'}`;
+      div.innerHTML=`<div class="log-rnd">รอบ ${e.round||'?'} · ${e.player||''}</div>${e.text}`;
+      logEl.insertBefore(div,logEl.firstChild);
+    });
+    // จำกัดไม่เกิน 30 รายการ
+    while(logEl.children.length>30)logEl.removeChild(logEl.lastChild);
+    lastLogLen=newLen;
+  } else if(newLen<lastLogLen){
+    // log ถูก reset → render ใหม่ทั้งหมด
+    logEl.innerHTML=log.slice().reverse().map(e=>
+      `<div class="log-entry ${e.type||'event'}">
+        <div class="log-rnd">รอบ ${e.round||'?'} · ${e.player||''}</div>${e.text}</div>`).join('');
+    lastLogLen=newLen;
+  }
+}
 
 let logBuf=[];
 function addLog(txt,type='event'){
@@ -1589,6 +1684,14 @@ function confirmReset(){if(confirm('รีเซ็ตห้องนี้? ข
 
 // ═══ END SCREEN ══════════════════════════════════════════
 function showEnd(s, myBothCorrect){
+  // ตรวจสอบว่าทุกคนคำนวณภาษีเสร็จแล้วหรือยัง
+  const totalPlayers = s.players.length;
+  const donePlayers = s.players.filter(p=>p.taxDone===true).length;
+  if(donePlayers < totalPlayers && !isTeacher){
+    // แสดงหน้ารอแทน
+    showWaitingResult(s, donePlayers, totalPlayers);
+    return;
+  }
   sfxWin();
   // เงื่อนไขชนะ:
   // ✅ ตอบถูกทั้ง 2 ขั้น = ชนะ
