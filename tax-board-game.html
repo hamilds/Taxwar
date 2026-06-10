@@ -140,13 +140,13 @@ hr.dv{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
 .board-grid{display:grid;grid-template-columns:repeat(9,1fr);
   grid-template-rows:repeat(9,1fr);width:100%;gap:1px;flex:1}
 .cell{border-radius:4px;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;font-size:clamp(6px,.9vw,9px);font-weight:600;
-  text-align:center;padding:2px;border:1px solid transparent;
-  position:relative;line-height:1.1;cursor:default;min-height:0;min-width:0;z-index:6}
+  justify-content:center;font-size:clamp(7px,1vw,10px);font-weight:600;
+  text-align:center;padding:3px;border:1px solid transparent;
+  position:relative;line-height:1.2;cursor:default;min-height:0;min-width:0;z-index:6}
 .cell-num{position:absolute;top:1px;left:2px;font-size:8px;opacity:.7;
   font-family:'Teko',sans-serif;font-weight:700;color:#000}
-.cell-icon{font-size:clamp(10px,1.5vw,16px);margin-bottom:1px}
-.cell-text{font-size:clamp(5px,.65vw,7.5px);color:var(--ink);opacity:.8;line-height:1.1}
+.cell-icon{font-size:clamp(13px,1.8vw,20px);margin-bottom:1px}
+.cell-text{font-size:clamp(7px,.85vw,10px);color:var(--ink);opacity:.9;line-height:1.2}
 .cell-start  {background:linear-gradient(135deg,#FFD700,#FF8C00);border-color:#8B6000;border-width:2px;z-index:8!important}
 .cell-income {background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border-color:#4CAF50}
 .cell-expense{background:linear-gradient(135deg,#FFEBEE,#FFCDD2);border-color:#EF9A9A}
@@ -494,7 +494,7 @@ hr.dv{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
   <div class="game-hd">
     <div class="game-title">⚔️ TAX WAR</div>
   </div>
-  <div class="round-ctr" id="roundCtr">⚔️ กำลังเล่น รอบที่ 1 จาก 3 รอบ</div>
+  <div class="round-ctr" id="roundCtr">⚔️ กำลังเล่น รอบที่ 1 จาก 2 รอบ</div>
   <div class="game-layout">
     <div>
       <div class="turn-banner" id="turnBanner">รอเริ่ม...</div>
@@ -536,9 +536,7 @@ hr.dv{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
             <div class="li"><div class="ld" style="background:linear-gradient(135deg,#FFF9C4,#FFF176);border:2px solid #F9A825"></div>⭐การ์ดพิเศษ</div>
           </div>
           <br>
-          <div class="rules-box"><h4>🎯 ชนะ</h4><p>เงินมากสุดหลัง 3 รอบ</p></div>
           <div class="rules-box"><h4>⭐ การ์ดพิเศษ</h4><p>หยุดช่อง ⭐ → คลิกกองไพ่กลางกระดาน</p></div>
-          <div class="rules-box"><h4>🏛️ ภาษี</h4><p>ผ่านช่อง 0 = ยื่นภาษีปีนั้น</p></div>
         </div>
       </div>
       <br>
@@ -625,7 +623,7 @@ hr.dv{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
   <div class="guide-box">
     <h2>📖 คู่มือความรู้ภาษี</h2>
     <p style="font-size:12px;color:#5A3A10;text-align:center;margin-bottom:12px;opacity:.8">
-      เกมจำลอง 3 รอบ (= 3 ปีภาษี) เหตุการณ์แต่ละรอบ = เหตุการณ์รวมในรอบปีนั้น</p>
+      เกมจำลอง 2 รอบ (= 3 ปีภาษี) เหตุการณ์แต่ละรอบ = เหตุการณ์รวมในรอบปีนั้น</p>
     <div class="g-sec"><h4>🧮 สูตรคำนวณภาษี</h4>
       <p><b>รายได้รวม</b> − <b>ค่าใช้จ่าย</b> − <b>ค่าลดหย่อน</b> − <b>ส่วนตัว 60,000 ฿</b> = <b>เงินได้สุทธิ</b><br>
       นำเงินได้สุทธิคำนวณภาษีตามอัตราก้าวหน้า</p></div>
@@ -678,7 +676,7 @@ hr.dv{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
 //  CONFIG
 // ═══════════════════════════════════════════════════════
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbzyxVDdeewSLZm5QmtRIAPMf0sCLmPQnL-oR3ZLN01B9YSjA4pgy0Z96pNSCV4khrrX/exec';
-const POLL_MS=2500, MAX_ROUNDS=3;
+const POLL_MS=2500, MAX_ROUNDS=2;
 const DF=['⚀','⚁','⚂','⚃','⚄','⚅'];
 const AVATARS=['👨‍💼','👩‍💼','👨‍🔧','👩‍🎓','👨‍🏫','👩‍🍳','🧑‍💻','👩‍⚕️','🧑‍🎨','👨‍🚀'];
 const CAREERS={
@@ -1079,7 +1077,7 @@ function showTaxQuizFlow(taxEv, state){
 
 
 // ═══════════════════════════════════════════════════════
-//  END TAX FLOW — แสดงเมื่อครบ 3 รอบ
+//  END TAX FLOW — แสดงเมื่อครบ 2 รอบ
 //  ขั้น 1: Fill-in รายได้สุทธิ
 //  ขั้น 2: Multiple Choice ภาษีที่ต้องจ่าย
 //  หลังจากนั้นค่อยแสดง End Screen
@@ -1161,7 +1159,7 @@ function showEndTaxFlow(state){
 
   // Intro modal
   document.getElementById('mIcon').textContent='🏛️';
-  document.getElementById('mTitle').textContent='ครบ 3 รอบ! ถึงเวลายื่นภาษี';
+  document.getElementById('mTitle').textContent='ครบ 2 รอบ! ถึงเวลายื่นภาษี';
   document.getElementById('mDesc').textContent=
     myPlayer.name+' มีรายได้รวม '+gross.toLocaleString()+' ฿\nกด "เริ่มคำนวณภาษี" เพื่อดำเนินการต่อ';
   document.getElementById('mAmt').textContent='';
@@ -1476,11 +1474,21 @@ function showWaitingResult(state, done, total){
       // นับเฉพาะผู้เล่นจริง (ไม่นับครู)
       const realDone=s2.players.filter(p=>p.taxDone===true).length;
       const realTotal=s2.players.length;
-      if(realDone>=realTotal || pollCount>40){
+      if(realDone>=realTotal){
+        if(!window._taxEndTimer){
+          window._taxEndTimer=setTimeout(()=>{
+            window._taxEndTimer=null;
+            clearInterval(rPoll);
+            const ov=document.getElementById('waitResultOv');
+            if(ov)ov.remove();
+            showEnd(s2,false);
+          },30000); // รอ 30 วินาที
+        }
+      } else if(pollCount>80){
         clearInterval(rPoll);
         const ov=document.getElementById('waitResultOv');
         if(ov)ov.remove();
-        showEnd(s2, false);
+        showEnd(s2,false);
       }
     }catch(e){console.error(e);}
   },3000);
@@ -1555,10 +1563,10 @@ function renderGame(s){
     ?(s.players.find(p=>p.id===myPid)?.laps||0)
     :Math.max(0,(s.round||1)-1);
   const displayRound=Math.min(myLaps+1,MAX_ROUNDS);
-  document.getElementById('roundCtr').textContent=`⚔️ รอบที่ ${displayRound}/3 — เดินครบ 32 ช่อง = 1 รอบ`;
+  document.getElementById('roundCtr').textContent=`⚔️ รอบที่ ${displayRound}/2 — เดินครบ 32 ช่อง = 1 รอบ`;
   const cp=s.players[s.currentPlayer];const cc=cp?CAREERS[cp.careerId]:null;
   document.getElementById('turnBanner').textContent=
-    s.status==='playing'?`⚔️ ตาของ ${cp?.name||'?'} ${cc?.icon||''} (รอบ ${displayRound}/3)`:
+    s.status==='playing'?`⚔️ ตาของ ${cp?.name||'?'} ${cc?.icon||''} (รอบ ${displayRound}/2)`:
     s.status==='paused'?'⏸ หยุดชั่วคราว':'รอเริ่มเกม';
   document.getElementById('pausedOv').style.display=s.status==='paused'?'flex':'none';
   document.getElementById('playerListEl').innerHTML=(s.players||[]).map((p,i)=>{
@@ -1585,39 +1593,17 @@ function renderGame(s){
 }
 
 function renderLog(log){
-  // render เสมอเมื่อมีการเปลี่ยนแปลง (ไม่ใช้แค่ length เพราะ log อาจ truncate)
   const logEl=document.getElementById('logEl');if(!logEl)return;
-  const newLen=log.length;
-  // render ทุกครั้งที่มีการเปลี่ยนแปลง
-  if(newLen===lastLogLen && newLen>0){
-    // ตรวจ content ของรายการล่าสุด
-    const logEl2=document.getElementById('logEl');
-    if(logEl2&&logEl2.children.length>0){
-      const first=logEl2.firstChild;
-      if(first&&first.textContent&&log[0]&&first.textContent.includes(log[0].text)){
-        return; // ไม่มีการเปลี่ยนแปลงจริง
-      }
-    }
-  }
-  if(newLen>lastLogLen){
-    // เพิ่มรายการใหม่ที่ยังไม่แสดง
-    const newEntries=log.slice(lastLogLen);
-    newEntries.reverse().forEach(e=>{
-      const div=document.createElement('div');
-      div.className=`log-entry ${e.type||'event'}`;
-      div.innerHTML=`<div class="log-rnd">รอบ ${e.round||'?'} · ${e.player||''}</div>${e.text}`;
-      logEl.insertBefore(div,logEl.firstChild);
-    });
-    // จำกัดไม่เกิน 30 รายการ
-    while(logEl.children.length>30)logEl.removeChild(logEl.lastChild);
-    lastLogLen=newLen;
-  } else if(newLen<lastLogLen){
-    // log ถูก reset → render ใหม่ทั้งหมด
-    logEl.innerHTML=log.slice().reverse().map(e=>
-      `<div class="log-entry ${e.type||'event'}">
-        <div class="log-rnd">รอบ ${e.round||'?'} · ${e.player||''}</div>${e.text}</div>`).join('');
-    lastLogLen=newLen;
-  }
+  if(!log||!log.length)return;
+  const sig=log.map(e=>e.ts||e.text).join('|');
+  if(sig===window._lastLogSig)return;
+  window._lastLogSig=sig;
+  // render ใหม่ทั้งหมดทุกครั้งที่มีการเปลี่ยน
+  logEl.innerHTML=log.map(e=>
+    `<div class="log-entry ${e.type||'event'}">
+      <div class="log-rnd">รอบ ${e.round||'?'} · ${e.player||''}</div>${e.text}</div>`
+  ).join('');
+  lastLogLen=log.length;
 }
 
 let logBuf=[];
@@ -1660,7 +1646,7 @@ async function doRoll(){
     if(data.cellEvent&&data.cellEvent.cellType!=='lucky')
       handleEvent(data.cellEvent,data.state);
     updateLuckyPill(data.state);
-    // ถ้าเกมจบ (ครบ 3 รอบ) → หยุด poll แล้วเริ่ม tax flow
+    // ถ้าเกมจบ (ครบ 2 รอบ) → หยุด poll แล้วเริ่ม tax flow
     if(data.state.status==='ended'){
       stopPoll(); // หยุด poll ทันที ป้องกันเรียกซ้ำ
       if(!endTaxDone){
@@ -1781,7 +1767,7 @@ function showEnd(s, myBothCorrect){
     <div class="endscreen"><div class="confetti-bar"></div>${parts}
       <span class="end-trophy">🏆</span>
       <div class="end-title">จบสงคราม!</div>
-      <div class="end-sub" id="endSubText">⚔️ ครบ 3 รอบ · จอมภาษีแห่งสงคราม ⚔️</div>
+      <div class="end-sub" id="endSubText">⚔️ ครบ 2 รอบ · จอมภาษีแห่งสงคราม ⚔️</div>
       <div class="podium">${podHTML}</div>
       <div class="sc-tbl"><div class="sc-hd">📊 ตารางสถิติ</div>
         <div class="sc-cols"><div></div><div></div>
