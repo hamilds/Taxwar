@@ -631,11 +631,18 @@ hr.dv{border:none;border-top:1px solid rgba(212,160,23,.3);margin:14px 0}
       <table class="g-tbl">
         <tr><th>รายการ</th><th>จำนวน</th></tr>
         <tr><td>ค่าลดหย่อนส่วนตัว</td><td>60,000 ฿</td></tr>
+        <tr><td>คู่สมรส (ไม่มีรายได้)</td><td>60,000 ฿</td></tr>
+        <tr><td>บุตร (คนที่ 1)</td><td>30,000 ฿/คน</td></tr>
+        <tr><td>บุตร (คนที่ 2 ขึ้นไป)</td><td>60,000 ฿/คน</td></tr>
+        <tr><td>บิดา-มารดา (ต่อคน)</td><td>30,000 ฿</td></tr>
         <tr><td>ประกันสังคม</td><td>ไม่เกิน 9,000 ฿</td></tr>
         <tr><td>ประกันชีวิต (≥10 ปี)</td><td>ไม่เกิน 100,000 ฿</td></tr>
         <tr><td>ประกันสุขภาพ</td><td>ไม่เกิน 25,000 ฿</td></tr>
+        <tr><td>ประกันบำนาญ</td><td>ไม่เกิน 200,000 ฿</td></tr>
         <tr><td>ดอกเบี้ยบ้าน</td><td>ไม่เกิน 100,000 ฿</td></tr>
-        <tr><td>ลดหย่อนบุตร (ต่อคน)</td><td>30,000 ฿</td></tr>
+        <tr><td>ช็อปดีมีคืน 2568</td><td>ไม่เกิน 50,000 ฿</td></tr>
+        <tr><td>เที่ยวเมืองรอง</td><td>ไม่เกิน 15,000 ฿</td></tr>
+        <tr><td>บริจาคโรงพยาบาลรัฐ</td><td>2 เท่า ≤10% เงินได้</td></tr>
       </table></div>
     <div class="g-sec"><h4>📊 อัตราภาษีก้าวหน้า 2568</h4>
       <table class="g-tbl">
@@ -1105,17 +1112,16 @@ function showEndTaxFlow(state){
   const diff=taxDue-taxPaid;
   const finalTax=Math.abs(diff);
   const isRefund=diff<0;
-
-  // เก็บผลการตอบ
   let step1Correct=false;
   let step2Correct=false;
 
+  // ── ขั้น 2: Multiple Choice ── (เรียกหลัง step1 เสร็จ)
   function doStep2(){
     const choices=shuf([finalTax,...rndWrong(Math.max(finalTax,5000))]);
     showQuiz([{
       ic:'🏛️',
       title:'ขั้นที่ 2/2 — ภาษีที่ต้องจ่าย',
-      sub:'เลือกคำตอบที่ถูกต้อง — ภาษีที่ต้องจ่ายเพิ่มหรือได้รับคืน',
+      sub:'เลือกคำตอบที่ถูกต้อง',
       sum:'<b>รายได้สุทธิ:</b> '+netIncome.toLocaleString()+' ฿<br>'+
           '<b>ภาษีที่จ่ายไปแล้ว (หัก ณ ที่จ่าย):</b> '+taxPaid.toLocaleString()+' ฿',
       q:isRefund?'ได้รับเงินคืนภาษี = ? ฿':'ภาษีที่ต้องจ่ายเพิ่ม = ? ฿',
@@ -1126,18 +1132,21 @@ function showEndTaxFlow(state){
         :'ภาษีที่ต้องจ่าย '+taxDue.toLocaleString()+' ฿ จ่ายไปแล้ว '+taxPaid.toLocaleString()+' ฿ → จ่ายเพิ่ม '+finalTax.toLocaleString()+' ฿',
       penalty:10000,
     }],(quizBonus)=>{
-      // บันทึกผลขั้น 2
-      step2Correct = (quizBonus > 0);
-      const bothCorrect = step1Correct && step2Correct;
-      // บันทึก taxScore ของผู้เล่น (ส่งให้ server ไม่ได้ เก็บใน state local)
-      myPlayer.taxScore = (step1Correct?1:0) + (step2Correct?1:0); // 0,1,2
-      myPlayer.taxWin = bothCorrect;
-      // bonus/penalty
+      step2Correct=(quizBonus>0);
+      const myScore=(step1Correct?1:0)+(step2Correct?1:0);
+      myPlayer.taxScore=myScore;
+      myPlayer.taxWin=(step1Correct&&step2Correct);
+      myPlayer.taxDone=true; // mark local ทันที
       if(quizBonus!==0) myPlayer.money+=quizBonus;
-      setTimeout(()=>showEnd(state, bothCorrect), 500);
+      // ส่งผลไป server แบบ non-blocking (ไม่ใช้ await)
+      reportTaxDone(myScore, step1Correct&&step2Correct);
+      // แสดงหน้ารอ
+      const doneSoFar=state.players.filter(p=>p.taxDone===true).length;
+      showWaitingResult(state, doneSoFar, state.players.length);
     });
   }
 
+  // ── ขั้น 1: Fill-in ──
   function doStep1(){
     showFillModal({
       icon:'📊',
@@ -1157,7 +1166,7 @@ function showEndTaxFlow(state){
     });
   }
 
-  // Intro modal
+  // ── Intro modal ──
   document.getElementById('mIcon').textContent='🏛️';
   document.getElementById('mTitle').textContent='ครบ 2 รอบ! ถึงเวลายื่นภาษี';
   document.getElementById('mDesc').textContent=
@@ -1166,7 +1175,7 @@ function showEndTaxFlow(state){
   const tipBox=document.getElementById('tipBox');
   tipBox.style.display='block';
   document.getElementById('tipTxt').textContent=
-    '⭐ ผู้ที่ตอบถูกทั้ง 2 ขั้นตอนจะเป็นผู้ชนะ!\nขั้น 1: กรอกรายได้สุทธิ  |  ขั้น 2: เลือกภาษีที่ถูกต้อง';
+    '⭐ ตอบถูกทั้ง 2 ขั้นตอน = ชนะ!\nขั้น 1: กรอกรายได้สุทธิ  |  ขั้น 2: เลือกภาษีที่ถูกต้อง';
   const oldBtn=document.querySelector('#eventModal .m-btn');
   const oldTxt=oldBtn.textContent; const oldFn=oldBtn.onclick;
   oldBtn.textContent='เริ่มคำนวณภาษี →';
@@ -1399,11 +1408,22 @@ function startTaxWaitPoll(origState){
 
 
 // ═══ REPORT TAX DONE ══════════════════════════════════════
-async function reportTaxDone(score, win){
-  try{
-    await api({action:'reportTaxDone',room:myRoom,
-      playerId:String(myPid),taxScore:String(score),taxWin:String(win)});
-  }catch(e){console.error('reportTaxDone error:',e);}
+function reportTaxDone(score, win){
+  // fire-and-forget ไม่ block UI
+  api({action:'reportTaxDone',room:myRoom,
+    playerId:String(myPid),taxScore:String(score),taxWin:String(win)
+  }).then(d=>{
+    if(d&&d.ok&&d.state){
+      // sync taxDone จาก server กลับมา
+      d.state.players.forEach((sp,i)=>{
+        if(gameState&&gameState.players[i]){
+          gameState.players[i].taxDone=sp.taxDone;
+          gameState.players[i].taxScore=sp.taxScore;
+          gameState.players[i].taxWin=sp.taxWin;
+        }
+      });
+    }
+  }).catch(e=>console.error('reportTaxDone:',e));
 }
 
 
@@ -1411,18 +1431,15 @@ async function reportTaxDone(score, win){
 //  WAITING RESULT — รอทุกคนคำนวณภาษีเสร็จ
 // ═══════════════════════════════════════════════════════
 function showWaitingResult(state, done, total){
-  // ลบ overlay เก่าถ้ามี
   ['waitTaxOv','waitResultOv'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el)el.remove();
-  });
+    const el=document.getElementById(id); if(el)el.remove();});
 
   document.body.insertAdjacentHTML('beforeend',`
     <div id="waitResultOv" style="position:fixed;inset:0;background:rgba(0,0,0,.85);
       display:flex;align-items:center;justify-content:center;z-index:199;backdrop-filter:blur(6px)">
       <div style="background:var(--paper);border:3px solid var(--gold);border-radius:16px;
         padding:32px 28px;text-align:center;max-width:380px;width:92%;
-        box-shadow:8px 8px 0 rgba(0,0,0,.5);animation:mp .3s cubic-bezier(.34,1.56,.64,1)">
+        box-shadow:8px 8px 0 rgba(0,0,0,.5)">
         <div style="font-size:52px;margin-bottom:10px">⚔️</div>
         <div style="font-family:'Teko',sans-serif;font-size:30px;color:var(--gold);
           letter-spacing:3px;margin-bottom:8px">กำลังรอผลสงคราม</div>
@@ -1444,8 +1461,8 @@ function showWaitingResult(state, done, total){
           อัปเดตอัตโนมัติทุก 3 วินาที <span class="poll-dot"></span></div>
       </div></div>`);
 
-  // Poll รอจนทุกคนเสร็จ
   let pollCount=0;
+  let allDoneTriggered=false;
   const rPoll=setInterval(async()=>{
     pollCount++;
     try{
@@ -1454,10 +1471,19 @@ function showWaitingResult(state, done, total){
       const s2=d.state;
       const done2=s2.players.filter(p=>p.taxDone===true).length;
       const total2=s2.players.length;
-      // อัปเดตจำนวน
+      // sync กลับไป gameState
+      if(gameState){
+        s2.players.forEach((sp,i)=>{
+          if(gameState.players[i]){
+            gameState.players[i].taxDone=sp.taxDone;
+            gameState.players[i].taxScore=sp.taxScore;
+            gameState.players[i].taxWin=sp.taxWin;
+          }
+        });
+      }
+      // อัปเดต UI
       const dc=document.getElementById('doneCount');
       if(dc)dc.textContent=done2;
-      // อัปเดตสถานะแต่ละคน
       const wrap=document.getElementById('playerStatusWrap');
       if(wrap){
         wrap.innerHTML=s2.players.map(p=>`
@@ -1470,25 +1496,22 @@ function showWaitingResult(state, done, total){
               ${p.taxDone?'✅ เสร็จแล้ว':'⏳ กำลังคำนวณ'}</div>
           </div>`).join('');
       }
-      // ถ้าทุกคนเสร็จแล้ว หรือรอนาน 3 นาที
-      // นับเฉพาะผู้เล่นจริง (ไม่นับครู)
-      const realDone=s2.players.filter(p=>p.taxDone===true).length;
-      const realTotal=s2.players.length;
-      if(realDone>=realTotal){
-        if(!window._taxEndTimer){
-          window._taxEndTimer=setTimeout(()=>{
-            window._taxEndTimer=null;
-            clearInterval(rPoll);
-            const ov=document.getElementById('waitResultOv');
-            if(ov)ov.remove();
-            showEnd(s2,false);
-          },30000); // รอ 30 วินาที
-        }
-      } else if(pollCount>80){
+      // ทุกคนเสร็จ → รอ 10 วิ แล้ว showEnd
+      if(done2>=total2 && !allDoneTriggered){
+        allDoneTriggered=true;
+        setTimeout(()=>{
+          clearInterval(rPoll);
+          const ov=document.getElementById('waitResultOv');
+          if(ov)ov.remove();
+          showEnd(s2);
+        },10000);
+      }
+      // timeout 3 นาที
+      if(pollCount>60){
         clearInterval(rPoll);
         const ov=document.getElementById('waitResultOv');
         if(ov)ov.remove();
-        showEnd(s2,false);
+        showEnd(s2);
       }
     }catch(e){console.error(e);}
   },3000);
@@ -1498,7 +1521,10 @@ function showWaitingResult(state, done, total){
 function onCenterClick(){
   if(!gameState||!gameState.luckyPending)return;
   if(isTeacher)return;
-  // luckyPlayerId เก็บ index ของ player ใน array
+  // ตรวจว่าผู้เล่นยังอยู่ช่อง lucky จริง
+  const luckyPositions=[5,21];
+  const lp=gameState.players[gameState.luckyPlayerId||gameState.currentPlayer];
+  if(!lp||!luckyPositions.includes(lp.pos))return;
   if(gameState.luckyPlayerId !== myPid)return;
   showLuckyModal(async()=>{
     if(!currentCard)return;
@@ -1643,6 +1669,13 @@ async function doRoll(){
     gameState=data.state;
     renderGame(data.state);
     // จัดการ events — ไม่มี taxEvent ระหว่างเกม
+    // reset luckyPending ถ้า player ไม่ได้หยุดช่อง lucky
+    const myPos = data.state.players.find(p=>p.id===myPid)?.pos;
+    if(myPos!==undefined && ![5,21].includes(myPos)){
+      if(data.state.luckyPending && data.state.luckyPlayerId===myPid){
+        data.state.luckyPending=false;
+      }
+    }
     if(data.cellEvent&&data.cellEvent.cellType!=='lucky')
       handleEvent(data.cellEvent,data.state);
     updateLuckyPill(data.state);
@@ -1690,8 +1723,12 @@ function closeEventModal(){document.getElementById('eventModal').style.display='
 
 function updateLuckyPill(s){
   const pill=document.getElementById('deckPill');if(!pill)return;
-  if(s&&s.luckyPending){
-    const isMyDraw=!isTeacher&&s.luckyPlayerId===myPid;
+  // ตรวจว่า luckyPending และผู้เล่นที่ต้องจั่วยังอยู่ช่อง lucky จริง
+  const luckyPositions=[5,21]; // ช่องที่เป็น lucky
+  const luckyPlayer = s&&s.luckyPending ? s.players[s.luckyPlayerId||s.currentPlayer] : null;
+  const isOnLucky = luckyPlayer && luckyPositions.includes(luckyPlayer.pos);
+  if(s&&s.luckyPending&&isOnLucky){
+    const isMyDraw=!isTeacher&&(s.luckyPlayerId===myPid);
     if(isMyDraw){
       pill.textContent='⭐ ตาคุณ! กดเพื่อจั่วการ์ดพิเศษ';
       pill.style.background='linear-gradient(135deg,#F9A825,#E65100)';
@@ -1715,8 +1752,8 @@ function showEnd(s, myBothCorrect){
   // ตรวจสอบว่าทุกคนคำนวณภาษีเสร็จแล้วหรือยัง
   const totalPlayers = s.players.length;
   const donePlayers = s.players.filter(p=>p.taxDone===true).length;
-  if(donePlayers < totalPlayers && !isTeacher){
-    // แสดงหน้ารอแทน
+  // ถ้าเรียกจาก showWaitingResult (poll ครบแล้ว) ให้ผ่านเลย
+  if(donePlayers < totalPlayers && !isTeacher && totalPlayers > 1){
     showWaitingResult(s, donePlayers, totalPlayers);
     return;
   }
