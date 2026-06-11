@@ -1096,7 +1096,11 @@ function showEndTaxFlow(state){
   endTaxDone=true;
   stopPoll();
 
-  if(isTeacher){setTimeout(()=>showEnd(state),500);return;}
+  if(isTeacher){
+    // ครูรอให้ทุกคนคำนวณเสร็จก่อน แล้วค่อยแสดงผล
+    showTeacherWaiting(state);
+    return;
+  }
   const myPlayer=state.players.find(p=>p.id===myPid);
   if(!myPlayer){setTimeout(()=>showEnd(state),500);return;}
 
@@ -1548,6 +1552,88 @@ function onCenterClick(){
       desc:currentCard.desc,amount:cardAmt,
       tip:(currentCard.tip||'')+'\n💰 '+cardAmt.toLocaleString()+' ฿ บันทึกลงรายได้แล้ว',
       cellType:'lucky'});});}
+
+
+// ═══ TEACHER WAITING — ครูรอผลการคำนวณภาษีของทุกคน ══════
+function showTeacherWaiting(initialState){
+  // แสดง overlay รอ
+  document.body.insertAdjacentHTML('beforeend',`
+    <div id="teacherWaitOv" style="position:fixed;inset:0;background:rgba(0,0,0,.85);
+      display:flex;align-items:center;justify-content:center;z-index:199;backdrop-filter:blur(6px)">
+      <div style="background:var(--paper);border:3px solid var(--gold);border-radius:16px;
+        padding:32px 28px;text-align:center;max-width:400px;width:92%;
+        box-shadow:8px 8px 0 rgba(0,0,0,.5)">
+        <div style="font-size:44px;margin-bottom:8px">🎓</div>
+        <div style="font-family:'Teko',sans-serif;font-size:28px;color:var(--gold);
+          letter-spacing:2px;margin-bottom:8px">รอผลการคำนวณภาษี</div>
+        <div style="font-size:14px;color:#5A3A10;margin-bottom:16px">
+          นักเรียนกำลังคำนวณภาษี...<br>
+          เสร็จแล้ว <b id="teacherDoneCount">0</b>/<b id="teacherTotalCount">${initialState.players.length}</b> คน
+        </div>
+        <div id="teacherPlayerStatus" style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+          ${initialState.players.map(p=>`
+            <div style="background:rgba(212,160,23,.1);border:1px solid rgba(212,160,23,.3);
+              border-radius:8px;padding:6px 10px;font-size:12px;min-width:80px" id="tps-${p.id}">
+              <div style="font-size:18px">${p.avatar}</div>
+              <div style="font-weight:700;color:var(--ink)">${p.name}</div>
+              <div style="font-size:11px;color:#8A6A30">⏳ กำลังคำนวณ</div>
+            </div>`).join('')}
+        </div>
+        <div style="font-size:11px;color:#8A6A30;opacity:.6">
+          อัปเดตอัตโนมัติทุก 3 วินาที <span class="poll-dot"></span></div>
+      </div></div>`);
+
+  let pollCount=0;
+  let triggered=false;
+  const tPoll=setInterval(async()=>{
+    pollCount++;
+    try{
+      const d=await api({action:'getState',room:myRoom});
+      if(!d.ok)return;
+      const s=d.state;
+      const done=s.players.filter(p=>p.taxDone===true).length;
+      const total=s.players.length;
+
+      // อัปเดต count
+      const dc=document.getElementById('teacherDoneCount');
+      if(dc)dc.textContent=done;
+
+      // อัปเดตสถานะแต่ละคน
+      s.players.forEach(p=>{
+        const el=document.getElementById('tps-'+p.id);
+        if(el){
+          el.style.background=p.taxDone?'#E8F5E9':'rgba(212,160,23,.1)';
+          el.style.borderColor=p.taxDone?'#4CAF50':'rgba(212,160,23,.3)';
+          const statusEl=el.querySelector('div:last-child');
+          if(statusEl){
+            statusEl.style.color=p.taxDone?'#1A6B3A':'#8A6A30';
+            statusEl.textContent=p.taxDone?'✅ เสร็จแล้ว':'⏳ กำลังคำนวณ';
+          }
+        }
+      });
+
+      // ทุกคนเสร็จ → รอ 10 วิ แล้วแสดงผล
+      if(done>=total && !triggered){
+        triggered=true;
+        setTimeout(()=>{
+          clearInterval(tPoll);
+          const ov=document.getElementById('teacherWaitOv');
+          if(ov)ov.remove();
+          // ใช้ state ล่าสุดจาก server (มี taxWin ครบ)
+          showEnd(s);
+        },10000);
+      }
+      // timeout 3 นาที
+      if(pollCount>60 && !triggered){
+        triggered=true;
+        clearInterval(tPoll);
+        const ov=document.getElementById('teacherWaitOv');
+        if(ov)ov.remove();
+        showEnd(s);
+      }
+    }catch(e){console.error(e);}
+  },3000);
+}
 
 // ═══ INIT UI ═════════════════════════════════════════════
 function initUI(){
